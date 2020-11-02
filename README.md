@@ -11,3 +11,6 @@ Priorite : mise en place des data structures pour les differents elements du pro
 
 Il faudra voir aussi comment gerer la config meme du server avec une structure par exemple (avec comme elements le fichier de config et les jobs lances)
   -> savoir aussi dans quel type de structure stockes les jobs (une hashmap ou encore une liste vectorielle)
+
+
+Sources liste signaux: https://www.tutorialspoint.com/unix/unix-signals-traps.htm
