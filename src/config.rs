@@ -1,22 +1,5 @@
-// Status d'un job
-enum State {
-	RUNNING,
-	STOPPED,
-	EXITED,
-	KILLED
-}
-
-// Enum des instructions à envoyer sur le task 
-enum Instruction {
-	START,
-	RESTART,
-	STOP,
-	STATUS,
-	SHUTDOWN
-}
-
-// enum des signaux
-enum Signal {
+mod// enum des signaux
+pub enum Signal {
 	SIGHUP,
 	SIGINT,
 	SIGQUIT,
@@ -41,6 +24,25 @@ enum Signal {
 	SIGTTOU,
 	SIGURG
 }
+}
+
+// Status d'un job
+enum State {
+	RUNNING,
+	STOPPED,
+	EXITED,
+	KILLED
+}
+
+// Enum des instructions à envoyer sur le task 
+enum Instruction {
+	START,
+	RESTART,
+	STOP,
+	STATUS,
+	SHUTDOWN
+}
+
 
 // Un enum pour les erreurs pas mal pour la gestion et centraliser les messages
 enum Error {
