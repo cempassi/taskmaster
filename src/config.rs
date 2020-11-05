@@ -1,5 +1,8 @@
 use serde::Deserialize;
 use std::convert::From;
+use std::path::PathBuf;
+use std::fs;
+use std::error::Error;
 
 #[derive(Debug)]
 pub enum Signal {
@@ -36,6 +39,12 @@ pub enum Signal {
     SIGUSR2,
 }
 
+#[derive(Debug)]
+pub enum TaskmasterError {
+	ReadFileError,
+	ParseError,
+}
+
 #[derive(Debug, Deserialize)]
 pub struct ReadConfig {
     numprocess: i32,
@@ -44,12 +53,30 @@ pub struct ReadConfig {
     workingdir: String,
 }
 
+impl ReadConfig{
+    pub fn new(path: &str) -> Result<Self, TaskmasterError>{
+        let content = fs::read_to_string(path);
+
+        let mut content = match content {
+            Ok(c) => c,
+            Err(e) => return Err(TaskmasterError::ReadFileError),
+        };
+
+        let readConfig: Result<ReadConfig, toml::de::Error> = toml::from_str(&content);
+
+        return match readConfig {
+            Ok(c) => Ok(c),
+            Err(e) => return Err(TaskmasterError::ParseError),
+        };
+    }
+}
+
 #[derive(Debug)]
 pub struct Config {
     numprocess: i32,
     umask: i32,
     stopsignal: Signal,
-    workingdir: String,
+    workingdir: PathBuf,
 }
 
 impl From<ReadConfig> for Config {
@@ -93,7 +120,7 @@ impl From<ReadConfig> for Config {
             numprocess: readconf.numprocess,
             umask: readconf.umask,
             stopsignal: signal.unwrap(),
-            workingdir: readconf.workingdir,
+            workingdir: PathBuf::from(readconf.workingdir),
         }
     }
 }

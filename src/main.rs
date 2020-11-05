@@ -4,15 +4,16 @@ mod config;
 
 use crate::config::{ReadConfig, Config};
 
-fn main() {
-    let content = fs::read_to_string("./task.toml").unwrap();
-    let readconfig: ReadConfig = toml::from_str(&content).unwrap();
+fn main(){
+    
+    let readconfig: ReadConfig = ReadConfig::new("./task.toml").unwrap();
 
     println!("readconfig: {:?}", readconfig);
 
     let config: Config = readconfig.into();
 
     println!("config: {:?}", config );
+
 }
 
 #[cfg(test)]
