@@ -1,8 +1,8 @@
 use serde::Deserialize;
 use std::convert::From;
-use std::path::PathBuf;
 use std::fs;
-use std::error::Error;
+use std::path::PathBuf;
+use std::str::FromStr;
 
 #[derive(Debug)]
 pub enum Signal {
@@ -41,8 +41,8 @@ pub enum Signal {
 
 #[derive(Debug)]
 pub enum TaskmasterError {
-	ReadFileError,
-	ParseError,
+    ReadFileError,
+    ParseError,
 }
 
 #[derive(Debug, Deserialize)]
@@ -53,21 +53,17 @@ pub struct ReadConfig {
     workingdir: String,
 }
 
-impl ReadConfig{
-    pub fn new(path: &str) -> Result<Self, TaskmasterError>{
-        let content = fs::read_to_string(path);
-
-        let mut content = match content {
+impl ReadConfig {
+    pub fn new(path: &str) -> Result<Self, TaskmasterError> {
+        let content = match fs::read_to_string(path) {
             Ok(c) => c,
-            Err(e) => return Err(TaskmasterError::ReadFileError),
+            Err(_e) => return Err(TaskmasterError::ReadFileError),
         };
 
-        let readConfig: Result<ReadConfig, toml::de::Error> = toml::from_str(&content);
-
-        return match readConfig {
+        match toml::from_str(&content) {
             Ok(c) => Ok(c),
-            Err(e) => return Err(TaskmasterError::ParseError),
-        };
+            Err(_e) => Err(TaskmasterError::ParseError),
+        }
     }
 }
 
@@ -77,6 +73,16 @@ pub struct Config {
     umask: i32,
     stopsignal: Signal,
     workingdir: PathBuf,
+}
+
+impl FromStr for Config {
+    type Err = TaskmasterError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err>{
+        let config: Config = ReadConfig::new(s)?.into();
+        dbg!("config: {:?}", &config);
+        Ok(config)
+    }
 }
 
 impl From<ReadConfig> for Config {

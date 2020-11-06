@@ -1,19 +1,11 @@
-use std::fs;
+use std::str::FromStr;
 
 mod config;
 
-use crate::config::{ReadConfig, Config};
+use crate::config::Config;
 
 fn main(){
-    
-    let readconfig: ReadConfig = ReadConfig::new("./task.toml").unwrap();
-
-    println!("readconfig: {:?}", readconfig);
-
-    let config: Config = readconfig.into();
-
-    println!("config: {:?}", config );
-
+    let _config: Config = Config::from_str("./task.tom").unwrap();
 }
 
 #[cfg(test)]
