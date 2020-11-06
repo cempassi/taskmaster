@@ -1,11 +1,17 @@
 use std::str::FromStr;
 
 mod config;
+mod task;
+mod signal;
+mod error;
 
+use crate::task::Task;
 use crate::config::Config;
 
 fn main(){
-    let _config: Config = Config::from_str("./task.tom").unwrap();
+    let _config: Config = Config::from_str("./task.toml").unwrap();
+    let task: Task = Task::from_str("./ls.toml").unwrap();
+    task.run();
 }
 
 #[cfg(test)]
