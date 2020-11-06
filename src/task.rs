@@ -81,12 +81,14 @@ impl FromStr for Task {
 }
 
 impl Task {
-    pub fn run(&self) -> () {
+    pub fn run(&self) {
         let mut command: Command = Command::new(&self.cmd[0]);
         if self.cmd.len() > 1 {
             command.args(&self.cmd[1..]);
         }
         command.current_dir(self.workingdir.as_path());
+        command.stdout(self.stdout.try_clone().unwrap());
+        command.stderr(self.stderr.try_clone().unwrap());
         command.status().expect("Couldn't run command!");
     }
 }
