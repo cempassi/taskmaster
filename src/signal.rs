@@ -40,8 +40,8 @@ pub enum Signal {
 impl FromStr for Signal {
     type Err = TaskmasterError;
 
-    fn from_str(s: &str) -> Result<Self, Self::Err>{
-        match s{
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
             "HUP" => Ok(Signal::SIGHUP),
             "INT" => Ok(Signal::SIGINT),
             "QUIT" => Ok(Signal::SIGQUIT),

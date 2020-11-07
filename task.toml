@@ -1,4 +1,0 @@
-numprocess = 1
-umask = 77
-stopsignal = "TERM"
-workingdir = "/tmp"

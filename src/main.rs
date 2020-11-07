@@ -1,17 +1,32 @@
+use std::convert::TryFrom;
 use std::str::FromStr;
 
 mod config;
-mod task;
-mod signal;
 mod error;
+mod reader;
+mod signal;
+mod task;
 
-use crate::task::Task;
-use crate::config::Config;
+use error::TaskmasterError;
+use config::Config;
+use reader::ConfigFile;
+use task::Task;
 
-fn main(){
-    let _config: Config = Config::from_str("./task.toml").unwrap();
-    let task: Task = Task::from_str("./ls.toml").unwrap();
-    task.run();
+type Result<T> = std::result::Result<T, TaskmasterError>;
+
+fn main() -> Result<()> {
+    let configfile: ConfigFile = ConfigFile::from_str("./config.toml")?;
+    let _config: Config = Config::try_from(&configfile.config)?;
+    let tasks: Vec<Task> = configfile
+        .tasks
+        .into_iter()
+        .map(|readtask| Task::try_from(&readtask).unwrap())
+        .collect();
+
+    for task in &tasks {
+        task.run();
+    }
+    Ok(())
 }
 
 #[cfg(test)]
