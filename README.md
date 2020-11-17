@@ -1,16 +1,60 @@
 # Taskmaster
 
-## Vendredi 29/10
+Taskmaster is a process manager written in rust. It's a school project.
 
-Commencer par la mise en place du serveur
-Priorite : mise en place des data structures pour les differents elements du projet
+## Table of contents
 
-    - Enum status de job (KILLED, RUNNING, STOPPED...)
-    - Structure pour chaque job avec command, statut etc
-    - Enum commande (Start, Stop...)
+- [General info](#general-info)
+- [Technologies](#technologies)
+- [Guides and documentation](#guides-and-documentation)
+- [Setup](#setup)
+- [Team](#team)
 
-Il faudra voir aussi comment gerer la config meme du server avec une structure par exemple (avec comme elements le fichier de config et les jobs lances)
-  -> savoir aussi dans quel type de structure stockes les jobs (une hashmap ou encore une liste vectorielle)
+## General info
 
+Taskmaster is a process control system based on [Supervisord](http://supervisord.org/)
 
-Sources liste signaux: https://www.tutorialspoint.com/unix/unix-signals-traps.htm
+It's a school project made to implement a unix process manager, with the
+following capabilites:
+
+1. Launch and monitor several "Jobs"
+1. Define jobs behaviour from a configuration file (See below)
+1. Reload the configuration and update the jobs accordingly
+1. Log the events
+1. A client/server architecture
+
+The following configurations are expected for each job:
+
+- Command to run
+- Number of job to spawn
+- Startup launch behaviour
+- Relaunch stratagy:
+  1. Always
+  1. Never
+  1. When an unexpected error occured
+- How long the job must have been running to be considered successfull
+- Number of tries
+- Unexpected errors
+- Signal to exit gracefully
+- Wait elay after a graceful stop (If the delay is exceded, a SIGKILL is sent)
+- Stdout and stderr redirections
+- Environment variables
+- Working directory
+- Umask
+
+## Technologies
+
+This project is fully written in Rust
+
+## Guides and documentation
+
+- [Rust book](https://doc.rust-lang.org/book/)
+
+## Setup
+
+To run this project, clone the repository and build it with Cargo.
+
+## Team
+
+- [apsaint](https://github.com/apsaint)
+- [cempassi](https://github.com/cempassi)
