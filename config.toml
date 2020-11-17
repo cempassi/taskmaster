@@ -1,0 +1,23 @@
+[config]
+numprocess = 1
+umask = 77
+stopsignal = "TERM"
+workingdir = "/tmp"
+
+[[tasks]]
+name = "ls"
+cmd = "ls -l"
+numprocess = 1
+umask = 777
+workingdir = "/tmp"
+stdout = "/tmp/ls.out"
+stderr = "/tmp/ls.err"
+
+[[tasks]]
+name = "ls home"
+cmd = "ls -l /"
+numprocess = 1
+umask = 777
+workingdir = "/tmp"
+stdout = "/tmp/ls_home.out"
+stderr = "/tmp/ls_home.err"

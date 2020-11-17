@@ -1,0 +1,11 @@
+[package]
+name = "taskmaster"
+version = "0.1.0"
+authors = ["Cedric M'Passi <cedricmpassi@gmail.com>", "Apolline Saint-Mleux <apsaint-@student.42.fr>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+toml = {version = "0.4.2"}
+serde = { version = "1.0", features = ["derive"] }
