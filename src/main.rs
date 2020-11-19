@@ -1,5 +1,6 @@
 use std::convert::TryFrom;
 use std::str::FromStr;
+use std::thread;
 
 mod config;
 mod error;
@@ -14,13 +15,38 @@ use task::Task;
 
 type Result<T> = std::result::Result<T, TaskmasterError>;
 
+#[derive(Debug)]
+enum State {
+    Running,
+    Stopped,
+    Killed,
+    Finished,
+    Init
+}
+
+pub struct Process {
+    pid: i32
+}
+
+pub struct Task_monitoring {
+    state: State,
+    processes: Vec<Process>
+}
+
+fn task_thread(config: Config) -> Result<()>{
+    for (name, task) in config.tasks.into_iter() {
+        println!("{}", name);
+        let child = thread::spawn(move || {
+            task.run();
+        });
+    }
+    Ok(())
+}
+
 fn main() -> Result<()> {
     let configfile: ConfigFile = ConfigFile::from_str("./config.toml")?;
-    let _config: Config = Config::try_from(&configfile)?;
-    for (name, task) in _config.tasks.into_iter() {
-        println!("{}", name);
-        task.run();
-    }
+    let config: Config = Config::try_from(&configfile)?;
+    task_thread(config);
     Ok(())
 }
 
