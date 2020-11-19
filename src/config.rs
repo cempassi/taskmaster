@@ -1,28 +1,28 @@
 use std::convert::TryFrom;
 use std::path::PathBuf;
 use std::str::FromStr;
+use std::collections::HashMap;
 
 use crate::error::TaskmasterError;
 use crate::signal::Signal;
-use crate::reader::ReadConfig;
+use crate::reader::ConfigFile;
+use crate::task::Task;
 
 #[derive(Debug)]
 pub struct Config {
-    numprocess: i32,
-    umask: i32,
-    stopsignal: Signal,
-    workingdir: PathBuf,
+    pub tasks: HashMap<String, Task>
 }
 
-impl TryFrom<&ReadConfig> for Config {
+impl TryFrom<&ConfigFile> for Config {
     type Error = TaskmasterError;
 
-    fn try_from(readconf: &ReadConfig) -> Result<Self, Self::Error> {
+    fn try_from(configFile: &ConfigFile) -> Result<Self, Self::Error> {
+        let mut tasks: HashMap<String, Task> = HashMap::new();
+        for task in &configFile.tasks {
+            tasks.insert(task.name.clone(), Task::try_from(task).unwrap());
+        }
         Ok(Config {
-            numprocess: readconf.numprocess,
-            umask: readconf.umask,
-            stopsignal: Signal::from_str(readconf.stopsignal.as_str())?,
-            workingdir: PathBuf::from(readconf.workingdir.as_str()),
+            tasks:tasks
         })
     }
 }

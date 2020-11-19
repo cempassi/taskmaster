@@ -16,14 +16,9 @@ type Result<T> = std::result::Result<T, TaskmasterError>;
 
 fn main() -> Result<()> {
     let configfile: ConfigFile = ConfigFile::from_str("./config.toml")?;
-    let _config: Config = Config::try_from(&configfile.config)?;
-    let tasks: Vec<Task> = configfile
-        .tasks
-        .into_iter()
-        .map(|readtask| Task::try_from(&readtask).unwrap())
-        .collect();
-
-    for task in &tasks {
+    let _config: Config = Config::try_from(&configfile)?;
+    for (name, task) in _config.tasks.into_iter() {
+        println!("{}", name);
         task.run();
     }
     Ok(())
