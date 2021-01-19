@@ -1,4 +1,3 @@
-use std::convert::TryFrom;
 use std::str::FromStr;
 use std::thread;
 
@@ -10,8 +9,6 @@ mod task;
 
 use error::TaskmasterError;
 use config::Config;
-use reader::ConfigFile;
-use task::Task;
 
 type Result<T> = std::result::Result<T, TaskmasterError>;
 
@@ -35,19 +32,18 @@ pub struct Task_monitoring {
 
 fn task_thread(config: Config) -> Result<()>{
     for (name, task) in config.tasks.into_iter() {
-        println!("{}", name);
+        println!("Running task: {}", name);
         let child = thread::spawn(move || {
             task.run();
         });
+        child.join().unwrap();
     }
     Ok(())
 }
 
 fn main() -> Result<()> {
-    let configfile: ConfigFile = ConfigFile::from_str("./config.toml")?;
-    let config: Config = Config::try_from(&configfile)?;
-    task_thread(config);
-    Ok(())
+    let config: Config = Config::from_str("./config.toml")?;
+    task_thread(config)
 }
 
 #[cfg(test)]
