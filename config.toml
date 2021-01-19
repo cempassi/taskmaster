@@ -6,7 +6,7 @@ workingdir = "/tmp"
 
 [[tasks]]
 name = "ls"
-cmd = "ls -l"
+cmd = "ls -l /"
 numprocess = 1
 umask = 777
 workingdir = "/tmp"
@@ -15,7 +15,7 @@ stderr = "/tmp/ls.err"
 
 [[tasks]]
 name = "ls home"
-cmd = "ls -l /"
+cmd = "ls -l -R /Users/cempassi"
 numprocess = 1
 umask = 777
 workingdir = "/tmp"
