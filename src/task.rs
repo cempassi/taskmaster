@@ -26,10 +26,10 @@ pub struct Task {
     stderr: File,
 }
 
-impl TryFrom<&ReadTask> for Task {
+impl TryFrom<ReadTask> for Task {
     type Error = TaskmasterError;
 
-    fn try_from(readtask: &ReadTask) -> Result<Self, Self::Error> {
+    fn try_from(readtask: ReadTask) -> Result<Self, Self::Error> {
         Ok(Self {
             name: readtask.name.clone(),
             cmd: readtask.cmd.split(" ").map(|s| s.to_string()).collect(),
