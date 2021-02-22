@@ -6,16 +6,7 @@ use crate::error::TaskmasterError;
 
 #[derive(Debug, Deserialize)]
 pub struct ConfigFile {
-    pub config: ReadConfig,
-    pub tasks: Vec<ReadTask>,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct ReadConfig {
-    pub numprocess: i32,
-    pub umask: i32,
-    pub stopsignal: String,
-    pub workingdir: String,
+    pub task: Vec<ReadTask>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -24,6 +15,7 @@ pub struct ReadTask {
     pub cmd: String,
     pub numprocess: i32,
     pub umask: i16,
+    pub stopsignal: String,
     pub workingdir: String,
     pub stdout: String,
     pub stderr: String,

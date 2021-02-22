@@ -18,7 +18,7 @@ impl FromStr for Config {
         let configfile: ConfigFile = ConfigFile::from_str(path)?;
 
         let mut tasks: HashMap<String, Task> = HashMap::new();
-        for task in configfile.tasks {
+        for task in configfile.task {
             tasks.insert(task.name.clone(), Task::try_from(task).unwrap());
         }
         Ok(Config {tasks})
