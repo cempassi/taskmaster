@@ -2,6 +2,7 @@ use std::error;
 
 #[derive(Debug)]
 pub enum TaskmasterError {
+    FileNotFound(std::io::Error),
     ReadFile(std::io::Error),
     Io(std::io::Error),
     Parse(toml::de::Error),
@@ -11,6 +12,7 @@ pub enum TaskmasterError {
 impl TaskmasterError {
     fn __description(&self) -> &str {
         match *self {
+            TaskmasterError::FileNotFound(_) => "Unable to find file",
             TaskmasterError::ReadFile(_) => "Unable to read file",
             TaskmasterError::Io(_) => "IO failure",
             TaskmasterError::Parse(_) => "Unable to parse config file",
@@ -32,6 +34,7 @@ impl error::Error for TaskmasterError {
 
     fn source(&self) -> Option<&(dyn error::Error + 'static)> {
         match *self {
+            TaskmasterError::FileNotFound(ref e) => Some(e),
             TaskmasterError::ReadFile(ref e) => Some(e),
             TaskmasterError::Io(ref e) => Some(e),
             TaskmasterError::Parse(ref e) => Some(e),

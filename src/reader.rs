@@ -1,6 +1,8 @@
 use serde::Deserialize;
 use std::fs;
 use std::str::FromStr;
+use std::path::Path;
+use std::io::Error;
 
 use crate::error::TaskmasterError;
 
@@ -33,6 +35,10 @@ impl FromStr for ConfigFile {
     type Err = TaskmasterError;
 
     fn from_str(path: &str) -> Result<Self, TaskmasterError> {
+        if !Path::new(path).exists() {
+            return Err(TaskmasterError::FileNotFound(Error::last_os_error()));
+        };
+
         let content: String = match fs::read_to_string(path) {
             Ok(c) => c,
             Err(e) => return Err(TaskmasterError::ReadFile(e)),
@@ -43,5 +49,28 @@ impl FromStr for ConfigFile {
             Err(e) => Err(TaskmasterError::Parse(e)),
         };
         parsed
+    }
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+
+    #[test]
+    fn test_from_str_ok () -> Result <(), TaskmasterError> {
+        let path = "./config.toml";
+        let configfile: ConfigFile = ConfigFile::from_str(path)?;
+        assert!(!configfile.config.workingdir.is_empty(), "configFile empty so panic");
+        Ok(())
+    }
+
+    #[test]
+    fn test_from_str_filenotfound () -> Result <(), TaskmasterError> {
+        let path = "missing_file";
+        let _configfile: ConfigFile = ConfigFile::from_str(path)?;
+        Err(TaskmasterError::FileNotFound(Error::last_os_error()))
+        
     }
 }
