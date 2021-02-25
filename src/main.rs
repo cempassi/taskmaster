@@ -48,8 +48,18 @@ fn main() -> Result<()> {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+
     #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
+    fn test_main_ok() -> Result<()> {
+        let config: Config = Config::from_str("./config.toml")?;
+        assert!(!config.tasks.is_empty(), "Tasks map empty");
+        Ok(())
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_main_panic() {
+        let _config: Config = Config::from_str("missing_file").unwrap();
     }
 }
