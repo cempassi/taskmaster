@@ -70,7 +70,13 @@ mod tests {
     fn test_from_str_filenotfound () -> Result <(), TaskmasterError> {
         let path = "missing_file";
         let _configfile: ConfigFile = ConfigFile::from_str(path)?;
-        Err(TaskmasterError::FileNotFound(Error::last_os_error()))
-        
+        Err(TaskmasterError::FileNotFound(Error::last_os_error())) 
+    }
+
+    #[test]
+    fn test_from_str_readerror () -> Result <(), TaskmasterError> {
+        let path = "missing_file";
+        let _configfile: ConfigFile = ConfigFile::from_str(path)?;
+        Err(TaskmasterError::ReadFile(Error::last_os_error())) 
     }
 }
