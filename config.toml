@@ -9,7 +9,7 @@ stopsignal = "TERM"
 stderr = "/tmp/ls.err"
 
 [[task]]
-name = "ls home"
+name = "ls homer"
 cmd = "ls -l /Users/cempassi/Programming"
 numprocess = 1
 umask = 777

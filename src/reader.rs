@@ -1,16 +1,16 @@
 use serde::Deserialize;
-use std::path::PathBuf;
 use std::fs;
 use std::convert::TryFrom;
 
 use crate::error::TaskmasterError;
+use crate::watcher::Watcher;
 
 #[derive(Debug, Deserialize)]
 pub struct ConfigFile {
     pub task: Vec<ReadTask>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Eq, PartialEq)]
 pub struct ReadTask {
     pub name: String,
     pub cmd: String,
@@ -22,11 +22,11 @@ pub struct ReadTask {
     pub stderr: String,
 }
 
-impl TryFrom<&PathBuf> for ConfigFile {
+impl TryFrom<&Watcher> for ConfigFile {
     type Error = TaskmasterError;
 
-    fn try_from(path: &PathBuf) -> Result<Self, TaskmasterError> {
-        let content: String = match fs::read_to_string(path) {
+    fn try_from(watcher: &Watcher) -> Result<Self, TaskmasterError> {
+        let content: String = match fs::read_to_string(&watcher.path) {
             Ok(c) => c,
             Err(e) => return Err(TaskmasterError::ReadFile(e)),
         };
@@ -35,6 +35,5 @@ impl TryFrom<&PathBuf> for ConfigFile {
             Err(e) => Err(TaskmasterError::Parse(e)),
         };
         parsed
-
     }
 }

@@ -1,36 +1,49 @@
-use std::path::PathBuf;
 use std::convert::TryFrom;
-use std::thread;
+use std::sync::mpsc::channel;
 
 mod config;
+mod watcher;
 mod error;
 mod reader;
 mod signal;
 mod task;
-mod config_watcher;
+//mod worker;
 
 use config::Config;
-use config_watcher::ConfigWatcher;
+use watcher::Watcher;
 use error::TaskmasterError;
 
 type Result<T> = std::result::Result<T, TaskmasterError>;
 
-fn task_thread(config: Config) -> Result<()> {
-    for (name, task) in config.tasks.into_iter() {
-        println!("Running task: {}", name);
-        let child = thread::spawn(move || {
-            task.run();
-        });
-        child.join().unwrap();
-    }
-    Ok(())
+pub enum Message {
+    Reload,
+    Launch(String),
+    Stop
 }
 
 fn main() -> Result<()> {
-    let config_path = PathBuf::from(r"./config.toml");
-    let config: Config = Config::try_from(&config_path)?;
-    let file_watcher: ConfigWatcher = ConfigWatcher::try_from(&config_path)?;
-    task_thread(config)
+    let (sender, receiver) = channel();
+    let mut config = Config::new();
+    let mut watcher = Watcher::try_from(r"config.toml")?;
+
+    watcher.run(sender);
+    loop {
+        match receiver.recv() {
+            Ok(message) => match message {
+                Message::Reload => {
+                    config.reload(&watcher);
+                }
+                Message::Launch(_task) => {
+                    unimplemented!();
+                    //if let Some(to_run) = config.tasks.get(&task) {
+                    //}
+                }
+                Message::Stop => break,
+            },
+            Err(_) => (),
+        };
+    }
+    Ok(())
 }
 
 #[cfg(test)]

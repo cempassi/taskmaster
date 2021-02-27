@@ -1,9 +1,11 @@
 use std::convert::TryFrom;
 use std::path::PathBuf;
+use std::sync::mpsc::Sender;
 use std::thread;
 use std::time::{Duration, Instant, SystemTime};
 
 use crate::error::TaskmasterError;
+use crate::Message;
 
 #[derive(Clone)]
 struct PathData {
@@ -12,41 +14,49 @@ struct PathData {
 }
 
 #[derive(Clone)]
-pub struct ConfigWatcher<'a> {
-    path: &'a PathBuf,
+pub struct Watcher {
+    pub path: PathBuf,
+    pub sender: Option<Sender<Message>>,
     data: PathData,
 }
 
-impl<'a> TryFrom<&'a PathBuf> for ConfigWatcher<'a> {
+impl TryFrom<&str> for Watcher {
     type Error = TaskmasterError;
 
-    fn try_from(path: &'a PathBuf) -> Result<Self, TaskmasterError> {
-        let mut p = ConfigWatcher {
+    fn try_from(p: &str) -> Result<Self, TaskmasterError> {
+        let path = PathBuf::from(p);
+
+        let watcher = Self {
             path,
+            sender: None,
             data: PathData {
                 mtime: SystemTime::now(),
                 last_check: None,
             },
         };
-        p.run();
-        Ok(p)
+        Ok(watcher)
     }
 }
 
-impl<'a> ConfigWatcher<'a> {
-    fn run(&mut self) {
-        for _ in 1..3 {
+impl Watcher {
+    pub fn run(&mut self, sender: Sender<Message>) {
+        let path = self.path.clone();
+        let mut data = self.data.clone();
+        self.sender = Some(sender.clone());
+        thread::spawn(move || {
+        loop {
             let delay: Duration = Duration::from_secs(10);
-            if self.path.is_file() {
-                match self.path.metadata() {
+            if path.is_file() {
+                match path.metadata() {
                     Err(_) => {
                         println!("Can't Access metadata");
                     }
                     Ok(metadata) => {
                         let mtime = metadata.modified().unwrap();
-                        if mtime != self.data.mtime {
+                        if mtime != data.mtime {
                             println!("Send signal to reload config");
-                            self.data.mtime = mtime;
+                            data.mtime = mtime;
+                            sender.send(Message::Reload).unwrap();
                         } else {
                             println!("Nothing to be done");
                         }
@@ -56,6 +66,6 @@ impl<'a> ConfigWatcher<'a> {
                 println!("File has been ereased");
             }
             thread::sleep(delay);
-        }
+        }});
     }
 }
