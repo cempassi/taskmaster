@@ -1,15 +1,15 @@
 use std::convert::TryFrom;
 use std::sync::mpsc::channel;
 
-mod config;
+mod state;
 mod watcher;
 mod error;
 mod reader;
 mod signal;
 mod task;
-//mod worker;
+mod worker;
 
-use config::Config;
+use state::State;
 use watcher::Watcher;
 use error::TaskmasterError;
 
@@ -17,30 +17,35 @@ type Result<T> = std::result::Result<T, TaskmasterError>;
 
 pub enum Message {
     Reload,
-    Launch(String),
-    Stop
+    Start(String),
+    Stop(String),
+    Status(String),
+    Quit
 }
 
 fn main() -> Result<()> {
     let (sender, receiver) = channel();
-    let mut config = Config::new();
+    let mut state = State::new();
     let mut watcher = Watcher::try_from(r"config.toml")?;
 
     watcher.run(sender);
     loop {
-        match receiver.recv() {
-            Ok(message) => match message {
+        if let Ok(message) = receiver.recv() {
+            match message {
                 Message::Reload => {
-                    config.reload(&watcher);
+                    state.reload(&watcher);
                 }
-                Message::Launch(_task) => {
+                Message::Start(task) => {
+                    state.start(&task)
+                }
+                Message::Stop(_task) => {
                     unimplemented!();
-                    //if let Some(to_run) = config.tasks.get(&task) {
-                    //}
                 }
-                Message::Stop => break,
-            },
-            Err(_) => (),
+                Message::Status(_task) => {
+                    unimplemented!();
+                }
+                Message::Quit => break,
+            };
         };
     }
     Ok(())

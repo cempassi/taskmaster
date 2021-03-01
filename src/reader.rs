@@ -10,10 +10,11 @@ pub struct ConfigFile {
     pub task: Vec<ReadTask>,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq)]
+#[derive(Debug, Deserialize, Eq, PartialEq, Clone)]
 pub struct ReadTask {
     pub name: String,
     pub cmd: String,
+    pub autostart: bool,
     pub numprocess: i32,
     pub umask: i16,
     pub stopsignal: String,

@@ -2,7 +2,7 @@ use serde::Deserialize;
 use std::convert::TryFrom;
 use std::fs::File;
 use std::path::PathBuf;
-use std::process::Command;
+use std::process::{Command, Child};
 use std::vec::Vec;
 
 use crate::error::TaskmasterError;
@@ -17,9 +17,10 @@ enum AutoRestart {
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct Task {
-    name: String,
+    pub name: String,
     cmd: Vec<String>,
     numprocess: i32,
+    autostart: bool,
     umask: i16,
     workingdir: PathBuf,
     stdout: PathBuf,
@@ -34,6 +35,7 @@ impl TryFrom<&ReadTask> for Task {
             name: readtask.name.clone(),
             cmd: readtask.cmd.split(" ").map(|s| s.to_string()).collect(),
             numprocess: readtask.numprocess,
+            autostart: readtask.autostart,
             umask: readtask.umask,
             workingdir: PathBuf::from(readtask.workingdir.as_str()),
             stdout: PathBuf::from(readtask.stdout.as_str()),
@@ -43,7 +45,7 @@ impl TryFrom<&ReadTask> for Task {
 }
 
 impl Task {
-    pub fn run(&self) {
+    pub fn run(&self) -> Child {
         let mut command: Command = Command::new(&self.cmd[0]);
         let stdout = File::create(self.stdout.as_path()).unwrap();
         let stderr = File::create(self.stderr.as_path()).unwrap();
@@ -53,6 +55,6 @@ impl Task {
         command.current_dir(self.workingdir.as_path());
         command.stdout(stdout);
         command.stderr(stderr);
-        command.status().expect("Couldn't run command!");
+        command.spawn().expect("Couldn't run command!")
     }
 }

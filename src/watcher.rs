@@ -68,4 +68,10 @@ impl Watcher {
             thread::sleep(delay);
         }});
     }
+
+    pub fn send(&self, msg: Message) {
+        if let Some(sender) = &self.sender {
+            sender.send(msg).unwrap();
+        }
+    }
 }
