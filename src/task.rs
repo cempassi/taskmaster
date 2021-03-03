@@ -45,7 +45,8 @@ impl TryFrom<&ReadTask> for Task {
 }
 
 impl Task {
-    pub fn run(&self) -> Child {
+    pub fn run(&self) -> Vec<Child> {
+        let mut jobs = Vec::new();
         let mut command: Command = Command::new(&self.cmd[0]);
         let stdout = File::create(self.stdout.as_path()).unwrap();
         let stderr = File::create(self.stderr.as_path()).unwrap();
@@ -55,6 +56,9 @@ impl Task {
         command.current_dir(self.workingdir.as_path());
         command.stdout(stdout);
         command.stderr(stderr);
-        command.spawn().expect("Couldn't run command!")
+        for _ in 0..self.numprocess {
+            jobs.push(command.spawn().expect("Couldn't run command!"));
+        };
+        jobs
     }
 }

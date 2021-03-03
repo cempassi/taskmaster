@@ -38,8 +38,8 @@ fn main() -> Result<()> {
                 Message::Start(task) => {
                     state.start(&task)
                 }
-                Message::Stop(_task) => {
-                    unimplemented!();
+                Message::Stop(task) => {
+                    state.stop(&task)
                 }
                 Message::Status(_task) => {
                     unimplemented!();

@@ -9,6 +9,7 @@ use crate::task::Task;
 
 pub enum Action {
     Reload(ReadTask),
+    Stop,
     Finished,
 }
 
@@ -51,8 +52,7 @@ fn monitor(m: Arc<Mutex<Vec<Child>>>, sender: Sender<Action>) {
 
 pub fn run(task: Task, sender: Sender<Action>, receiver: Receiver<Action>) {
     thread::spawn(move || {
-        let mut jobs = Vec::new();
-        jobs.push(task.run());
+        let jobs = task.run();
 
         let m = Arc::new(Mutex::new(jobs));
         monitor(m.clone(), sender);
@@ -62,10 +62,15 @@ pub fn run(task: Task, sender: Sender<Action>, receiver: Receiver<Action>) {
                     Action::Reload(t) => {
                         let task = Task::try_from(&t).unwrap();
                         let mut vec = m.lock().unwrap();
+                        vec.iter_mut().for_each(|child| child.kill().unwrap());
                         vec.clear();
-                        vec.push(task.run());
-                        drop(vec);
-                    }
+                        *vec = task.run();
+                    },
+                    Action::Stop => {
+                        let mut vec = m.lock().unwrap();
+                        vec.iter_mut().for_each(|child| child.kill().unwrap());
+                        break;
+                    },
                     Action::Finished => break,
                 }
             }
