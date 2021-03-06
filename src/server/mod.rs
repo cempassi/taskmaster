@@ -49,7 +49,7 @@ fn listen() {
 pub fn start_server(config: &str) {
     let (sender, receiver) = channel();
     let mut state = State::new();
-    let mut watcher = Watcher::try_from(r"config.toml").unwrap();
+    let mut watcher = Watcher::try_from(config).unwrap();
 
     listen();
     watcher.run(sender);
