@@ -1,52 +1,34 @@
-use std::convert::TryFrom;
-use std::sync::mpsc::channel;
+#![warn(clippy::all, clippy::pedantic)]
+extern crate clap;
 
-mod state;
-mod watcher;
+mod cli;
+mod client;
 mod error;
 mod reader;
+mod server;
 mod signal;
+mod state;
 mod task;
+mod watcher;
 mod worker;
+mod history;
+mod editor;
 
-use state::State;
-use watcher::Watcher;
-use error::TaskmasterError;
+use crate::error::TaskmasterError;
+use cli::generate_cli;
+use client::start_client;
 
 type Result<T> = std::result::Result<T, TaskmasterError>;
 
-pub enum Message {
-    Reload,
-    Start(String),
-    Stop(String),
-    Status(String),
-    Quit
-}
-
 fn main() -> Result<()> {
-    let (sender, receiver) = channel();
-    let mut state = State::new();
-    let mut watcher = Watcher::try_from(r"config.toml")?;
+    let cli = generate_cli();
 
-    watcher.run(sender);
-    loop {
-        if let Ok(message) = receiver.recv() {
-            match message {
-                Message::Reload => {
-                    state.reload(&watcher);
-                }
-                Message::Start(task) => {
-                    state.start(&task)
-                }
-                Message::Stop(task) => {
-                    state.stop(&task)
-                }
-                Message::Status(_task) => {
-                    unimplemented!();
-                }
-                Message::Quit => break,
-            };
-        };
+    if let Some(matches) = cli.subcommand_matches("server") {
+        let _config = matches.value_of("config").unwrap();
+        println!("Starting server");
+    } else {
+        println!("Starting client");
+        start_client();
     }
     Ok(())
 }
