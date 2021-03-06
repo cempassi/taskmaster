@@ -5,7 +5,7 @@ use std::sync::mpsc::{channel, Sender};
 use crate::reader::ReadTask;
 use crate::task::Task;
 use crate::watcher::Watcher;
-use crate::{reader::ConfigFile, worker::Action, Message};
+use crate::{reader::ConfigFile, worker::Action, server::Message};
 
 #[derive(Debug)]
 pub struct State {

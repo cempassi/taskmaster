@@ -5,7 +5,7 @@ use std::thread;
 use std::time::{Duration, Instant, SystemTime};
 
 use crate::error::TaskmasterError;
-use crate::Message;
+use crate::server::Message;
 
 #[derive(Clone)]
 struct PathData {
