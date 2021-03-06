@@ -2,10 +2,15 @@ use std::collections::HashMap;
 use std::convert::TryFrom;
 use std::sync::mpsc::{channel, Sender};
 
-use crate::reader::ReadTask;
-use crate::task::Task;
-use crate::watcher::Watcher;
-use crate::{reader::ConfigFile, worker::Action, server::Message};
+use super::worker;
+
+use super::{
+    reader::{ConfigFile, ReadTask},
+    Message,
+    task::Task,
+    watcher::Watcher,
+    worker::Action,
+};
 
 #[derive(Debug)]
 pub struct State {
@@ -49,7 +54,7 @@ impl State {
         let task = Task::try_from(self.tasks.get(name).unwrap()).unwrap();
         let (sender, receiver) = channel::<Action>();
         self.workers.insert(name.to_string(), sender.clone());
-        crate::worker::run(task, sender.clone(), receiver);
+        worker::run(task, sender.clone(), receiver);
     }
 
     pub fn stop(&mut self, name: &str) {

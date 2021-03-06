@@ -6,6 +6,9 @@ use std::thread;
 
 mod state;
 mod watcher;
+mod reader;
+mod task;
+mod worker;
 pub mod error;
 
 use self::state::State;

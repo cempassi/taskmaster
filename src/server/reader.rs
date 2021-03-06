@@ -2,8 +2,8 @@ use serde::Deserialize;
 use std::fs;
 use std::convert::TryFrom;
 
-use crate::error::TaskmasterError;
-use crate::watcher::Watcher;
+use super::error::TaskmasterError;
+use super::watcher::Watcher;
 
 #[derive(Debug, Deserialize)]
 pub struct ConfigFile {

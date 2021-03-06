@@ -4,8 +4,8 @@ use std::time::Duration;
 use std::{convert::TryFrom, sync::Arc};
 use std::{process::Child, thread};
 
-use crate::reader::ReadTask;
-use crate::task::Task;
+use super::reader::ReadTask;
+use super::task::Task;
 
 pub enum Action {
     Reload(ReadTask),

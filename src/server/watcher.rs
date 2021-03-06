@@ -4,8 +4,8 @@ use std::sync::mpsc::Sender;
 use std::thread;
 use std::time::{Duration, Instant, SystemTime};
 
-use crate::error::TaskmasterError;
-use crate::server::Message;
+use super::error::TaskmasterError;
+use super::Message;
 
 #[derive(Clone)]
 struct PathData {

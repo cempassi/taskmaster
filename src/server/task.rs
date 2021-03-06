@@ -5,8 +5,7 @@ use std::path::PathBuf;
 use std::process::{Command, Child};
 use std::vec::Vec;
 
-use crate::error::TaskmasterError;
-use crate::reader::ReadTask;
+use super::{error::TaskmasterError, reader::ReadTask};
 
 #[derive(Debug, Deserialize)]
 enum AutoRestart {
