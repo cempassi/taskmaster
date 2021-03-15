@@ -12,7 +12,7 @@ stderr = "/tmp/ls.err"
 [[task]]
 name = "ls homer"
 cmd = "ls -l /Users/cempassi/Programming"
-autostart = true
+autostart = false
 numprocess = 1
 umask = 777
 workingdir = "/tmp"

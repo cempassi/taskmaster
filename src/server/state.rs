@@ -6,10 +6,10 @@ use super::worker;
 
 use super::{
     reader::{ConfigFile, ReadTask},
-    Message,
     task::Task,
     watcher::Watcher,
     worker::Action,
+    Message,
 };
 
 #[derive(Debug)]
@@ -50,6 +50,7 @@ impl State {
             }
         }
     }
+
     pub fn start(&mut self, name: &str) {
         let task = Task::try_from(self.tasks.get(name).unwrap()).unwrap();
         let (sender, receiver) = channel::<Action>();

@@ -64,6 +64,7 @@ impl Watcher {
                 }
             } else {
                 println!("File has been ereased");
+                break;
             }
             thread::sleep(delay);
         }});
