@@ -65,4 +65,10 @@ impl State {
             println!("Task is not running");
         }
     }
+
+    pub fn list(&mut self) {
+        for task in &self.tasks {
+            println!("{:?}", task);
+        }
+    }
 }

@@ -1,5 +1,7 @@
 #![warn(clippy::all, clippy::pedantic)]
-extern crate clap;
+//extern crate clap;
+//extern crate serde;
+//extern crate rmp_serde as rmps;
 
 mod cli;
 mod client;
