@@ -1,5 +1,6 @@
 use serde::Deserialize;
 use std::fs;
+use std::fmt;
 use std::convert::TryFrom;
 
 use super::error::TaskmasterError;
@@ -21,6 +22,23 @@ pub struct ReadTask {
     pub workingdir: String,
     pub stdout: String,
     pub stderr: String,
+}
+
+impl fmt::Display for ReadTask {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "name: {}\nCommand: {:?}\nNumber of processes: {}\nAutostart: {}\nUmask: {}\nWorking Directory: {:?}\nStdour: {:?}, Stderr: {:?}",
+            self.name,
+            self.cmd,
+            self.numprocess,
+            self.autostart,
+            self.umask,
+            self.workingdir,
+            self.stdout,
+            self.stderr
+        )
+    }
 }
 
 impl TryFrom<&Watcher> for ConfigFile {

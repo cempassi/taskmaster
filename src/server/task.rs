@@ -2,7 +2,7 @@ use serde::Deserialize;
 use std::convert::TryFrom;
 use std::fs::File;
 use std::path::PathBuf;
-use std::process::{Command, Child};
+use std::process::{Child, Command};
 use std::vec::Vec;
 
 use super::{error::TaskmasterError, reader::ReadTask};
@@ -43,6 +43,7 @@ impl TryFrom<&ReadTask> for Task {
     }
 }
 
+
 impl Task {
     pub fn run(&self) -> Vec<Child> {
         let mut jobs = Vec::new();
@@ -57,7 +58,7 @@ impl Task {
         command.stderr(stderr);
         for _ in 0..self.numprocess {
             jobs.push(command.spawn().expect("Couldn't run command!"));
-        };
+        }
         jobs
     }
 }

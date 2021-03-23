@@ -1,7 +1,6 @@
 #![warn(clippy::all, clippy::pedantic)]
-//extern crate clap;
-//extern crate serde;
-//extern crate rmp_serde as rmps;
+extern crate clap;
+extern crate serde;
 
 mod cli;
 mod client;
@@ -24,7 +23,6 @@ fn main() -> Result<()> {
         println!("Starting server");
         start_server(config);
     } else {
-        println!("Starting client");
         start_client();
     }
     Ok(())

@@ -32,7 +32,7 @@ impl Editor {
             Key::Backspace => {
                 line.pop();
             }
-            Key::Ctrl('q') => self.should_quit = true,
+            Key::Ctrl('d') => self.should_quit = true,
             Key::Ctrl('c') => {
                 if line.is_empty() {
                     println!("")

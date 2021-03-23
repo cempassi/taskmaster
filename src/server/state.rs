@@ -67,8 +67,10 @@ impl State {
     }
 
     pub fn list(&mut self) {
-        for task in &self.tasks {
-            println!("{:?}", task);
+        println!("Available jobs:");
+        for (_, task) in &self.tasks {
+            println!("{}", task);
+            println!("-----");
         }
     }
 }

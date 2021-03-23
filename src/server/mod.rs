@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use std::fs;
 use std::io::prelude::*;
 use std::convert::TryFrom;
 use std::os::unix::net::{UnixListener, UnixStream};
@@ -69,7 +70,7 @@ pub fn start_server(config: &str) {
                 Message::Reload => state.reload(&watcher),
                 Message::Start(task) => state.start(&task),
                 Message::Stop(task) => state.stop(&task),
-                Message::List => state.list(),
+                Message::List => state.lst(),
                 Message::Status(_task) => {
                     unimplemented!();
                 }
@@ -77,4 +78,6 @@ pub fn start_server(config: &str) {
             };
         };
     }
+    fs::remove_file("/tmp/taskmaster.sock").unwrap();
+
 }
