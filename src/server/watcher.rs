@@ -5,7 +5,7 @@ use std::thread;
 use std::time::{Duration, Instant, SystemTime};
 
 use super::error::TaskmasterError;
-use super::Message;
+use super::{Communication, Message};
 
 #[derive(Clone)]
 struct PathData {
@@ -16,7 +16,7 @@ struct PathData {
 #[derive(Clone)]
 pub struct Watcher {
     pub path: PathBuf,
-    pub sender: Option<Sender<Message>>,
+    pub sender: Option<Sender<Communication>>,
     data: PathData,
 }
 
@@ -39,12 +39,11 @@ impl TryFrom<&str> for Watcher {
 }
 
 impl Watcher {
-    pub fn run(&mut self, sender: Sender<Message>) {
+    pub fn run(&mut self, sender: Sender<Communication>) {
         let path = self.path.clone();
         let mut data = self.data.clone();
         self.sender = Some(sender.clone());
-        thread::spawn(move || {
-        loop {
+        thread::spawn(move || loop {
             let delay: Duration = Duration::from_secs(10);
             if path.is_file() {
                 match path.metadata() {
@@ -56,7 +55,11 @@ impl Watcher {
                         if mtime != data.mtime {
                             println!("Send signal to reload config");
                             data.mtime = mtime;
-                            sender.send(Message::Reload).unwrap();
+                            let com = Communication {
+                                message: Message::Reload,
+                                channel: None,
+                            };
+                            sender.send(com).unwrap();
                         } else {
                             println!("Nothing to be done");
                         }
@@ -64,15 +67,18 @@ impl Watcher {
                 }
             } else {
                 println!("File has been ereased");
-                break;
             }
             thread::sleep(delay);
-        }});
+        });
     }
 
     pub fn send(&self, msg: Message) {
         if let Some(sender) = &self.sender {
-            sender.send(msg).unwrap();
+            let com = Communication {
+                message: msg,
+                channel: None,
+            };
+            sender.send(com).unwrap();
         }
     }
 }

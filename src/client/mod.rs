@@ -14,10 +14,10 @@ fn send_message(msg: Message) {
     let serialized = serde_json::to_string(&msg).unwrap();
 
     stream.write_all(serialized.as_bytes()).unwrap();
-    let mut reader = BufReader::new(stream);
-    let mut line = String::new();
-    reader.read_line(&mut line).unwrap();
-    println!("{}", line);
+    let reader = BufReader::new(stream);
+    for line in reader.lines() {
+        println!("{}", line.unwrap());
+    }
 }
 
 fn process_line(history: &mut History, line: String) {
@@ -34,7 +34,6 @@ fn process_line(history: &mut History, line: String) {
 
 pub fn start_client() {
     if let Ok(_) = UnixStream::connect("/tmp/taskmaster.sock") {
-        println!("Starting client");
         let mut history = History::new();
 
         loop {
