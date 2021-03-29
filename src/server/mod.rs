@@ -1,21 +1,22 @@
-use std::sync::mpsc::Sender;
 use serde::{Deserialize, Serialize};
 use std::convert::TryFrom;
 use std::sync::mpsc::channel;
+use std::sync::mpsc::Sender;
 
 pub mod error;
+mod listener;
 mod reader;
 mod state;
 mod task;
 mod watcher;
 mod worker;
 
-use self::state::State;
 use self::watcher::Watcher;
+use self::{listener::Listener, state::State};
 
 pub struct Communication {
     message: Message,
-    channel: Option<Sender<String>>
+    channel: Option<Sender<String>>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -30,10 +31,11 @@ pub enum Message {
 
 pub fn start_server(config: &str) {
     let (sender, receiver) = channel();
-    let mut state = State::new("/tmp/taskmaster.sock");
+    let mut state = State::new();
     let mut watcher = Watcher::try_from(config).unwrap();
+    let mut listener = Listener::new();
 
-    state.listen(sender.clone());
+    listener.run(sender.clone());
     watcher.run(sender);
     loop {
         if let Ok(com) = receiver.recv() {
