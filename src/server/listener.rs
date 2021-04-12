@@ -1,5 +1,6 @@
 use serde::Deserialize;
 use std::io::prelude::*;
+use std::fs;
 use std::os::unix::net::{UnixListener, UnixStream};
 use std::sync::mpsc::{channel, Sender};
 use std::thread;
@@ -35,6 +36,7 @@ impl Listener {
         });
     }
 }
+
 
 fn process_message(stream: UnixStream, sender: Sender<Communication>) {
     println!("Ready to recieve.");

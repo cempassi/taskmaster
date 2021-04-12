@@ -20,16 +20,21 @@ fn send_message(msg: Message) {
     }
 }
 
-fn process_line(history: &mut History, line: String) {
+fn process_line(history: &mut History, line: String) -> bool {
     match line.as_ref() {
         "list" => send_message(Message::List),
         "history" => history.print(),
-        "quit" => send_message(Message::Quit),
+        "quit" => {
+            send_message(Message::Quit);
+            return false;
+
+        },
         _ => {
             println!("Invalid command");
         }
     }
     history.push(line);
+    true
 }
 
 pub fn start_client() {
@@ -40,7 +45,9 @@ pub fn start_client() {
             match Editor::default().readline(&mut history) {
                 Ok(line) => {
                     println!("Command: {}", line);
-                    process_line(&mut history, line);
+                    if process_line(&mut history, line) == false {
+                        break;
+                    }
                 }
                 Err(e) if e.kind() == ErrorKind::Interrupted => break,
                 Err(_) => break,
