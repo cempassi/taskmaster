@@ -43,7 +43,7 @@ The following configurations are expected for each **task**:
 - How long the **process** must have been running to be considered successfull
 - Number of tries a restart should be attempted before aborting
 - Signal to exit gracefully
-- Wait elay after a graceful stop (If the delay is exceded, a `SIGKILL` is sent)
+- Wait delay after a graceful stop (If the delay is exceded, a `SIGKILL` is sent)
 - IO redirections, stdout & stderr for the time beeing
 - Environment variables
 - Working directory
