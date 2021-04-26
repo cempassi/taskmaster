@@ -1,6 +1,6 @@
 # Taskmaster
 
-Taskmaster is a process manager written in rust. It's a school project.
+Taskmaster is a process manager written in `rust`. It's a school project.
 
 ## Table of contents
 
@@ -8,8 +8,8 @@ Taskmaster is a process manager written in rust. It's a school project.
   - [Table of contents](#table-of-contents)
   - [General info](#general-info)
   - [Technologies](#technologies)
-  - [Guides and documentation](#guides-and-documentation)
   - [Setup](#setup)
+  - [Guides and documentation](#guides-and-documentation)
   - [Team](#team)
 
 ## General info
@@ -46,15 +46,16 @@ The following configurations are expected for each job:
 
 ## Technologies
 
-This project is fully written in Rust
+This project is fully written in `Rust`
+
+## Setup
+
+To run this project, clone the repository and build it with `Cargo`.
 
 ## Guides and documentation
 
 - [Rust book](https://doc.rust-lang.org/book/)
-
-## Setup
-
-To run this project, clone the repository and build it with Cargo.
+- [Supervisord](http://supervisord.org/)
 
 ## Team
 
