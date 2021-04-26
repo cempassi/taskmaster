@@ -4,11 +4,13 @@ Taskmaster is a process manager written in rust. It's a school project.
 
 ## Table of contents
 
-- [General info](#general-info)
-- [Technologies](#technologies)
-- [Guides and documentation](#guides-and-documentation)
-- [Setup](#setup)
-- [Team](#team)
+- [Taskmaster](#taskmaster)
+  - [Table of contents](#table-of-contents)
+  - [General info](#general-info)
+  - [Technologies](#technologies)
+  - [Guides and documentation](#guides-and-documentation)
+  - [Setup](#setup)
+  - [Team](#team)
 
 ## General info
 
