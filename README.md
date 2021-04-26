@@ -10,6 +10,7 @@ Taskmaster is a process manager written in `rust`. It's a school project.
   - [Technologies](#technologies)
   - [Setup](#setup)
   - [Guides and documentation](#guides-and-documentation)
+  - [Terms](#terms)
   - [Team](#team)
 
 ## General info
@@ -19,27 +20,27 @@ Taskmaster is a process control system based on [Supervisord](http://supervisord
 It's a school project made to implement a unix process manager, with the
 following capabilites:
 
-1. Launch and monitor several "Jobs"
-1. Define jobs behaviour from a configuration file (See below)
-1. Reload the configuration and update the jobs accordingly
+1. Launch and monitor several **Jobs**
+1. Define **jobs** behaviour from a configuration file (See below)
+1. Reload the configuration and update the **jobs** accordingly
 1. Log the events
 1. A client/server architecture
 
-The following configurations are expected for each job:
+The following configurations are expected for each **job**:
 
 - Command to run
-- Number of job to spawn
+- Number of **process** to spawn
 - Startup launch behaviour
 - Relaunch stratagy:
   1. Always
   1. Never
   1. When an unexpected error occured
-- How long the job must have been running to be considered successfull
+- How long the **process** must have been running to be considered successfull
 - Number of tries
 - Unexpected errors
 - Signal to exit gracefully
-- Wait elay after a graceful stop (If the delay is exceded, a SIGKILL is sent)
-- Stdout and stderr redirections
+- Wait elay after a graceful stop (If the delay is exceded, a `SIGKILL` is sent)
+- IO redirections
 - Environment variables
 - Working directory
 - Umask
@@ -56,6 +57,14 @@ To run this project, clone the repository and build it with `Cargo`.
 
 - [Rust book](https://doc.rust-lang.org/book/)
 - [Supervisord](http://supervisord.org/)
+
+## Terms
+
+| Term                | Description                                         |
+| ------------------- | --------------------------------------------------- |
+| Job / Jobs          | A job is a configure for running some **processes** |
+| Process / Processes | A process is a unix process                         |
+| IO                  | refere to stdin, stdout and stderr                  |
 
 ## Team
 
