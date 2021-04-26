@@ -7,6 +7,7 @@ Taskmaster is a process manager written in `rust`. It's a school project.
 - [Taskmaster](#taskmaster)
   - [Table of contents](#table-of-contents)
   - [General info](#general-info)
+    - [How to configure Taskmaster](#how-to-configure-taskmaster)
   - [Technologies](#technologies)
   - [Setup](#setup)
   - [Guides and documentation](#guides-and-documentation)
@@ -26,6 +27,8 @@ following capabilites:
 1. Log the events
 1. A client/server architecture
 
+### How to configure Taskmaster
+
 The following configurations are expected for each **job**:
 
 - Command to run
@@ -44,6 +47,21 @@ The following configurations are expected for each **job**:
 - Environment variables
 - Working directory
 - Umask
+
+The configuration is expected to be written in `toml`
+
+```toml
+[[task]]
+name = "write bar"      # name of the JOB
+cmd = "echo bar"        # the command to execute, shell-like
+autostart = true        # boolean, the JOB start with taskmaster
+numprocess = 42         # uint, number to PROCESSES the JOB have to run
+umask = 0777            # uint, set umask aka default permission on created file from process
+workingdir = "/tmp"     # working directory of the PROCESS
+stdout = "/tmp/foo.out" # redirect STDOUT to <file>
+stderr = "/tmp/foo.err" # redirect STDERR to <file>
+stopsignal = "TERM"     # signal to send to stop the running PROCESS
+```
 
 ## Technologies
 
