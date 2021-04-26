@@ -21,16 +21,17 @@ Taskmaster is a process control system based on [Supervisord](http://supervisord
 It's a school project made to implement a unix process manager, with the
 following capabilites:
 
-1. Launch and monitor several **Jobs**
-1. Define **jobs** behaviour from a configuration file (See below)
-1. Reload the configuration and update the **jobs** accordingly
+1. Launch and monitor several **Tasks**
+1. Define **tasks** behaviour from a configuration file (See below)
+1. Reload the configuration and update the **tasks** accordingly
 1. Log the events
 1. A client/server architecture
 
 ### How to configure Taskmaster
 
-The following configurations are expected for each **job**:
+The following configurations are expected for each **task**:
 
+- Name of the **task**
 - Command to run
 - Number of **process** to spawn
 - Startup launch behaviour
@@ -38,12 +39,12 @@ The following configurations are expected for each **job**:
   1. Always
   1. Never
   1. When an unexpected error occured
+- Expected exit status
 - How long the **process** must have been running to be considered successfull
-- Number of tries
-- Unexpected errors
+- Number of tries a restart should be attempted before aborting
 - Signal to exit gracefully
 - Wait elay after a graceful stop (If the delay is exceded, a `SIGKILL` is sent)
-- IO redirections
+- IO redirections, stdout & stderr for the time beeing
 - Environment variables
 - Working directory
 - Umask
@@ -52,10 +53,10 @@ The configuration is expected to be written in `toml`
 
 ```toml
 [[task]]
-name = "write bar"      # name of the JOB
+name = "write bar"      # name of the TASK
 cmd = "echo bar"        # the command to execute, shell-like
-autostart = true        # boolean, the JOB start with taskmaster
-numprocess = 42         # uint, number to PROCESSES the JOB have to run
+autostart = true        # boolean, the TASK start with taskmaster
+numprocess = 42         # uint, number to PROCESSES the TASK have to run
 umask = 0777            # uint, set umask aka default permission on created file from process
 workingdir = "/tmp"     # working directory of the PROCESS
 stdout = "/tmp/foo.out" # redirect STDOUT to <file>
@@ -78,11 +79,11 @@ To run this project, clone the repository and build it with `Cargo`.
 
 ## Terms
 
-| Term                | Description                                         |
-| ------------------- | --------------------------------------------------- |
-| Job / Jobs          | A job is a configure for running some **processes** |
-| Process / Processes | A process is a unix process                         |
-| IO                  | refere to stdin, stdout and stderr                  |
+| Term                | Description                                                        |
+| ------------------- | ------------------------------------------------------------------ |
+| Task / Tasks        | A task is refere to a configuration for running some **processes** |
+| Process / Processes | A process is a unix process                                        |
+| IO                  | refere to stdin, stdout and stderr                                 |
 
 ## Team
 
