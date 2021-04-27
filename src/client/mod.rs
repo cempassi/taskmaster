@@ -28,8 +28,7 @@ fn process_line(history: &mut History, line: String) -> bool {
         "quit" => {
             send_message(Message::Quit);
             return false;
-
-        },
+        }
         _ => {
             println!("Invalid command: {}", line);
         }
@@ -38,20 +37,17 @@ fn process_line(history: &mut History, line: String) -> bool {
     true
 }
 
-fn print_help() -> () {
+fn print_help() {
     println!("Help is on the way...");
 }
 
-pub fn start_client() {
+pub fn start() {
     if let Ok(_) = UnixStream::connect("/tmp/taskmaster.sock") {
         let mut history = History::new();
 
         loop {
             match Editor::default().readline(&mut history) {
-                Ok(line) => {
-                    if process_line(&mut history, line) == false {
-                    }
-                }
+                Ok(line) => if process_line(&mut history, line) == false {},
                 Err(e) if e.kind() == ErrorKind::Interrupted => break,
                 Err(_) => break,
             }
