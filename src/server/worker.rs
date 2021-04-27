@@ -41,11 +41,10 @@ fn monitor(m: Arc<Mutex<Vec<Child>>>, sender: Sender<Action>) {
                 println!("Finished!");
                 sender.send(Action::Finished).unwrap();
                 break;
-            } else {
-                drop(jobs);
-                println!("Went to sleep");
-                thread::sleep(delay);
             }
+            drop(jobs);
+            println!("Went to sleep");
+            thread::sleep(delay);
         }
     });
 }
@@ -65,12 +64,12 @@ pub fn run(task: Task, sender: Sender<Action>, receiver: Receiver<Action>) {
                         vec.iter_mut().for_each(|child| child.kill().unwrap());
                         vec.clear();
                         *vec = task.run();
-                    },
+                    }
                     Action::Stop => {
                         let mut vec = m.lock().unwrap();
                         vec.iter_mut().for_each(|child| child.kill().unwrap());
                         break;
-                    },
+                    }
                     Action::Finished => break,
                 }
             }
