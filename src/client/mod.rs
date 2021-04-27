@@ -9,7 +9,7 @@ use crate::server::Message;
 use self::{editor::Editor, history::History};
 use std::os::unix::net::UnixStream;
 
-fn send_message(msg: Message) {
+fn send_message(msg: &Message) {
     let mut stream = UnixStream::connect("/tmp/taskmaster.sock").unwrap();
     let serialized = serde_json::to_string(&msg).unwrap();
 
@@ -22,11 +22,11 @@ fn send_message(msg: Message) {
 
 fn process_line(history: &mut History, line: String) -> bool {
     match line.as_ref() {
-        "list" => send_message(Message::List),
+        "list" => send_message(&Message::List),
         "history" => history.print(),
         "help" => print_help(),
         "quit" => {
-            send_message(Message::Quit);
+            send_message(&Message::Quit);
             return false;
         }
         _ => {
