@@ -49,10 +49,9 @@ impl TryFrom<&Watcher> for ConfigFile {
             Ok(c) => c,
             Err(e) => return Err(error::Taskmaster::ReadFile(e)),
         };
-        let parsed = match toml::from_str(&content) {
+        match toml::from_str(&content) {
             Ok(c) => Ok(c),
             Err(e) => Err(error::Taskmaster::Parse(e)),
-        };
-        parsed
+        }
     }
 }
