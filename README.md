@@ -76,6 +76,7 @@ To run this project, clone the repository and build it with `Cargo`.
 
 - [Rust book](https://doc.rust-lang.org/book/)
 - [Supervisord](http://supervisord.org/)
+- [Subject](https://cdn.intra.42.fr/pdf/pdf/13305/en.subject.pdf)
 
 ## Terms
 
