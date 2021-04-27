@@ -1,6 +1,5 @@
 use serde::Deserialize;
 use std::io::prelude::*;
-use std::fs;
 use std::os::unix::net::{UnixListener, UnixStream};
 use std::sync::mpsc::{channel, Sender};
 use std::thread;
@@ -25,7 +24,7 @@ impl Listener {
                 match stream {
                     Ok(stream) => {
                         let s = sender.clone();
-                        thread::spawn(move || process_message(stream, s));
+                        thread::spawn(move || process_message(stream, &s));
                     }
                     Err(err) => {
                         println!("Error: {}", err);
@@ -37,8 +36,7 @@ impl Listener {
     }
 }
 
-
-fn process_message(stream: UnixStream, sender: Sender<Communication>) {
+fn process_message(stream: UnixStream, sender: &Sender<Communication>) {
     println!("Ready to recieve.");
     let mut response = stream.try_clone().expect("Couldn't clone socket");
     let mut de = serde_json::Deserializer::from_reader(stream);
