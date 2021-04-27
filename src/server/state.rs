@@ -50,7 +50,7 @@ impl State {
                     //Replace in hashmap and relaunch
                 }
             } else {
-                if task.autostart == true {
+                if task.autostart {
                     watcher.send(Message::Start(task.name.clone()))
                 }
                 self.tasks.insert(task.name.clone(), task);
