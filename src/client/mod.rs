@@ -42,7 +42,7 @@ fn print_help() {
 }
 
 pub fn start() {
-    if let Ok(_) = UnixStream::connect("/tmp/taskmaster.sock") {
+    if UnixStream::connect("/tmp/taskmaster.sock").is_ok() {
         let mut history = History::new();
 
         loop {
