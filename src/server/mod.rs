@@ -43,7 +43,7 @@ pub fn start(config: &str) {
                 Message::Reload => state.reload(&watcher),
                 Message::Start(task) => state.start(&task),
                 Message::Stop(task) => state.stop(&task),
-                Message::List => state.list(com.channel.unwrap()),
+                Message::List => state.list(&com.channel.unwrap()),
                 Message::Status(_task) => {
                     unimplemented!();
                 }
