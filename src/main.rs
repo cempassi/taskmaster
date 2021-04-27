@@ -6,9 +6,9 @@ mod cli;
 mod client;
 mod server;
 
-use server::error::TaskmasterError;
+use server::error;
 
-type Result<T> = std::result::Result<T, TaskmasterError>;
+type Result<T> = std::result::Result<T, error::Taskmaster>;
 
 fn main() -> Result<()> {
     let cli = cli::generate();
@@ -21,7 +21,7 @@ fn main() -> Result<()> {
     } else if cli.subcommand_matches("client").is_some() {
         client::start();
     } else {
-        return Err(TaskmasterError::Cli);
+        return Err(error::Taskmaster::Cli);
     }
     Ok(())
 }

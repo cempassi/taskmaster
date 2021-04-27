@@ -5,7 +5,7 @@ use std::path::PathBuf;
 use std::process::{Child, Command};
 use std::vec::Vec;
 
-use super::{error::TaskmasterError, reader::ReadTask};
+use super::{error, reader::ReadTask};
 
 #[derive(Debug, Deserialize)]
 enum AutoRestart {
@@ -27,7 +27,7 @@ pub struct Task {
 }
 
 impl TryFrom<&ReadTask> for Task {
-    type Error = TaskmasterError;
+    type Error = error::Taskmaster;
 
     fn try_from(readtask: &ReadTask) -> Result<Self, Self::Error> {
         Ok(Self {
@@ -42,7 +42,6 @@ impl TryFrom<&ReadTask> for Task {
         })
     }
 }
-
 
 impl Task {
     pub fn run(&self) -> Vec<Child> {

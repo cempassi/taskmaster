@@ -1,9 +1,9 @@
 use serde::Deserialize;
-use std::fs;
-use std::fmt;
 use std::convert::TryFrom;
+use std::fmt;
+use std::fs;
 
-use super::error::TaskmasterError;
+use super::error;
 use super::watcher::Watcher;
 
 #[derive(Debug, Deserialize)]
@@ -42,16 +42,16 @@ impl fmt::Display for ReadTask {
 }
 
 impl TryFrom<&Watcher> for ConfigFile {
-    type Error = TaskmasterError;
+    type Error = error::Taskmaster;
 
-    fn try_from(watcher: &Watcher) -> Result<Self, TaskmasterError> {
+    fn try_from(watcher: &Watcher) -> Result<Self, error::Taskmaster> {
         let content: String = match fs::read_to_string(&watcher.path) {
             Ok(c) => c,
-            Err(e) => return Err(TaskmasterError::ReadFile(e)),
+            Err(e) => return Err(error::Taskmaster::ReadFile(e)),
         };
         let parsed = match toml::from_str(&content) {
             Ok(c) => Ok(c),
-            Err(e) => Err(TaskmasterError::Parse(e)),
+            Err(e) => Err(error::Taskmaster::Parse(e)),
         };
         parsed
     }

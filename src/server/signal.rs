@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use crate::error::TaskmasterError;
+use crate::error;
 
 #[derive(Debug)]
 pub enum Signal {
@@ -38,7 +38,7 @@ pub enum Signal {
 }
 
 impl FromStr for Signal {
-    type Err = TaskmasterError;
+    type Err = error::Taskmaster;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
@@ -73,7 +73,7 @@ impl FromStr for Signal {
             "INFO" => Ok(Signal::SIGINFO),
             "USR1" => Ok(Signal::SIGUSR1),
             "USR2" => Ok(Signal::SIGUSR2),
-            &_ => Err(TaskmasterError::Signal),
+            &_ => Err(error::Taskmaster::Signal),
         }
     }
 }
