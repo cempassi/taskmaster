@@ -75,7 +75,7 @@ impl State {
 
     pub fn list(&mut self, chan: &Sender<String>) {
         chan.send("\nAvailable jobs:\n".to_string()).unwrap();
-        for (_, task) in &self.tasks {
+        for task in self.tasks.values() {
             chan.send(format!("{}", task)).unwrap();
             chan.send("\n----------\n".to_string()).unwrap();
         }
