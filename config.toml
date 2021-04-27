@@ -1,7 +1,7 @@
 [[task]]
 name = "ls"
-cmd = "ls -l ~"
-autostart = false
+cmd = "ls -l /home/cempass"
+autostart = true
 numprocess = 1
 umask = 777
 workingdir = "/tmp"

@@ -24,17 +24,22 @@ fn process_line(history: &mut History, line: String) -> bool {
     match line.as_ref() {
         "list" => send_message(Message::List),
         "history" => history.print(),
+        "help" => print_help(),
         "quit" => {
             send_message(Message::Quit);
             return false;
 
         },
         _ => {
-            println!("Invalid command");
+            println!("Invalid command: {}", line);
         }
     }
     history.push(line);
     true
+}
+
+fn print_help() -> () {
+    println!("Help is on the way...");
 }
 
 pub fn start_client() {
@@ -44,9 +49,7 @@ pub fn start_client() {
         loop {
             match Editor::default().readline(&mut history) {
                 Ok(line) => {
-                    println!("Command: {}", line);
                     if process_line(&mut history, line) == false {
-                        break;
                     }
                 }
                 Err(e) if e.kind() == ErrorKind::Interrupted => break,
