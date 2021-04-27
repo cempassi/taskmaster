@@ -62,7 +62,7 @@ impl State {
         let task = Task::try_from(self.tasks.get(name).unwrap()).unwrap();
         let (sender, receiver) = channel::<Action>();
         self.workers.insert(name.to_string(), sender.clone());
-        worker::run(task, sender.clone(), receiver);
+        worker::run(task, sender, receiver);
     }
 
     pub fn stop(&mut self, name: &str) {
