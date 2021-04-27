@@ -53,7 +53,7 @@ impl Editor {
             display_prompt();
             display_line(&line);
             if let Err(error) = self.process_keypress(&mut line, history) {
-                die(error);
+                die(&error);
             }
             if self.should_quit {
                 return Err(Error::new(ErrorKind::Interrupted, "Interupted"));
@@ -96,6 +96,6 @@ fn display_prompt() {
     io::stdout().flush().unwrap();
 }
 
-fn die(e: std::io::Error) {
-    panic!(e);
+fn die(e: &std::io::Error) {
+    panic!("{}", e);
 }

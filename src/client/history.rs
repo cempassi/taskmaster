@@ -21,7 +21,7 @@ impl History {
         if direction > 0 {
             self.pos += direction as usize;
         } else {
-            self.pos -= (direction * -1) as usize;
+            self.pos -= (-direction) as usize;
         }
         if let Some(line) = self.queue.get(self.pos) {
             return Some(line.clone());
@@ -29,7 +29,7 @@ impl History {
         None
     }
 
-    pub fn print(&self) { 
+    pub fn print(&self) {
         self.queue.iter().for_each(|line| println!("{}", line));
     }
 }
