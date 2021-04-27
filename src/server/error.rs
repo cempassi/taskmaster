@@ -6,6 +6,7 @@ pub enum TaskmasterError {
     Io(std::io::Error),
     Parse(toml::de::Error),
     Signal,
+    Cli,
 }
 
 impl TaskmasterError {
@@ -15,6 +16,7 @@ impl TaskmasterError {
             TaskmasterError::Io(_) => "IO failure",
             TaskmasterError::Parse(_) => "Unable to parse config file",
             TaskmasterError::Signal => "Signal not handled",
+            TaskmasterError::Cli => "Error in the cli",
         }
     }
 }
@@ -36,12 +38,13 @@ impl error::Error for TaskmasterError {
             TaskmasterError::Io(ref e) => Some(e),
             TaskmasterError::Parse(ref e) => Some(e),
             TaskmasterError::Signal => None,
+            TaskmasterError::Cli => None,
         }
     }
 }
 
 impl From<std::io::Error> for TaskmasterError {
-    fn from(err: std::io::Error) -> TaskmasterError{
+    fn from(err: std::io::Error) -> TaskmasterError {
         TaskmasterError::Io(err)
     }
 }

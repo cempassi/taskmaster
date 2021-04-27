@@ -18,8 +18,10 @@ fn main() -> Result<()> {
 
         println!("Starting server");
         server::start(config);
-    } else {
+    } else if cli.subcommand_matches("client").is_some() {
         client::start();
+    } else {
+        return Err(TaskmasterError::Cli);
     }
     Ok(())
 }
