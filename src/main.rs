@@ -6,16 +6,14 @@ mod cli;
 mod client;
 mod server;
 
-use cli::generate_cli;
 use client::start_client;
-use server::start_server;
 use server::error::TaskmasterError;
-
+use server::start_server;
 
 type Result<T> = std::result::Result<T, TaskmasterError>;
 
 fn main() -> Result<()> {
-    let cli = generate_cli();
+    let cli = cli::generate();
 
     if let Some(matches) = cli.subcommand_matches("server") {
         let config = matches.value_of("config").unwrap();

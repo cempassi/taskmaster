@@ -1,6 +1,6 @@
 use clap::{App, Arg, ArgMatches, SubCommand};
 
-pub fn generate_cli() -> ArgMatches<'static> {
+pub fn generate() -> ArgMatches<'static> {
     App::new("Taskmaster")
         .version("0.1")
         .about("Unix process manager")
@@ -16,5 +16,6 @@ pub fn generate_cli() -> ArgMatches<'static> {
                         .required(true),
                 ),
         )
-        .subcommand(SubCommand::with_name("client").about("Launch client")).get_matches()
+        .subcommand(SubCommand::with_name("client").about("Launch client"))
+        .get_matches()
 }
