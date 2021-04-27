@@ -47,7 +47,7 @@ pub fn start() {
 
         loop {
             match Editor::default().readline(&mut history) {
-                Ok(line) => if process_line(&mut history, line) == false {},
+                Ok(line) => if !process_line(&mut history, line) {},
                 Err(e) if e.kind() == ErrorKind::Interrupted => break,
                 Err(_) => break,
             }
