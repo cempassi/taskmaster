@@ -52,7 +52,9 @@ impl Watcher {
                     }
                     Ok(metadata) => {
                         let mtime = metadata.modified().unwrap();
-                        if mtime != data.mtime {
+                        if mtime == data.mtime {
+                            println!("Nothing to be done");
+                        } else {
                             println!("Send signal to reload config");
                             data.mtime = mtime;
                             let com = Communication {
@@ -60,8 +62,6 @@ impl Watcher {
                                 channel: None,
                             };
                             sender.send(com).unwrap();
-                        } else {
-                            println!("Nothing to be done");
                         }
                     }
                 }
