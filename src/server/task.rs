@@ -32,7 +32,11 @@ impl TryFrom<&ReadTask> for Task {
     fn try_from(readtask: &ReadTask) -> Result<Self, Self::Error> {
         Ok(Self {
             name: readtask.name.clone(),
-            cmd: readtask.cmd.split(" ").map(|s| s.to_string()).collect(),
+            cmd: readtask
+                .cmd
+                .split(' ')
+                .map(std::string::ToString::to_string)
+                .collect(),
             numprocess: readtask.numprocess,
             autostart: readtask.autostart,
             umask: readtask.umask,
