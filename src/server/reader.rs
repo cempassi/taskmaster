@@ -18,9 +18,11 @@ pub struct ReadTask {
     pub autostart: Option<bool>,
     pub numprocess: Option<u32>,
     pub umask: Option<u16>,
+    pub workingdir: Option<String>,
+
     pub stopsignal: Option<String>,
     pub stopdelay: Option<u32>,
-    pub workingdir: Option<String>,
+
     pub stdout: Option<String>,
     pub stderr: Option<String>,
 }
