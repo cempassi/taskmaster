@@ -35,7 +35,7 @@ The following configurations are expected for each **task**:
 - Command to run
 - Number of **process** to spawn
 - Startup launch behaviour
-- Relaunch stratagy:
+- Relaunch strategy:
   1. Always
   1. Never
   1. When an unexpected error occured
