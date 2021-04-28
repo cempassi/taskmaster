@@ -28,7 +28,7 @@ impl fmt::Display for ReadTask {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "name: {}\nCommand: {}\nNumber of processes: {}\nAutostart: {}\nUmask: {}\nWorking Directory: {}\nStdour: {}, Stderr: {}",
+            "name: {}\nCommand: {}\nNumber of processes: {}\nAutostart: {}\nUmask: {}\nWorking Directory: {}\nStdout: {}, Stderr: {}",
             self.name,
             self.cmd,
             self.numprocess.unwrap_or(default::NUMPROCESS),
