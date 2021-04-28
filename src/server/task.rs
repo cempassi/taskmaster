@@ -29,6 +29,8 @@ pub struct Task {
 
     stopsignal: signal::Signal,
     stopdelay: u32,
+
+    retry: u32,
 }
 
 impl TryFrom<&ReadTask> for Task {
@@ -45,6 +47,8 @@ impl TryFrom<&ReadTask> for Task {
             numprocess: readtask.numprocess.unwrap_or(default::NUMPROCESS),
             autostart: readtask.autostart.unwrap_or(default::AUTOSTART),
             umask: readtask.umask.unwrap_or(default::UMASK),
+
+            retry: readtask.retry.unwrap_or(default::RETRY),
 
             stopsignal: signal::Signal::from_str(
                 &readtask

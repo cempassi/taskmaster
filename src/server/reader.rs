@@ -25,13 +25,15 @@ pub struct ReadTask {
 
     pub stdout: Option<String>,
     pub stderr: Option<String>,
+
+    pub retry: Option<u32>,
 }
 
 impl fmt::Display for ReadTask {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "name: {}\nCommand: {}\nNumber of processes: {}\nAutostart: {}\nUmask: {}\nWorking Directory: {}\nStdout: {}\nStderr: {}\nStop signal: {}\nStop delay: {}",
+            "name: {}\nCommand: {}\nNumber of processes: {}\nAutostart: {}\nUmask: {}\nWorking Directory: {}\nStdout: {}\nStderr: {}\nStop signal: {}\nStop delay: {}\nretry: {}",
             self.name,
             self.cmd,
             self.numprocess.unwrap_or(default::NUMPROCESS),
@@ -44,6 +46,8 @@ impl fmt::Display for ReadTask {
 
             self.stopsignal.as_ref().unwrap_or(&String::from(default::STOP_SIGNAL)),
             self.stopdelay.unwrap_or(default::STOP_DELAY),
+
+            self.retry.unwrap_or(default::RETRY),
         )
     }
 }
