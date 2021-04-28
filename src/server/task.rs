@@ -3,9 +3,10 @@ use std::convert::TryFrom;
 use std::fs::File;
 use std::path::PathBuf;
 use std::process::{Child, Command};
+use std::str::FromStr;
 use std::vec::Vec;
 
-use super::{error, reader::ReadTask};
+use super::{error, reader::ReadTask, signal};
 
 #[derive(Debug, Deserialize)]
 enum AutoRestart {
@@ -22,8 +23,12 @@ pub struct Task {
     autostart: bool,
     umask: i16,
     workingdir: PathBuf,
+
     stdout: PathBuf,
     stderr: PathBuf,
+
+    stopsignal: signal::Signal,
+    stopdelay: u32,
 }
 
 impl TryFrom<&ReadTask> for Task {
@@ -43,6 +48,9 @@ impl TryFrom<&ReadTask> for Task {
             workingdir: PathBuf::from(readtask.workingdir.as_str()),
             stdout: PathBuf::from(readtask.stdout.as_str()),
             stderr: PathBuf::from(readtask.stderr.as_str()),
+
+            stopsignal: signal::Signal::from_str(&readtask.stopsignal)?,
+            stopdelay: readtask.stopdelay,
         })
     }
 }

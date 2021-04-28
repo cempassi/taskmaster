@@ -2,7 +2,7 @@ use std::str::FromStr;
 
 use crate::error;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum Signal {
     SIGHUP,
     SIGINT,
