@@ -3,14 +3,6 @@
   "tasks": [
     {
       "type": "cargo",
-      "subcommand": "run",
-      "problemMatcher": [
-        "$rustc"
-      ],
-      "label": "Rust: cargo run - taskmaster"
-    },
-    {
-      "type": "cargo",
       "subcommand": "build",
       "problemMatcher": [
         "$rustc"
