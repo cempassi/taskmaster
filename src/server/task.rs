@@ -31,6 +31,8 @@ pub struct Task {
     stopdelay: u32,
 
     retry: u32,
+
+    successdelay: u32,
 }
 
 impl TryFrom<&ReadTask> for Task {
@@ -49,6 +51,8 @@ impl TryFrom<&ReadTask> for Task {
             umask: readtask.umask.unwrap_or(default::UMASK),
 
             retry: readtask.retry.unwrap_or(default::RETRY),
+
+            successdelay: readtask.successdelay.unwrap_or(default::SUCCESS_DELAY),
 
             stopsignal: signal::Signal::from_str(
                 &readtask
