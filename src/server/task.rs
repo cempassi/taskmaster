@@ -33,6 +33,8 @@ pub struct Task {
     retry: u32,
 
     successdelay: u32,
+
+    expected_exit_codes: Vec<i32>,
 }
 
 impl TryFrom<&ReadTask> for Task {
@@ -53,6 +55,12 @@ impl TryFrom<&ReadTask> for Task {
             retry: readtask.retry.unwrap_or(default::RETRY),
 
             successdelay: readtask.successdelay.unwrap_or(default::SUCCESS_DELAY),
+
+            expected_exit_codes: readtask
+                .exitcodes
+                .as_ref()
+                .unwrap_or(&default::EXPECTED_EXIT_CODES)
+                .clone(),
 
             stopsignal: signal::Signal::from_str(
                 &readtask
