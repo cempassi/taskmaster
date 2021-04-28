@@ -1,13 +1,13 @@
-const AUTOSTART: bool = false;
-const NUMPROCESS: u32 = 1;
-const UMASK: u16 = 0;
-const WORKDIR: String = String::from(".");
+pub const AUTOSTART: bool = false;
+pub const NUMPROCESS: u32 = 1;
+pub const UMASK: u16 = 0;
+pub const WORKDIR: &str = ".";
 // const RELAUNCH_MODE // TODO
-const RETRY: u32 = 0;
+pub const RETRY: u32 = 0;
 // const EXPECTED_EXIT_CODE // TODO
-const RUNNING_DELAY: u32 = 0;
-const STOP_SIGNAL: String = String::from("QUIT");
-const STOP_DELAY: u32 = 2;
-const STDOUT: String = String::from("/dev/null");
-const STDERR: String = String::from("/dev/null");
+pub const RUNNING_DELAY: u32 = 0;
+pub const STOP_SIGNAL: &str = "QUIT";
+pub const STOP_DELAY: u32 = 2;
+pub const STDOUT: &str = "/dev/null";
+pub const STDERR: &str = "/dev/null";
 // const ENV // TODO

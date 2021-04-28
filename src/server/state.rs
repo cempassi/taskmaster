@@ -6,6 +6,7 @@ use std::sync::mpsc::{channel, Sender};
 use super::worker;
 
 use super::{
+    default,
     reader::{ConfigFile, ReadTask},
     task::Task,
     watcher::Watcher,
@@ -37,6 +38,8 @@ impl State {
         let configfile: ConfigFile = ConfigFile::try_from(watcher).unwrap();
 
         for task in configfile.task {
+            println!("parsed task: {}", task);
+
             //Si la tache existe deja
             if let Some(t) = self.tasks.get(&task.name) {
                 //Si la tache a ete modifiee
@@ -50,7 +53,7 @@ impl State {
                     //Replace in hashmap and relaunch
                 }
             } else {
-                if task.autostart {
+                if task.autostart.unwrap_or(default::AUTOSTART) {
                     watcher.send(Message::Start(task.name.clone()))
                 }
                 self.tasks.insert(task.name.clone(), task);
