@@ -6,7 +6,7 @@ use std::process::{Child, Command};
 use std::str::FromStr;
 use std::vec::Vec;
 
-use super::{default, error, reader::ReadTask, signal};
+use super::{default, error, reader::ReadTask, relaunch::Relaunch, signal};
 
 #[derive(Debug, Deserialize)]
 enum AutoRestart {
@@ -35,6 +35,8 @@ pub struct Task {
     successdelay: u32,
 
     expected_exit_codes: Vec<i32>,
+
+    restart: Relaunch,
 }
 
 impl TryFrom<&ReadTask> for Task {
@@ -55,6 +57,12 @@ impl TryFrom<&ReadTask> for Task {
             retry: readtask.retry.unwrap_or(default::RETRY),
 
             successdelay: readtask.successdelay.unwrap_or(default::SUCCESS_DELAY),
+
+            restart: readtask
+                .restart
+                .as_ref()
+                .unwrap_or(&default::RELAUNCH_MODE)
+                .clone(),
 
             expected_exit_codes: readtask
                 .exitcodes

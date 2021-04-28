@@ -4,7 +4,7 @@ use std::fmt;
 use std::fs;
 
 use super::watcher::Watcher;
-use super::{default, error};
+use super::{default, error, relaunch::Relaunch};
 
 #[derive(Debug, Deserialize)]
 pub struct ConfigFile {
@@ -31,13 +31,15 @@ pub struct ReadTask {
     pub successdelay: Option<u32>,
 
     pub exitcodes: Option<Vec<i32>>,
+
+    pub restart: Option<Relaunch>,
 }
 
 impl fmt::Display for ReadTask {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "name: {}\nCommand: {}\nNumber of processes: {}\nAutostart: {}\nUmask: {}\nWorking Directory: {}\nStdout: {}\nStderr: {}\nStop signal: {}\nStop delay: {}\nretry: {}\nSuccess Delay: {}\nExit Codes: {:?}",
+            "name: {}\nCommand: {}\nNumber of processes: {}\nAutostart: {}\nUmask: {}\nWorking Directory: {}\nStdout: {}\nStderr: {}\nStop signal: {}\nStop delay: {}\nretry: {}\nSuccess Delay: {}\nExit Codes: {:?}\nRestart: {}",
             self.name,
             self.cmd,
             self.numprocess.unwrap_or(default::NUMPROCESS),
@@ -56,6 +58,8 @@ impl fmt::Display for ReadTask {
             self.successdelay.unwrap_or(default::SUCCESS_DELAY),
 
             self.exitcodes.as_ref().unwrap_or(&default::EXPECTED_EXIT_CODES),
+
+            self.restart.as_ref().unwrap_or(&default::RELAUNCH_MODE),
         )
     }
 }
