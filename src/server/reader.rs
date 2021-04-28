@@ -29,7 +29,7 @@ impl fmt::Display for ReadTask {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "name: {}\nCommand: {}\nNumber of processes: {}\nAutostart: {}\nUmask: {}\nWorking Directory: {}\nStdout: {}, Stderr: {}, Stop signal: {}, Stop delay: {}",
+            "name: {}\nCommand: {}\nNumber of processes: {}\nAutostart: {}\nUmask: {}\nWorking Directory: {}\nStdout: {}\nStderr: {}\nStop signal: {}\nStop delay: {}",
             self.name,
             self.cmd,
             self.numprocess.unwrap_or(default::NUMPROCESS),
@@ -40,8 +40,8 @@ impl fmt::Display for ReadTask {
             self.stdout.as_ref().unwrap_or(&String::from(default::STDOUT)),
             self.stderr.as_ref().unwrap_or(&String::from(default::STDERR)),
 
+            self.stopsignal.as_ref().unwrap_or(&String::from(default::STOP_SIGNAL)),
             self.stopdelay.unwrap_or(default::STOP_DELAY),
-            self.stopsignal.as_ref().unwrap_or(&String::from(default::STOP_SIGNAL))
         )
     }
 }
