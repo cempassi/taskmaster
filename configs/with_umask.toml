@@ -1,4 +1,4 @@
 [[task]]
 name = "foo"
 cmd = "echo foo"
-umask = "0o64"
+umask = 42 # value are in decimal not octal

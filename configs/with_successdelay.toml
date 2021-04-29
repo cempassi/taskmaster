@@ -1,4 +1,4 @@
 [[task]]
 name = "foo"
 cmd = "echo foo"
-succesdelay = 42
+successdelay = 42
