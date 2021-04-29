@@ -84,7 +84,7 @@ impl TryFrom<&Watcher> for ConfigFile {
             },
             Some("toml") => match toml::from_str(&content) {
                 Ok(c) => Ok(c),
-                Err(e) => Err(error::Taskmaster::Parse(e)),
+                Err(e) => Err(error::Taskmaster::ParseToml(e)),
             },
             _ => Err(error::Taskmaster::Cli),
         }

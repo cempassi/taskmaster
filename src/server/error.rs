@@ -4,7 +4,7 @@ use std::error;
 pub enum Taskmaster {
     ReadFile(std::io::Error),
     Io(std::io::Error),
-    Parse(toml::de::Error),
+    ParseToml(toml::de::Error),
     Signal,
     Cli,
 }
@@ -14,7 +14,7 @@ impl Taskmaster {
         match *self {
             Taskmaster::ReadFile(_) => "Unable to read file",
             Taskmaster::Io(_) => "IO failure",
-            Taskmaster::Parse(_) => "Unable to parse config file",
+            Taskmaster::ParseToml(_) => "Unable to parse config file",
             Taskmaster::Signal => "Signal not handled",
             Taskmaster::Cli => "Error in the cli",
         }
@@ -35,7 +35,7 @@ impl error::Error for Taskmaster {
     fn source(&self) -> Option<&(dyn error::Error + 'static)> {
         match *self {
             Taskmaster::ReadFile(ref e) | Taskmaster::Io(ref e) => Some(e),
-            Taskmaster::Parse(ref e) => Some(e),
+            Taskmaster::ParseToml(ref e) => Some(e),
             Taskmaster::Signal | Taskmaster::Cli => None,
         }
     }
