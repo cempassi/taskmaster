@@ -1,10 +1,9 @@
+use super::watcher::Watcher;
+use super::{default, error, relaunch::Relaunch};
 use serde::Deserialize;
 use std::convert::TryFrom;
 use std::fmt;
 use std::fs;
-
-use super::watcher::Watcher;
-use super::{default, error, relaunch::Relaunch};
 
 #[derive(Debug, Deserialize)]
 pub struct ConfigFile {
@@ -76,9 +75,18 @@ impl TryFrom<&Watcher> for ConfigFile {
             Ok(c) => c,
             Err(e) => return Err(error::Taskmaster::ReadFile(e)),
         };
-        match toml::from_str(&content) {
-            Ok(c) => Ok(c),
-            Err(e) => Err(error::Taskmaster::Parse(e)),
+        let ext = watcher.path.extension().and_then(std::ffi::OsStr::to_str);
+
+        match ext {
+            Some("yml") | Some("yaml") => match serde_yaml::from_str(&content) {
+                Ok(c) => Ok(c),
+                Err(e) => panic!("parsing yaml {}", e),
+            },
+            Some("toml") => match toml::from_str(&content) {
+                Ok(c) => Ok(c),
+                Err(e) => Err(error::Taskmaster::Parse(e)),
+            },
+            _ => Err(error::Taskmaster::Cli),
         }
     }
 }
