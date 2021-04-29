@@ -2,7 +2,7 @@ use super::relaunch::Relaunch;
 
 pub const AUTOSTART: bool = false;
 pub const NUMPROCESS: u32 = 1;
-pub const UMASK: u16 = 0;
+pub const UMASK: u32 = 0;
 pub const WORKDIR: &str = ".";
 pub const RELAUNCH_MODE: Relaunch = Relaunch::Never;
 pub const RETRY: u32 = 0;
