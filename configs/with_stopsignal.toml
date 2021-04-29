@@ -1,0 +1,4 @@
+[[task]]
+name = "foo"
+cmd = "echo foo"
+stopsignal = "CONT"

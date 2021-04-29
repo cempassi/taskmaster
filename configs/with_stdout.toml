@@ -1,0 +1,4 @@
+[[task]]
+name = "foo"
+cmd = "echo foo"
+stdout = "/tmp/foo.out"

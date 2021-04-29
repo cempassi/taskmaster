@@ -1,0 +1,14 @@
+[[task]]
+name = "foo always"
+cmd = "echo foo"
+restart = "always"
+
+[[task]]
+name = "foo never"
+cmd = "echo foo"
+restart = "never"
+
+[[task]]
+name = "foo on-error"
+cmd = "echo foo"
+restart = "on-error"

@@ -1,4 +1,4 @@
 [[task]]
 name = "foo"
 cmd = "echo foo"
-restart = "on-error"
+umask = "0o64"
