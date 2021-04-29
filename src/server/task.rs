@@ -17,7 +17,6 @@ enum AutoRestart {
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct Task {
-    pub name: String,
     cmd: Vec<String>,
     numprocess: u32,
     autostart: bool,
@@ -46,7 +45,6 @@ impl TryFrom<&ReadTask> for Task {
 
     fn try_from(readtask: &ReadTask) -> Result<Self, Self::Error> {
         Ok(Self {
-            name: readtask.name.clone(),
             cmd: readtask
                 .cmd
                 .split(' ')
