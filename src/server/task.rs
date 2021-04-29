@@ -5,7 +5,7 @@ use std::path::PathBuf;
 use std::process::{Child, Command};
 use std::vec::Vec;
 
-use super::{error, reader::ReadTask};
+use super::{default, error, reader::ReadTask};
 
 #[derive(Debug, Deserialize)]
 enum AutoRestart {
@@ -18,9 +18,9 @@ enum AutoRestart {
 pub struct Task {
     pub name: String,
     cmd: Vec<String>,
-    numprocess: i32,
+    numprocess: u32,
     autostart: bool,
-    umask: i16,
+    umask: u16,
     workingdir: PathBuf,
     stdout: PathBuf,
     stderr: PathBuf,
@@ -37,12 +37,30 @@ impl TryFrom<&ReadTask> for Task {
                 .split(' ')
                 .map(std::string::ToString::to_string)
                 .collect(),
-            numprocess: readtask.numprocess,
-            autostart: readtask.autostart,
-            umask: readtask.umask,
-            workingdir: PathBuf::from(readtask.workingdir.as_str()),
-            stdout: PathBuf::from(readtask.stdout.as_str()),
-            stderr: PathBuf::from(readtask.stderr.as_str()),
+            numprocess: readtask.numprocess.unwrap_or(default::NUMPROCESS),
+            autostart: readtask.autostart.unwrap_or(default::AUTOSTART),
+            umask: readtask.umask.unwrap_or(default::UMASK),
+            workingdir: PathBuf::from(
+                readtask
+                    .workingdir
+                    .as_ref()
+                    .unwrap_or(&String::from(default::WORKDIR))
+                    .as_str(),
+            ),
+            stdout: PathBuf::from(
+                readtask
+                    .stdout
+                    .as_ref()
+                    .unwrap_or(&String::from(default::STDOUT))
+                    .as_str(),
+            ),
+            stderr: PathBuf::from(
+                readtask
+                    .stderr
+                    .as_ref()
+                    .unwrap_or(&String::from(default::STDERR))
+                    .as_str(),
+            ),
         })
     }
 }
