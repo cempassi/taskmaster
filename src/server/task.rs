@@ -21,7 +21,7 @@ pub struct Task {
     cmd: Vec<String>,
     numprocess: u32,
     autostart: bool,
-    umask: u16,
+    umask: u32,
     workingdir: PathBuf,
 
     stdout: PathBuf,
