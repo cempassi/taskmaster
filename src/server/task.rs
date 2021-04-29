@@ -3,9 +3,10 @@ use std::convert::TryFrom;
 use std::fs::File;
 use std::path::PathBuf;
 use std::process::{Child, Command};
+use std::str::FromStr;
 use std::vec::Vec;
 
-use super::{default, error, reader::ReadTask};
+use super::{default, error, reader::ReadTask, relaunch::Relaunch, signal};
 
 #[derive(Debug, Deserialize)]
 enum AutoRestart {
@@ -22,8 +23,22 @@ pub struct Task {
     autostart: bool,
     umask: u16,
     workingdir: PathBuf,
+
     stdout: PathBuf,
     stderr: PathBuf,
+
+    stopsignal: signal::Signal,
+    stopdelay: u32,
+
+    retry: u32,
+
+    successdelay: u32,
+
+    expected_exit_codes: Vec<i32>,
+
+    restart: Relaunch,
+
+    env: Vec<String>,
 }
 
 impl TryFrom<&ReadTask> for Task {
@@ -40,6 +55,37 @@ impl TryFrom<&ReadTask> for Task {
             numprocess: readtask.numprocess.unwrap_or(default::NUMPROCESS),
             autostart: readtask.autostart.unwrap_or(default::AUTOSTART),
             umask: readtask.umask.unwrap_or(default::UMASK),
+
+            retry: readtask.retry.unwrap_or(default::RETRY),
+
+            successdelay: readtask.successdelay.unwrap_or(default::SUCCESS_DELAY),
+
+            env: readtask
+                .env
+                .as_ref()
+                .unwrap_or(&Vec::from(default::ENV))
+                .clone(),
+
+            restart: readtask
+                .restart
+                .as_ref()
+                .unwrap_or(&default::RELAUNCH_MODE)
+                .clone(),
+
+            expected_exit_codes: readtask
+                .exitcodes
+                .as_ref()
+                .unwrap_or(&Vec::from(default::EXPECTED_EXIT_CODES))
+                .clone(),
+
+            stopsignal: signal::Signal::from_str(
+                &readtask
+                    .stopsignal
+                    .as_ref()
+                    .unwrap_or(&String::from(default::STOP_SIGNAL)),
+            )?,
+            stopdelay: readtask.stopdelay.unwrap_or(default::STOP_DELAY),
+
             workingdir: PathBuf::from(
                 readtask
                     .workingdir
