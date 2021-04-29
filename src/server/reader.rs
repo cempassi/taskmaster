@@ -80,7 +80,7 @@ impl TryFrom<&Watcher> for ConfigFile {
         match ext {
             Some("yml") | Some("yaml") => match serde_yaml::from_str(&content) {
                 Ok(c) => Ok(c),
-                Err(e) => panic!("parsing yaml {}", e),
+                Err(e) => Err(error::Taskmaster::ParseYaml(e)),
             },
             Some("toml") => match toml::from_str(&content) {
                 Ok(c) => Ok(c),

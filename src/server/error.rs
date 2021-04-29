@@ -5,6 +5,7 @@ pub enum Taskmaster {
     ReadFile(std::io::Error),
     Io(std::io::Error),
     ParseToml(toml::de::Error),
+    ParseYaml(serde_yaml::Error),
     Signal,
     Cli,
 }
@@ -14,7 +15,8 @@ impl Taskmaster {
         match *self {
             Taskmaster::ReadFile(_) => "Unable to read file",
             Taskmaster::Io(_) => "IO failure",
-            Taskmaster::ParseToml(_) => "Unable to parse config file",
+            Taskmaster::ParseToml(_) => "Unable to parse config file in TOML format",
+            Taskmaster::ParseYaml(_) => "Unable to parse config file in YAML format",
             Taskmaster::Signal => "Signal not handled",
             Taskmaster::Cli => "Error in the cli",
         }
@@ -36,6 +38,7 @@ impl error::Error for Taskmaster {
         match *self {
             Taskmaster::ReadFile(ref e) | Taskmaster::Io(ref e) => Some(e),
             Taskmaster::ParseToml(ref e) => Some(e),
+            Taskmaster::ParseYaml(ref e) => Some(e),
             Taskmaster::Signal | Taskmaster::Cli => None,
         }
     }
