@@ -6,7 +6,7 @@ pub const WORKDIR: &str = ".";
 pub const RETRY: u32 = 0;
 // const EXPECTED_EXIT_CODE // TODO
 pub const RUNNING_DELAY: u32 = 0;
-pub const STOP_SIGNAL: &str = "QUIT";
+pub const STOP_SIGNAL: &str = "TERM";
 pub const STOP_DELAY: u32 = 2;
 pub const STDOUT: &str = "/dev/null";
 pub const STDERR: &str = "/dev/null";
