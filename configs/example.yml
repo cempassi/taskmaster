@@ -1,4 +1,4 @@
-task:
-  - name: foo
-    cmd: echo foo
-    umask: 0o722
+foo:
+  name: foo
+  cmd: echo foo
+  umask: 0o722

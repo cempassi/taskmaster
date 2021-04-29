@@ -37,26 +37,26 @@ impl State {
     pub fn reload(&mut self, watcher: &Watcher) {
         let configfile: ConfigFile = ConfigFile::try_from(watcher).unwrap();
 
-        for task in configfile.task {
-            println!("parsed task: {}", task);
+        for (name, task) in configfile {
+            println!("parsed task: {}\n{}", name, task);
 
             //Si la tache existe deja
-            if let Some(t) = self.tasks.get(&task.name) {
+            if let Some(t) = self.tasks.get(&name) {
                 //Si la tache a ete modifiee
                 if t != &task {
                     //Si la tache est deja en cours de lancement, la relancer, sinon
                     //simplement changer la configuration
-                    if let Some(w) = self.workers.get(&task.name) {
+                    if let Some(w) = self.workers.get(&name) {
                         w.send(Action::Reload(task.clone())).unwrap();
                     }
-                    self.tasks.insert(task.name.clone(), task);
+                    self.tasks.insert(name.clone(), task);
                     //Replace in hashmap and relaunch
                 }
             } else {
                 if task.autostart.unwrap_or(default::AUTOSTART) {
-                    watcher.send(Message::Start(task.name.clone()))
+                    watcher.send(Message::Start(name.clone()))
                 }
-                self.tasks.insert(task.name.clone(), task);
+                self.tasks.insert(name.clone(), task);
             }
         }
     }
