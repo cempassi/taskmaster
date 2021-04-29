@@ -4,7 +4,7 @@ use std::sync::mpsc::Sender;
 use std::thread;
 use std::time::{Duration, Instant, SystemTime};
 
-use super::error::TaskmasterError;
+use super::error;
 use super::{Communication, Message};
 
 #[derive(Clone)]
@@ -21,9 +21,9 @@ pub struct Watcher {
 }
 
 impl TryFrom<&str> for Watcher {
-    type Error = TaskmasterError;
+    type Error = error::Taskmaster;
 
-    fn try_from(p: &str) -> Result<Self, TaskmasterError> {
+    fn try_from(p: &str) -> Result<Self, error::Taskmaster> {
         let path = PathBuf::from(p);
 
         let watcher = Self {
@@ -52,7 +52,9 @@ impl Watcher {
                     }
                     Ok(metadata) => {
                         let mtime = metadata.modified().unwrap();
-                        if mtime != data.mtime {
+                        if mtime == data.mtime {
+                            println!("Nothing to be done");
+                        } else {
                             println!("Send signal to reload config");
                             data.mtime = mtime;
                             let com = Communication {
@@ -60,8 +62,6 @@ impl Watcher {
                                 channel: None,
                             };
                             sender.send(com).unwrap();
-                        } else {
-                            println!("Nothing to be done");
                         }
                     }
                 }

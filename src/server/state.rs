@@ -50,7 +50,7 @@ impl State {
                     //Replace in hashmap and relaunch
                 }
             } else {
-                if task.autostart == true {
+                if task.autostart {
                     watcher.send(Message::Start(task.name.clone()))
                 }
                 self.tasks.insert(task.name.clone(), task);
@@ -62,7 +62,7 @@ impl State {
         let task = Task::try_from(self.tasks.get(name).unwrap()).unwrap();
         let (sender, receiver) = channel::<Action>();
         self.workers.insert(name.to_string(), sender.clone());
-        worker::run(task, sender.clone(), receiver);
+        worker::run(task, sender, receiver);
     }
 
     pub fn stop(&mut self, name: &str) {
@@ -73,9 +73,9 @@ impl State {
         }
     }
 
-    pub fn list(&mut self, chan: Sender<String>) {
+    pub fn list(&mut self, chan: &Sender<String>) {
         chan.send("\nAvailable jobs:\n".to_string()).unwrap();
-        for (_, task) in &self.tasks {
+        for task in self.tasks.values() {
             chan.send(format!("{}", task)).unwrap();
             chan.send("\n----------\n".to_string()).unwrap();
         }

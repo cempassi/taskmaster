@@ -1,7 +1,7 @@
 use std::io::{self, stdout, Error, ErrorKind, Write};
 use termion::{event::Key, input::TermRead, raw::IntoRawMode};
 
-use super::history::History;
+use super::history::{Direction, History};
 
 pub struct Editor {
     should_quit: bool,
@@ -19,12 +19,12 @@ impl Editor {
         match pressed_key {
             Key::Char(c) if c == '\n' => self.newline = true,
             Key::Up if line.is_empty() => {
-                if let Some(cmd) = history.get(1) {
+                if let Some(cmd) = history.get(&Direction::Previous) {
                     *line = cmd;
                 }
             }
             Key::Down if line.is_empty() => {
-                if let Some(cmd) = history.get(-1) {
+                if let Some(cmd) = history.get(&Direction::Next) {
                     *line = cmd;
                 }
             }
@@ -53,7 +53,7 @@ impl Editor {
             display_prompt();
             display_line(&line);
             if let Err(error) = self.process_keypress(&mut line, history) {
-                die(error);
+                die(&error);
             }
             if self.should_quit {
                 return Err(Error::new(ErrorKind::Interrupted, "Interupted"));
@@ -96,6 +96,6 @@ fn display_prompt() {
     io::stdout().flush().unwrap();
 }
 
-fn die(e: std::io::Error) {
-    panic!(e);
+fn die(e: &std::io::Error) {
+    panic!("{}", e);
 }

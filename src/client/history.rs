@@ -5,6 +5,11 @@ pub struct History {
     pos: usize,
 }
 
+pub enum Direction {
+    Next,
+    Previous,
+}
+
 impl History {
     pub fn new() -> Self {
         History {
@@ -17,19 +22,18 @@ impl History {
         self.queue.push_back(command);
     }
 
-    pub fn get(&mut self, direction: i8) -> Option<String> {
-        if direction > 0 {
-            self.pos += direction as usize;
-        } else {
-            self.pos -= (direction * -1) as usize;
-        }
+    pub fn get(&mut self, direction: &Direction) -> Option<String> {
+        match direction {
+            Direction::Next => self.pos -= 1,
+            Direction::Previous => self.pos += 1,
+        };
         if let Some(line) = self.queue.get(self.pos) {
             return Some(line.clone());
         }
         None
     }
 
-    pub fn print(&self) { 
+    pub fn print(&self) {
         self.queue.iter().for_each(|line| println!("{}", line));
     }
 }

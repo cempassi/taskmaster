@@ -29,7 +29,7 @@ pub enum Message {
     Quit,
 }
 
-pub fn start_server(config: &str) {
+pub fn start(config: &str) {
     let (sender, receiver) = channel();
     let mut state = State::new();
     let mut watcher = Watcher::try_from(config).unwrap();
@@ -43,7 +43,7 @@ pub fn start_server(config: &str) {
                 Message::Reload => state.reload(&watcher),
                 Message::Start(task) => state.start(&task),
                 Message::Stop(task) => state.stop(&task),
-                Message::List => state.list(com.channel.unwrap()),
+                Message::List => state.list(&com.channel.unwrap()),
                 Message::Status(_task) => {
                     unimplemented!();
                 }

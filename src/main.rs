@@ -6,32 +6,22 @@ mod cli;
 mod client;
 mod server;
 
-use cli::generate_cli;
-use client::start_client;
-use server::start_server;
-use server::error::TaskmasterError;
+use server::error;
 
-
-type Result<T> = std::result::Result<T, TaskmasterError>;
+type Result<T> = std::result::Result<T, error::Taskmaster>;
 
 fn main() -> Result<()> {
-    let cli = generate_cli();
+    let cli = cli::generate();
 
     if let Some(matches) = cli.subcommand_matches("server") {
         let config = matches.value_of("config").unwrap();
 
         println!("Starting server");
-        start_server(config);
+        server::start(config);
+    } else if cli.subcommand_matches("client").is_some() {
+        client::start();
     } else {
-        start_client();
+        return Err(error::Taskmaster::Cli);
     }
     Ok(())
-}
-
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
-    }
 }
