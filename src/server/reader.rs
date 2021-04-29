@@ -16,7 +16,9 @@ pub struct ReadTask {
     pub cmd: String,
     pub autostart: Option<bool>,
     pub numprocess: Option<u32>,
+
     pub umask: Option<u32>,
+
     pub workingdir: Option<String>,
 
     pub stopsignal: Option<String>,
