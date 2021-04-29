@@ -33,13 +33,15 @@ pub struct ReadTask {
     pub exitcodes: Option<Vec<i32>>,
 
     pub restart: Option<Relaunch>,
+
+    pub env: Option<Vec<String>>,
 }
 
 impl fmt::Display for ReadTask {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "name: {}\nCommand: {}\nNumber of processes: {}\nAutostart: {}\nUmask: {}\nWorking Directory: {}\nStdout: {}\nStderr: {}\nStop signal: {}\nStop delay: {}\nretry: {}\nSuccess Delay: {}\nExit Codes: {:?}\nRestart: {}",
+            "name: {}\nCommand: {}\nNumber of processes: {}\nAutostart: {}\nUmask: {:#05o}\nWorking Directory: {}\nStdout: {}\nStderr: {}\nStop signal: {}\nStop delay: {}\nretry: {}\nSuccess Delay: {}\nExit Codes: {:?}\nRestart: {}\nEnv: {:?}",
             self.name,
             self.cmd,
             self.numprocess.unwrap_or(default::NUMPROCESS),
@@ -57,9 +59,11 @@ impl fmt::Display for ReadTask {
 
             self.successdelay.unwrap_or(default::SUCCESS_DELAY),
 
-            self.exitcodes.as_ref().unwrap_or(&default::EXPECTED_EXIT_CODES),
+            self.exitcodes.as_ref().unwrap_or(&Vec::from(default::EXPECTED_EXIT_CODES)),
 
             self.restart.as_ref().unwrap_or(&default::RELAUNCH_MODE),
+
+            self.env.as_ref().unwrap_or(&Vec::from(default::ENV)),
         )
     }
 }

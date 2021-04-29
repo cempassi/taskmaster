@@ -37,6 +37,8 @@ pub struct Task {
     expected_exit_codes: Vec<i32>,
 
     restart: Relaunch,
+
+    env: Vec<String>,
 }
 
 impl TryFrom<&ReadTask> for Task {
@@ -58,6 +60,12 @@ impl TryFrom<&ReadTask> for Task {
 
             successdelay: readtask.successdelay.unwrap_or(default::SUCCESS_DELAY),
 
+            env: readtask
+                .env
+                .as_ref()
+                .unwrap_or(&Vec::from(default::ENV))
+                .clone(),
+
             restart: readtask
                 .restart
                 .as_ref()
@@ -67,7 +75,7 @@ impl TryFrom<&ReadTask> for Task {
             expected_exit_codes: readtask
                 .exitcodes
                 .as_ref()
-                .unwrap_or(&default::EXPECTED_EXIT_CODES)
+                .unwrap_or(&Vec::from(default::EXPECTED_EXIT_CODES))
                 .clone(),
 
             stopsignal: signal::Signal::from_str(
