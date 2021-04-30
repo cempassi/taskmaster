@@ -26,15 +26,19 @@ impl TryFrom<&str> for Watcher {
     fn try_from(p: &str) -> Result<Self, error::Taskmaster> {
         let path = PathBuf::from(p);
 
-        let watcher = Self {
-            path,
-            sender: None,
-            data: PathData {
-                mtime: SystemTime::now(),
-                last_check: None,
-            },
-        };
-        Ok(watcher)
+        if path.exists() {
+            let watcher = Self {
+                path,
+                sender: None,
+                data: PathData {
+                    mtime: SystemTime::now(),
+                    last_check: None,
+                },
+            };
+            Ok(watcher)
+        } else {
+            Err(error::Taskmaster::InvalidConf)
+        }
     }
 }
 

@@ -8,6 +8,7 @@ pub enum Taskmaster {
     ParseYaml(serde_yaml::Error),
     Signal,
     Cli,
+    InvalidConf,
 }
 
 impl Taskmaster {
@@ -19,6 +20,7 @@ impl Taskmaster {
             Taskmaster::ParseYaml(_) => "Unable to parse config file in YAML format",
             Taskmaster::Signal => "Signal not handled",
             Taskmaster::Cli => "Error in the cli",
+            Taskmaster::InvalidConf => "Config file path is invald",
         }
     }
 }
@@ -39,7 +41,7 @@ impl error::Error for Taskmaster {
             Taskmaster::ReadFile(ref e) | Taskmaster::Io(ref e) => Some(e),
             Taskmaster::ParseToml(ref e) => Some(e),
             Taskmaster::ParseYaml(ref e) => Some(e),
-            Taskmaster::Signal | Taskmaster::Cli => None,
+            Taskmaster::Signal | Taskmaster::Cli | Taskmaster::InvalidConf => None,
         }
     }
 }
