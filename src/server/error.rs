@@ -9,6 +9,7 @@ pub enum Taskmaster {
     Signal,
     Cli,
     InvalidConf,
+    InvalidCmd,
 }
 
 impl Taskmaster {
@@ -21,6 +22,7 @@ impl Taskmaster {
             Taskmaster::Signal => "Signal not handled",
             Taskmaster::Cli => "Error in the cli",
             Taskmaster::InvalidConf => "Config file path is invald",
+            Taskmaster::InvalidCmd => "Invalid Command",
         }
     }
 }
@@ -41,7 +43,10 @@ impl error::Error for Taskmaster {
             Taskmaster::ReadFile(ref e) | Taskmaster::Io(ref e) => Some(e),
             Taskmaster::ParseToml(ref e) => Some(e),
             Taskmaster::ParseYaml(ref e) => Some(e),
-            Taskmaster::Signal | Taskmaster::Cli | Taskmaster::InvalidConf => None,
+            Taskmaster::Signal
+            | Taskmaster::Cli
+            | Taskmaster::InvalidConf
+            | Taskmaster::InvalidCmd => None,
         }
     }
 }

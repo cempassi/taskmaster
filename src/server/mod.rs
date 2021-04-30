@@ -52,6 +52,9 @@ pub fn start(config: &str) -> Result<(), error::Taskmaster> {
             log::info!("received message: {:?}", com.message);
             match com.message {
                 Message::Reload => state.reload(&watcher),
+                Message::Start(task) if com.channel.is_some() => {
+                    state.start(&task);
+                }
                 Message::Start(task) => state.start(&task),
                 Message::Stop(task) => state.stop(&task),
                 Message::List => state.list(&com.channel.unwrap()),
