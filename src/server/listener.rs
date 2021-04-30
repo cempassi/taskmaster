@@ -3,6 +3,7 @@ use std::io::prelude::*;
 use std::os::unix::net::{UnixListener, UnixStream};
 use std::sync::mpsc::{channel, Sender};
 use std::thread;
+use std::fs;
 
 use super::{Communication, Message};
 
@@ -33,6 +34,12 @@ impl Listener {
                 }
             }
         });
+    }
+}
+
+impl Drop for Listener {
+    fn drop(&mut self){
+        fs::remove_file("/tmp/taskmaster.sock").unwrap();
     }
 }
 
