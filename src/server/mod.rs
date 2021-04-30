@@ -22,6 +22,12 @@ pub struct Communication {
     channel: Option<Sender<String>>,
 }
 
+impl Communication {
+    pub fn new(message: Message, channel: Option<Sender<String>>) -> Communication {
+        Communication { message, channel }
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 pub enum Message {
     Reload,
@@ -32,14 +38,15 @@ pub enum Message {
     Quit,
 }
 
-pub fn start(config: &str) {
+pub fn start(config: &str) -> Result<(), error::Taskmaster> {
     let (sender, receiver) = channel();
     let mut state = State::new();
     let mut watcher = Watcher::try_from(config).unwrap();
     let mut listener = Listener::new();
 
     listener.run(sender.clone());
-    watcher.run(sender);
+    watcher.run(sender.clone());
+    signal::handle_signals(sender)?;
     loop {
         if let Ok(com) = receiver.recv() {
             match com.message {
@@ -54,4 +61,5 @@ pub fn start(config: &str) {
             };
         };
     }
+    Ok(())
 }
