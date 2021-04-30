@@ -1,4 +1,4 @@
-[[task]]
+[foo]
 name = "foo"
 cmd = "echo foo"
 env = [ "FOO=bar", "PATH=/bin:/usr/bin"]
