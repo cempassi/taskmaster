@@ -12,13 +12,15 @@ use server::error;
 
 type Result<T> = std::result::Result<T, error::Taskmaster>;
 
-static LOGGER: shared::logger::Simple = shared::logger::Simple { level: Level::Info };
+static LOGGER: shared::logger::Simple = shared::logger::Simple {
+    level: Level::Debug,
+};
 
 /// # Errors
 ///
 /// Will return `Err` when failing to initialise `LOGGER`
 pub fn init() -> std::result::Result<(), SetLoggerError> {
-    log::set_logger(&LOGGER).map(|()| log::set_max_level(LevelFilter::Info))
+    log::set_logger(&LOGGER).map(|()| log::set_max_level(LevelFilter::Debug))
 }
 
 fn main() -> Result<()> {
