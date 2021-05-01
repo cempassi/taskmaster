@@ -1,6 +1,7 @@
 use serde::Deserialize;
 use std::convert::TryFrom;
 use std::fs::File;
+use std::os::unix::process::CommandExt;
 use std::path::PathBuf;
 use std::process::{Child, Command};
 use std::str::FromStr;
@@ -114,9 +115,10 @@ impl TryFrom<&ReadTask> for Task {
 impl Task {
     pub fn run(&self) -> Vec<Child> {
         let mut jobs = Vec::new();
-        let mut command: Command = Command::new(&self.cmd[0]);
+        let mut command = Command::new(&self.cmd[0]);
         let stdout = File::create(self.stdout.as_path()).unwrap();
         let stderr = File::create(self.stderr.as_path()).unwrap();
+        self.setup_command(&mut command);
         if self.cmd.len() > 1 {
             command.args(&self.cmd[1..]);
         }
@@ -127,5 +129,17 @@ impl Task {
             jobs.push(command.spawn().expect("Couldn't run command!"));
         }
         jobs
+    }
+
+    fn setup_command(&self, command: &mut impl CommandExt) {
+        if self.umask != 0 {
+            let umask: u32 = self.umask;
+            unsafe {
+                command.pre_exec(move || {
+                    libc::umask(umask);
+                    Ok(())
+                });
+            }
+        }
     }
 }
