@@ -40,6 +40,8 @@ pub struct Task {
     restart: Relaunch,
 
     env: Vec<String>,
+    uid: Option<u32>,
+    gid: Option<u32>,
 }
 
 impl TryFrom<&ReadTask> for Task {
@@ -60,6 +62,9 @@ impl TryFrom<&ReadTask> for Task {
             retry: readtask.retry.unwrap_or(default::RETRY),
 
             successdelay: readtask.successdelay.unwrap_or(default::SUCCESS_DELAY),
+
+            uid: readtask.uid,
+            gid: readtask.gid,
 
             env: readtask
                 .env

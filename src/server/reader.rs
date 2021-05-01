@@ -36,13 +36,16 @@ pub struct ReadTask {
     pub restart: Option<Relaunch>,
 
     pub env: Option<Vec<String>>,
+
+    pub gid: Option<u32>,
+    pub uid: Option<u32>,
 }
 
 impl fmt::Display for ReadTask {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "name: {}\nCommand: {}\nNumber of processes: {}\nAutostart: {}\nUmask: {:#05o}\nWorking Directory: {}\nStdout: {}\nStderr: {}\nStop signal: {}\nStop delay: {}\nretry: {}\nSuccess Delay: {}\nExit Codes: {:?}\nRestart: {}\nEnv: {:?}",
+            "name: {}\nCommand: {}\nNumber of processes: {}\nAutostart: {}\nUmask: {:#05o}\nWorking Directory: {}\nStdout: {}\nStderr: {}\nStop signal: {}\nStop delay: {}\nretry: {}\nSuccess Delay: {}\nExit Codes: {:?}\nRestart: {}\nEnv: {:?}\npermission: uid: {:?}, gid: {:?}",
             self.name,
             self.cmd,
             self.numprocess.unwrap_or(default::NUMPROCESS),
@@ -65,6 +68,9 @@ impl fmt::Display for ReadTask {
             self.restart.as_ref().unwrap_or(&default::RELAUNCH_MODE),
 
             self.env.as_ref().unwrap_or(&Vec::from(default::ENV)),
+
+            self.uid,
+            self.gid,
         )
     }
 }
