@@ -1,0 +1,6 @@
+task:
+- name: "foo"
+  cmd: "test/bin/show_umask.py"
+  umask: 0o42
+  autostart: true
+  stdout: /dev/stdout

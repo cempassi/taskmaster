@@ -1,4 +1,0 @@
-[[task]]
-name = "foo"
-cmd = "echo foo"
-umask = 42 # value are in decimal not octal
