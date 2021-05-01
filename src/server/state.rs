@@ -44,9 +44,11 @@ impl State {
             if let Some(t) = self.tasks.get(&task.name) {
                 //Si la tache a ete modifiee
                 if t != &task {
+                    log::debug!("task {} as been changed", task.name.clone());
                     //Si la tache est deja en cours de lancement, la relancer, sinon
                     //simplement changer la configuration
                     if let Some(w) = self.workers.get(&task.name) {
+                        log::debug!("asking to reload running process for {}", task.name.clone());
                         w.send(Action::Reload(task.clone())).unwrap();
                     }
                     self.tasks.insert(task.name.clone(), task);
@@ -54,6 +56,7 @@ impl State {
                 }
             } else {
                 if task.autostart.unwrap_or(default::AUTOSTART) {
+                    log::debug!("asking to start {}", task.name.clone());
                     watcher.send(Message::Start(task.name.clone()))
                 }
                 self.tasks.insert(task.name.clone(), task);
@@ -74,7 +77,7 @@ impl State {
         if let Some(worker) = self.workers.get(name) {
             worker.send(Action::Stop).unwrap();
         } else {
-            log::debug!("task {} is not running", name);
+            log::warn!("task {} is not running", name);
         }
     }
 
