@@ -137,6 +137,12 @@ impl Task {
     }
 
     fn setup_command(&self, command: &mut impl CommandExt) {
+        if let Some(uid) = self.uid {
+            command.uid(uid);
+        }
+        if let Some(gid) = self.gid {
+            command.gid(gid);
+        }
         if self.umask != 0 {
             let umask: u32 = self.umask;
             unsafe {
