@@ -1,4 +1,3 @@
-use log::debug;
 use serde::{Deserialize, Serialize};
 use std::convert::TryFrom;
 use std::sync::mpsc::channel;
@@ -43,7 +42,7 @@ pub fn start(config: &str) {
     watcher.run(sender);
     loop {
         if let Ok(com) = receiver.recv() {
-            debug!("received message: {:?}", com.message);
+            log::info!("received message: {:?}", com.message);
             match com.message {
                 Message::Reload => state.reload(&watcher),
                 Message::Start(task) => state.start(&task),

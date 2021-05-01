@@ -5,7 +5,6 @@ use std::sync::mpsc::{channel, Sender};
 use std::thread;
 
 use super::{Communication, Message};
-use log::{debug, error, info};
 
 pub struct Listener {
     pub sock: UnixListener,
@@ -28,7 +27,7 @@ impl Listener {
                         thread::spawn(move || process_message(stream, &s));
                     }
                     Err(err) => {
-                        error!("{}", err);
+                        log::error!("{}", err);
                         break;
                     }
                 }
@@ -38,12 +37,12 @@ impl Listener {
 }
 
 fn process_message(stream: UnixStream, sender: &Sender<Communication>) {
-    info!("Ready to recieve.");
+    log::info!("Ready to recieve.");
     let mut response = stream.try_clone().expect("Couldn't clone socket");
     let mut de = serde_json::Deserializer::from_reader(stream);
 
     if let Ok(msg) = Message::deserialize(&mut de) {
-        debug!("Recieved {:?}", msg);
+        log::info!("Recieved {:?}", msg);
         let (snd, receiver) = channel();
         let com = Communication {
             message: msg,
@@ -54,5 +53,5 @@ fn process_message(stream: UnixStream, sender: &Sender<Communication>) {
             response.write_all(res.as_bytes()).unwrap();
         }
     }
-    info!("End of transmission.");
+    log::info!("End of transmission.");
 }

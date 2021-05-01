@@ -1,6 +1,5 @@
 use super::watcher::Watcher;
 use super::{default, error, relaunch::Relaunch};
-use log::debug;
 use serde::Deserialize;
 use std::convert::TryFrom;
 use std::fmt;
@@ -82,14 +81,14 @@ impl TryFrom<&Watcher> for ConfigFile {
 
         match ext {
             Some("yml") | Some("yaml") => {
-                debug!("try parsing in YAML format");
+                log::info!("try parsing in YAML format");
                 match serde_yaml::from_str(&content) {
                     Ok(c) => Ok(c),
                     Err(e) => Err(error::Taskmaster::ParseYaml(e)),
                 }
             }
             Some("toml") => {
-                debug!("try parsing in TOML format");
+                log::info!("try parsing in TOML format");
                 match toml::from_str(&content) {
                     Ok(c) => Ok(c),
                     Err(e) => Err(error::Taskmaster::ParseToml(e)),

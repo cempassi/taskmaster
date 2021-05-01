@@ -7,7 +7,7 @@ mod client;
 mod server;
 mod shared;
 
-use log::{error, info, Level, LevelFilter, SetLoggerError};
+use log::{Level, LevelFilter, SetLoggerError};
 use server::error;
 
 type Result<T> = std::result::Result<T, error::Taskmaster>;
@@ -28,13 +28,13 @@ fn main() -> Result<()> {
     if let Some(matches) = cli.subcommand_matches("server") {
         let config = matches.value_of("config").unwrap();
 
-        info!("starting server");
+        log::info!("starting server");
         server::start(config);
     } else if cli.subcommand_matches("client").is_some() {
-        info!("starting client");
+        log::info!("starting client");
         client::start();
     } else {
-        error!("unknown subcommand");
+        log::error!("unknown subcommand");
         return Err(error::Taskmaster::Cli);
     }
     Ok(())
