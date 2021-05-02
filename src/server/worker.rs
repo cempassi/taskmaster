@@ -17,33 +17,33 @@ fn monitor(m: Arc<Mutex<Vec<Child>>>, sender: Sender<Action>) {
     thread::spawn(move || {
         let delay: Duration = Duration::from_secs(10);
         let mut finished: Vec<u32> = Vec::new();
-        println!("Start monitoring");
+        log::debug!("Start monitoring");
         loop {
             let mut jobs = m.lock().unwrap();
 
             for child in &mut *jobs {
                 match child.try_wait() {
                     Ok(Some(status)) => {
-                        println!("Exited with status {}", status);
+                        log::debug!("Exited with status {}", status);
                         finished.push(child.id())
                     }
                     Ok(None) => {
-                        println!("Not finished yet!");
+                        log::debug!("Not finished yet!");
                     }
                     Err(_) => {
-                        println!("Something went wrong");
+                        log::debug!("Something went wrong");
                     }
                 }
             }
             jobs.retain(|child| finished.iter().any(|&done| done == child.id()));
             finished.clear();
             if jobs.is_empty() {
-                println!("Finished!");
+                log::debug!("Finished!");
                 sender.send(Action::Finished).unwrap();
                 break;
             }
             drop(jobs);
-            println!("Went to sleep");
+            log::debug!("Went to sleep");
             thread::sleep(delay);
         }
     });

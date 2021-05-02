@@ -48,14 +48,14 @@ impl Watcher {
             if path.is_file() {
                 match path.metadata() {
                     Err(_) => {
-                        println!("Can't Access metadata");
+                        log::error!("can't Access metadata");
                     }
                     Ok(metadata) => {
                         let mtime = metadata.modified().unwrap();
                         if mtime == data.mtime {
-                            println!("Nothing to be done");
+                            log::debug!("Nothing to be done");
                         } else {
-                            println!("Send signal to reload config");
+                            log::info!("ask to reload config");
                             data.mtime = mtime;
                             let com = Communication {
                                 message: Message::Reload,
@@ -66,7 +66,10 @@ impl Watcher {
                     }
                 }
             } else {
-                println!("File has been ereased");
+                log::error!(
+                    "{} is not a file / not exist",
+                    path.clone().into_os_string().into_string().unwrap()
+                );
             }
             thread::sleep(delay);
         });
