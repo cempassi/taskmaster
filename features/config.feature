@@ -7,7 +7,7 @@ Feature: testing loading configuration file with taskmaster
     Given the config file <File> in YAML
     When server is running
     Then it shouldn't have stopped
-    And he has read <N> tasks
+    And server has read <N> tasks
     And the tasks are named <Names>
 
     Examples:
@@ -18,8 +18,8 @@ Feature: testing loading configuration file with taskmaster
     Given the config file <File> in TOML
     When server is running
     Then it shouldn't have stopped
-    And he has read <N> tasks
-    And the task are named <Names>
+    And server has read <N> tasks
+    And the tasks are named <Names>
 
     Examples:
       | File         | N | Names                 |
