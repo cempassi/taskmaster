@@ -49,6 +49,7 @@ pub fn start(config: &str) -> Result<(), error::Taskmaster> {
     signal::handle_signals(sender)?;
     loop {
         if let Ok(com) = receiver.recv() {
+            log::info!("received message: {:?}", com.message);
             match com.message {
                 Message::Reload => state.reload(&watcher),
                 Message::Start(task) => state.start(&task),

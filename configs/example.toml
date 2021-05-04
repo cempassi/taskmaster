@@ -1,4 +1,4 @@
-[[task]]
+[ls]
 name = "ls"
 cmd = "ls -l /home/cempass"
 autostart = true
@@ -9,7 +9,7 @@ stdout = "/tmp/ls.out"
 stderr = "/tmp/ls.err"
 stopsignal = "TERM"
 
-[[task]]
+[ls-homer]
 name = "ls homer"
 cmd = "ls -l /Users/cempassi/Programming"
 autostart = false
@@ -20,7 +20,7 @@ stopsignal = "TERM"
 stdout = "/tmp/ls_home.out"
 stderr = "/tmp/ls_home.err"
 
-[[task]]
+[ls-test]
 name = "ls test"
 cmd = "ls -l /Users/cempassi/Programming"
 autostart = false
