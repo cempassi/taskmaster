@@ -17,5 +17,12 @@ pub fn generate() -> ArgMatches<'static> {
                 ),
         )
         .subcommand(SubCommand::with_name("client").about("Launch client"))
+        .arg(
+            Arg::with_name("verbose")
+                .long("verbose")
+                .takes_value(true)
+                .help("set verbose level")
+                .possible_values(&["trace", "debug", "info", "warn", "error"]),
+        )
         .get_matches()
 }
