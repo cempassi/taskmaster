@@ -1,7 +1,7 @@
 Feature: testing loading configuration file with taskmaster
 
   Background: Setting option for taskmaster server
-    Given the verbose level as DEBUG
+    Given the verbose level as debug
 
   Scenario Outline: Load valid yaml config file
     Given the config file <File> in YAML

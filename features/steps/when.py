@@ -17,12 +17,12 @@ def after_feature(ctx):
 def get_args(ctx: SimpleNamespace):
     l = log.getChild(get_args.__name__)
     args = ['taskmaster']
+    if ctx.verbose_level is not None:
+        args.extend(['--verbose', ctx.verbose_level])
     if ctx.subcommand is not None:
         args.extend(ctx.subcommand)
     if ctx.config_file is not None:
         args.extend(['--config', ctx.config_file])
-    if ctx.verbose_level is not None:
-        args.extend(['--verbose', ctx.verbose_level])
     return args
 
 
@@ -32,5 +32,5 @@ def run_server(ctx):
     ctx.subcommand = ['server']
     args = get_args(ctx)
     l.debug(f'args={args}')
-    popen = Popen(args, executable=TASKMASTER_PATH, stdout=PIPE, stderr=PIPE)
+    popen = Popen(args, executable=TASKMASTER_PATH, stdout=2, stderr=2)
     ctx.server = ServerProc(popen)
