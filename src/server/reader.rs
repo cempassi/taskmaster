@@ -80,15 +80,24 @@ impl TryFrom<&Watcher> for ConfigFile {
         let ext = watcher.path.extension().and_then(std::ffi::OsStr::to_str);
 
         match ext {
-            Some("yml") | Some("yaml") => match serde_yaml::from_str(&content) {
-                Ok(c) => Ok(c),
-                Err(e) => Err(error::Taskmaster::ParseYaml(e)),
-            },
-            Some("toml") => match toml::from_str(&content) {
-                Ok(c) => Ok(c),
-                Err(e) => Err(error::Taskmaster::ParseToml(e)),
-            },
-            _ => Err(error::Taskmaster::Cli),
+            Some("yml") | Some("yaml") => {
+                log::info!("try parsing in YAML format");
+                match serde_yaml::from_str(&content) {
+                    Ok(c) => Ok(c),
+                    Err(e) => Err(error::Taskmaster::ParseYaml(e)),
+                }
+            }
+            Some("toml") => {
+                log::info!("try parsing in TOML format");
+                match toml::from_str(&content) {
+                    Ok(c) => Ok(c),
+                    Err(e) => Err(error::Taskmaster::ParseToml(e)),
+                }
+            }
+            _ => {
+                log::error!("not handler for ext {:?}", ext);
+                Err(error::Taskmaster::Cli)
+            }
         }
     }
 }
