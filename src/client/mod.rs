@@ -38,7 +38,14 @@ fn process_line(history: &mut History, line: String) -> bool {
 }
 
 fn print_help() {
-    println!("Help is on the way...");
+    let s = r#"Usage:
+        start: start task
+        quit: quit the server
+        list: list all available tasks
+        history: display previous valid commands
+        help: show this help menu
+        "#;
+    print!("{}", s);
 }
 
 pub fn start() {
