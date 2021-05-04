@@ -93,13 +93,13 @@ pub fn handle_signals(sender: Sender<Communication>) -> Result<(), error::Taskma
         for sig in watching_signals.forever() {
             match sig {
                 SIGHUP => {
-                    println!("received SIGHUP, send Reload message");
+                    log::debug!("received SIGHUP, send Reload message");
                     sender
                         .send(Communication::new(Message::Reload, None))
                         .unwrap()
                 }
                 SIGINT => {
-                    println!("received SIGINT, sending Quit message");
+                    log::debug!("received SIGINT, sending Quit message");
                     sender
                         .send(Communication::new(Message::Quit, None))
                         .unwrap()
