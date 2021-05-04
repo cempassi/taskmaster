@@ -1,4 +1,3 @@
-[[task]]
-name = "foo"
+[foo]
 cmd = "echo foo"
 successdelay = 42

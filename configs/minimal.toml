@@ -1,3 +1,2 @@
-[[task]]
-name = "foo"
+[foo]
 cmd = "echo foo"

@@ -1,18 +1,15 @@
 use super::watcher::Watcher;
 use super::{default, error, relaunch::Relaunch};
 use serde::Deserialize;
+use std::collections::BTreeMap;
 use std::convert::TryFrom;
 use std::fmt;
 use std::fs;
 
-#[derive(Debug, Deserialize)]
-pub struct ConfigFile {
-    pub task: Vec<ReadTask>,
-}
+pub type ConfigFile = BTreeMap<String, ReadTask>;
 
 #[derive(Debug, Deserialize, Eq, PartialEq, Clone)]
 pub struct ReadTask {
-    pub name: String,
     pub cmd: String,
     pub autostart: Option<bool>,
     pub numprocess: Option<u32>,
@@ -42,8 +39,7 @@ impl fmt::Display for ReadTask {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "name: {}\nCommand: {}\nNumber of processes: {}\nAutostart: {}\nUmask: {:#05o}\nWorking Directory: {}\nStdout: {}\nStderr: {}\nStop signal: {}\nStop delay: {}\nretry: {}\nSuccess Delay: {}\nExit Codes: {:?}\nRestart: {}\nEnv: {:?}",
-            self.name,
+            "Command: {}\nNumber of processes: {}\nAutostart: {}\nUmask: {:#05o}\nWorking Directory: {}\nStdout: {}\nStderr: {}\nStop signal: {}\nStop delay: {}\nretry: {}\nSuccess Delay: {}\nExit Codes: {:?}\nRestart: {}\nEnv: {:?}",
             self.cmd,
             self.numprocess.unwrap_or(default::NUMPROCESS),
             self.autostart.unwrap_or(default::AUTOSTART),
@@ -80,15 +76,24 @@ impl TryFrom<&Watcher> for ConfigFile {
         let ext = watcher.path.extension().and_then(std::ffi::OsStr::to_str);
 
         match ext {
-            Some("yml") | Some("yaml") => match serde_yaml::from_str(&content) {
-                Ok(c) => Ok(c),
-                Err(e) => Err(error::Taskmaster::ParseYaml(e)),
-            },
-            Some("toml") => match toml::from_str(&content) {
-                Ok(c) => Ok(c),
-                Err(e) => Err(error::Taskmaster::ParseToml(e)),
-            },
-            _ => Err(error::Taskmaster::Cli),
+            Some("yml") | Some("yaml") => {
+                log::info!("try parsing in YAML format");
+                match serde_yaml::from_str(&content) {
+                    Ok(c) => Ok(c),
+                    Err(e) => Err(error::Taskmaster::ParseYaml(e)),
+                }
+            }
+            Some("toml") => {
+                log::info!("try parsing in TOML format");
+                match toml::from_str(&content) {
+                    Ok(c) => Ok(c),
+                    Err(e) => Err(error::Taskmaster::ParseToml(e)),
+                }
+            }
+            _ => {
+                log::error!("not handler for ext {:?}", ext);
+                Err(error::Taskmaster::Cli)
+            }
         }
     }
 }
