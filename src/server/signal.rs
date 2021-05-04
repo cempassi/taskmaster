@@ -104,7 +104,10 @@ pub fn handle_signals(sender: Sender<Communication>) -> Result<(), error::Taskma
                         .send(Communication::new(Message::Quit, None))
                         .unwrap()
                 }
-                _ => unreachable!(),
+                _ => {
+                    log::error!("unhandled signal value {}", sig);
+                    unreachable!()
+                }
             };
         }
     });
