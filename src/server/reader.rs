@@ -1,18 +1,15 @@
 use super::watcher::Watcher;
 use super::{default, error, relaunch::Relaunch};
 use serde::Deserialize;
+use std::collections::BTreeMap;
 use std::convert::TryFrom;
 use std::fmt;
 use std::fs;
 
-#[derive(Debug, Deserialize)]
-pub struct ConfigFile {
-    pub task: Vec<ReadTask>,
-}
+pub type ConfigFile = BTreeMap<String, ReadTask>;
 
 #[derive(Debug, Deserialize, Eq, PartialEq, Clone)]
 pub struct ReadTask {
-    pub name: String,
     pub cmd: String,
     pub autostart: Option<bool>,
     pub numprocess: Option<u32>,
@@ -42,8 +39,7 @@ impl fmt::Display for ReadTask {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "name: {}\nCommand: {}\nNumber of processes: {}\nAutostart: {}\nUmask: {:#05o}\nWorking Directory: {}\nStdout: {}\nStderr: {}\nStop signal: {}\nStop delay: {}\nretry: {}\nSuccess Delay: {}\nExit Codes: {:?}\nRestart: {}\nEnv: {:?}",
-            self.name,
+            "Command: {}\nNumber of processes: {}\nAutostart: {}\nUmask: {:#05o}\nWorking Directory: {}\nStdout: {}\nStderr: {}\nStop signal: {}\nStop delay: {}\nretry: {}\nSuccess Delay: {}\nExit Codes: {:?}\nRestart: {}\nEnv: {:?}",
             self.cmd,
             self.numprocess.unwrap_or(default::NUMPROCESS),
             self.autostart.unwrap_or(default::AUTOSTART),
