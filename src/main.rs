@@ -9,6 +9,7 @@ mod shared;
 
 use log::{Level, LevelFilter, SetLoggerError};
 use server::error;
+use std::str::FromStr;
 
 type Result<T> = std::result::Result<T, error::Taskmaster>;
 
@@ -19,13 +20,21 @@ static LOGGER: shared::logger::Simple = shared::logger::Simple {
 /// # Errors
 ///
 /// Will return `Err` when failing to initialise `LOGGER`
-pub fn init() -> std::result::Result<(), SetLoggerError> {
-    log::set_logger(&LOGGER).map(|()| log::set_max_level(LevelFilter::Debug))
+/// # Panics
+///
+/// Will panic if `level` is bad formated
+pub fn init(level: &str) -> std::result::Result<(), SetLoggerError> {
+    let converted_level = LevelFilter::from_str(level).unwrap();
+    let res = log::set_logger(&LOGGER).map(|()| log::set_max_level(converted_level));
+    log::info!("log level set to {}", level);
+
+    res
 }
 
 fn main() -> Result<()> {
-    init().unwrap();
     let cli = cli::generate();
+    let level = cli.value_of("verbose").unwrap();
+    init(level).unwrap();
 
     if let Some(matches) = cli.subcommand_matches("server") {
         let config = matches.value_of("config").unwrap();

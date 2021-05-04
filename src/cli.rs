@@ -20,7 +20,7 @@ pub fn generate() -> ArgMatches<'static> {
         .arg(
             Arg::with_name("verbose")
                 .long("verbose")
-                .default_value("info")
+                .default_value("debug")
                 .takes_value(true)
                 .help("set verbose level")
                 .possible_values(&["trace", "debug", "info", "warn", "error"]),
