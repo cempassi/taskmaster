@@ -17,3 +17,8 @@ def setup_verbose_level(ctx, level):
     l = log.getChild(setup_verbose_level.__name__)
     l.debug(f'level={level}')
     ctx.verbose_level = level
+
+
+@given("the client is running")
+def start_client(ctx):
+    pass

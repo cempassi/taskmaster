@@ -1,3 +1,4 @@
+from os import write
 from typing import List
 from behave import then, register_type, use_step_matcher
 from features.steps.lib.pattern import parse_int
@@ -28,4 +29,9 @@ def assert_process_is_running(ctx):
 def assert_task_names(ctx, task_names: List[str]):
     l = log.getChild(assert_task_names.__name__)
     l.debug(f'task_names={task_names}')
+    raise NotImplementedError
+
+
+@then('we read the help command output')
+def check_help_command_output(ctx):
     raise NotImplementedError
