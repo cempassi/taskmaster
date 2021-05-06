@@ -1,15 +1,15 @@
 from __future__ import annotations
+from features.steps.lib.utils import Namespace
 from features.steps.lib.taskmaster_utils import TASKMASTER_PATH, get_taskmaster_args
 from subprocess import PIPE, Popen
 import logging
-from types import SimpleNamespace
 from typing import List
 
 
 log = logging.getLogger('server_proc')
 
 
-def get_server_args(config: SimpleNamespace) -> List[str]:
+def get_server_args(config: Namespace) -> List[str]:
     l = log.getChild(get_server_args.__name__)
     args = get_taskmaster_args(config)
     args.append('server')
@@ -24,7 +24,7 @@ class ServerProc:
     log = log.getChild(__qualname__)  # type: ignore
 
     def __init__(self, config: str, verbose: str) -> None:
-        cfg = SimpleNamespace(configfile=config, verbose=verbose)
+        cfg = Namespace(configfile=config, verbose=verbose)
         self.args = get_server_args(cfg)
         self.proc = Popen(self.args, executable=TASKMASTER_PATH,
                           stdout=PIPE, stderr=PIPE)
