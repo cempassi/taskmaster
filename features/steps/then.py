@@ -16,12 +16,12 @@ def assert_tasks_read(ctx, task_to_read):
     raise NotImplementedError
 
 
-@then('it shouldn\'t have stopped')
+@then('server is still running')
 def assert_process_is_running(ctx):
     l = log.getChild(assert_process_is_running.__name__)
-    rc = ctx.server.is_running()
-    l.debug(f'rc={rc}')
-    assert rc == None
+    isrunning = ctx.server.is_running()
+    l.debug(f'isrunning={isrunning}')
+    assert isrunning
 
 
 @then('the tasks are named {task_names:String+}')

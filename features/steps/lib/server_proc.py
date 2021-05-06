@@ -30,7 +30,11 @@ class ServerProc:
                           stdout=PIPE, stderr=PIPE)
 
     def close(self):
-        pass
+        self.proc.terminate()
+        try:
+            self.proc.wait(timeout=2)
+        except TimeoutError:
+            self.proc.kill()
 
-    def is_running(self) -> int | None:
-        return self.proc.poll()
+    def is_running(self) -> bool:
+        return self.proc.poll() is None

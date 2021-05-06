@@ -6,7 +6,7 @@ Feature: testing loading configuration file with taskmaster
   Scenario Outline: Load valid yaml config file
     Given the config file <File> in YAML
     When server is running
-    Then it shouldn't have stopped
+    Then server is still running
     And server has read <N> tasks
     And the tasks are named <Names>
 
@@ -17,7 +17,7 @@ Feature: testing loading configuration file with taskmaster
   Scenario Outline: Load valid toml config file
     Given the config file <File> in TOML
     When server is running
-    Then it shouldn't have stopped
+    Then server is still running
     And server has read <N> tasks
     And the tasks are named <Names>
 
