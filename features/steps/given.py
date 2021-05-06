@@ -1,3 +1,4 @@
+from features.steps.lib.client_proc import ClientProc
 from behave import given
 import logging
 
@@ -21,4 +22,4 @@ def setup_verbose_level(ctx, level):
 
 @given("the client is running")
 def start_client(ctx):
-    pass
+    ctx.client = ClientProc()
