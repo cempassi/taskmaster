@@ -6,6 +6,7 @@ import logging
 log = logging.getLogger('taskmaster_utils')
 
 TASKMASTER_PATH = 'target/release/taskmaster'
+TASKMASTER_SOCK = '/tmp/taskmaster.sock'
 
 
 def get_taskmaster_args(config: SimpleNamespace) -> List[str]:

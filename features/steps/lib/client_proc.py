@@ -1,14 +1,14 @@
+from __future__ import annotations
+from os import SEEK_END, SEEK_SET
 from features.steps.lib.utils import Namespace
-from typing import List
 from features.steps.lib.taskmaster_utils import TASKMASTER_PATH, get_taskmaster_args
 import logging
 from subprocess import PIPE, Popen
-from types import SimpleNamespace
 
 log = logging.getLogger('client_proc')
 
 
-def get_client_args(config: Namespace) -> List[str]:
+def get_client_args(config: Namespace) -> list[str]:
     l = log.getChild(get_client_args.__name__)
     args = get_taskmaster_args(config)
     args.append('client')
@@ -19,11 +19,14 @@ def get_client_args(config: Namespace) -> List[str]:
 class ClientProc:
     log = log.getChild(__qualname__)  # type: ignore
 
-    def __init__(self) -> None:
+    def __init__(self) -> ClientProc:
         cfg = Namespace()
         self.args = get_client_args(cfg)
-        self.proc = Popen(self.args, executable=TASKMASTER_PATH,
+        self.proc = Popen(self.args, executable=TASKMASTER_PATH, stdin=PIPE,
                           stdout=PIPE, stderr=PIPE)
+
+    def __str__(self) -> str:
+        return ' '.join(self.args)
 
     def close(self):
         self.proc.terminate()
@@ -34,3 +37,24 @@ class ClientProc:
 
     def is_running(self) -> bool:
         return self.proc.poll() is None
+
+    def write(self, data: str) -> int:
+        return self.proc.stdin.write(data.encode())
+
+    def read_stdout(self) -> bytes:
+        return self.proc.stdout.read()
+
+    def readline_stdout(self, limit: int = -1) -> bytes:
+        return self.proc.stdout.readline(limit=limit)
+
+    def readlines_stdout(self, hint: int = -1) -> list[bytes]:
+        return self.proc.stdout.readlines(hint)
+
+    def seek_stdout(self, offset, whence=SEEK_SET) -> int:
+        return self.proc.stdout.seek(offset, whence)
+
+    def flush_stdout(self):
+        if self.proc.stdout.seekable():
+            self.seek_stdout(0, SEEK_END)
+        else:
+            self.readlines_stdout()

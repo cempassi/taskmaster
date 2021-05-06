@@ -18,9 +18,17 @@ def assert_tasks_read(ctx, task_to_read):
 
 
 @then('server is still running')
-def assert_process_is_running(ctx):
-    l = log.getChild(assert_process_is_running.__name__)
+def assert_server_running(ctx):
+    l = log.getChild(assert_server_running.__name__)
     isrunning = ctx.server.is_running()
+    l.debug(f'isrunning={isrunning}')
+    assert isrunning
+
+
+@then('client is still running')
+def assert_client_running(ctx):
+    l = log.getChild(assert_client_running.__name__)
+    isrunning = ctx.client.is_running()
     l.debug(f'isrunning={isrunning}')
     assert isrunning
 
@@ -34,4 +42,7 @@ def assert_task_names(ctx, task_names: List[str]):
 
 @then('we read the help command output')
 def check_help_command_output(ctx):
+    l = log.getChild(check_help_command_output.__name__)
+    lines = ctx.client.readlines_stdout()
+    l.debug(f'lines={lines}')
     raise NotImplementedError

@@ -3,13 +3,12 @@ from features.steps.lib.utils import Namespace
 from features.steps.lib.taskmaster_utils import TASKMASTER_PATH, get_taskmaster_args
 from subprocess import PIPE, Popen
 import logging
-from typing import List
 
 
 log = logging.getLogger('server_proc')
 
 
-def get_server_args(config: Namespace) -> List[str]:
+def get_server_args(config: Namespace) -> list[str]:
     l = log.getChild(get_server_args.__name__)
     args = get_taskmaster_args(config)
     args.append('server')
