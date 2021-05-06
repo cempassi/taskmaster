@@ -85,9 +85,9 @@ impl State {
     pub fn list(&mut self, chan: &Sender<String>) {
         log::debug!("setting list");
         chan.send("\nAvailable jobs:\n".to_string()).unwrap();
-        for task in self.tasks.values() {
-            chan.send(format!("{}", task)).unwrap();
-            chan.send("\n----------\n".to_string()).unwrap();
+        for (name, task) in &self.tasks {
+            chan.send(format!("Id: {}\n{}\n----------\n", name, task))
+                .unwrap();
         }
     }
 }
