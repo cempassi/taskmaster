@@ -1,5 +1,6 @@
 use super::watcher::Watcher;
 use super::{default, error, relaunch::Relaunch};
+use libc::{gid_t, mode_t, uid_t};
 use serde::Deserialize;
 use std::collections::BTreeMap;
 use std::convert::TryFrom;
@@ -14,7 +15,7 @@ pub struct ReadTask {
     pub autostart: Option<bool>,
     pub numprocess: Option<u32>,
 
-    pub umask: Option<u32>,
+    pub umask: Option<mode_t>,
 
     pub workingdir: Option<String>,
 
@@ -33,13 +34,16 @@ pub struct ReadTask {
     pub restart: Option<Relaunch>,
 
     pub env: Option<Vec<String>>,
+
+    pub gid: Option<gid_t>,
+    pub uid: Option<uid_t>,
 }
 
 impl fmt::Display for ReadTask {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "Command: {}\nNumber of processes: {}\nAutostart: {}\nUmask: {:#05o}\nWorking Directory: {}\nStdout: {}\nStderr: {}\nStop signal: {}\nStop delay: {}\nretry: {}\nSuccess Delay: {}\nExit Codes: {:?}\nRestart: {}\nEnv: {:?}",
+            "Command: {}\nNumber of processes: {}\nAutostart: {}\nUmask: {:#05o}\nWorking Directory: {}\nStdout: {}\nStderr: {}\nStop signal: {}\nStop delay: {}\nretry: {}\nSuccess Delay: {}\nExit Codes: {:?}\nRestart: {}\nEnv: {:?}\nPermission: uid: {:?}, gid: {:?}",
             self.cmd,
             self.numprocess.unwrap_or(default::NUMPROCESS),
             self.autostart.unwrap_or(default::AUTOSTART),
@@ -61,6 +65,9 @@ impl fmt::Display for ReadTask {
             self.restart.as_ref().unwrap_or(&default::RELAUNCH_MODE),
 
             self.env.as_ref().unwrap_or(&Vec::from(default::ENV)),
+
+            self.uid,
+            self.gid,
         )
     }
 }
