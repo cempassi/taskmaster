@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 use std::convert::TryFrom;
-use std::fs;
 use std::sync::mpsc::{channel, Sender};
 
 use super::worker;
@@ -18,12 +17,6 @@ use super::{
 pub struct State {
     pub tasks: HashMap<String, ReadTask>,
     pub workers: HashMap<String, Sender<Action>>,
-}
-
-impl Drop for State {
-    fn drop(&mut self) {
-        fs::remove_file("/tmp/taskmaster.sock").unwrap();
-    }
 }
 
 impl State {
