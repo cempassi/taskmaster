@@ -1,3 +1,4 @@
+from features.steps.lib.client_mock import ClientMock
 from os import SEEK_END
 from types import SimpleNamespace
 from behave import fixture, when
@@ -27,3 +28,9 @@ def flush_stdout(ctx):
     l = log.getChild(flush_stdout.__name__)
     l.debug('flush client stdout')
     ctx.client.flush_stdout()
+
+
+@when('we ask for tasks')
+def list_tasks(ctx):
+    mock = ClientMock()
+    ctx.read_tasks = mock.send_list()

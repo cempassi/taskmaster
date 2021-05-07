@@ -1,8 +1,9 @@
 from __future__ import annotations
 from enum import Enum
-from features.steps.lib.taskmaster_utils import connect_to_socket
+from features.steps.lib.taskmaster_utils import connect_to_socket, scan_tasks
 from json import dumps
 import logging
+from typing import Dict
 
 
 log = logging.getLogger('client_mock')
@@ -26,13 +27,17 @@ class ClientMock:
         self.log.debug(f'sending command: {command}')
         self.sock.send(command.encode())
 
-    def send_list(self):
+    def send_list(self) -> Dict[str, object]:
         """send list command to server"""
         command = dumps(str(ClientCommand.LIST))
         self.send_command(command)
+        return scan_tasks(self.readline(4096))
 
     def read_data(self, max_size: int) -> bytes:
         return self.sock.recv(max_size)
 
     def readlines(self, hint: int = -1) -> list[str]:
         return self.sock_file.readlines(hint)
+
+    def readline(self, size: int) -> str:
+        return self.read_data(size).decode()

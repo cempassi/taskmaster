@@ -1,6 +1,3 @@
-from features.steps.lib.client_mock import ClientMock
-from features.steps.lib.taskmaster_utils import connect_to_socket
-from os import write
 from typing import List
 from behave import then, register_type, use_step_matcher
 from features.steps.lib.pattern import parse_int
@@ -14,13 +11,10 @@ use_step_matcher('cfparse')
 
 @then('server has read {task_to_read:Int} tasks')
 def assert_tasks_read(ctx, task_to_read):
-    mock = ClientMock()
     l = log.getChild(assert_tasks_read.__name__)
     l.debug(f'task_to_read={task_to_read}')
-    mock.send_list()
-    data = mock.readlines(4096)
-    l.debug(f'data={data}')
-    raise NotImplementedError
+    l.debug(f'tasks={ctx.read_tasks}')
+    assert len(ctx.read_tasks.values()) == task_to_read
 
 
 @then('server is still running')
@@ -43,9 +37,12 @@ def assert_client_running(ctx):
 
 @then('the tasks are named {task_names:String+}')
 def assert_task_names(ctx, task_names: List[str]):
+    from asserts import assert_equal
     l = log.getChild(assert_task_names.__name__)
     l.debug(f'task_names={task_names}')
-    raise NotImplementedError
+    read_tasks_name = list(ctx.read_tasks.keys())
+    l.debug(f'read_tasks_name={read_tasks_name}')
+    assert_equal(sorted(task_names), sorted(read_tasks_name))
 
 
 @then('we read the help command output')
