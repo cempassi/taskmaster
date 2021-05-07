@@ -1,6 +1,6 @@
 use super::watcher::Watcher;
 use super::{default, error, relaunch::Relaunch};
-use libc::mode_t;
+use libc::{gid_t, mode_t, uid_t};
 use serde::Deserialize;
 use std::collections::BTreeMap;
 use std::convert::TryFrom;
@@ -35,8 +35,8 @@ pub struct ReadTask {
 
     pub env: Option<Vec<String>>,
 
-    pub gid: Option<u32>,
-    pub uid: Option<u32>,
+    pub gid: Option<gid_t>,
+    pub uid: Option<uid_t>,
 }
 
 impl fmt::Display for ReadTask {

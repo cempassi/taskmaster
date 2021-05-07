@@ -1,4 +1,4 @@
-use libc::mode_t;
+use libc::{gid_t, mode_t, uid_t};
 use serde::Deserialize;
 use std::convert::TryFrom;
 use std::fs::File;
@@ -40,8 +40,8 @@ pub struct Task {
     restart: Relaunch,
 
     env: Vec<String>,
-    uid: Option<u32>,
-    gid: Option<u32>,
+    uid: Option<uid_t>,
+    gid: Option<gid_t>,
 }
 
 impl TryFrom<&ReadTask> for Task {
