@@ -7,12 +7,13 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-toml = {version = "0.4.2"}
+toml = "0.4.2"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 serde_yaml = "0.8"
-clap = { version = "~2.27.0"}
+clap = "~2.27.0"
 termion = "1"
 regex = "1"
+signal-hook = "0.3.8"
 libc = "0.2.94"
 log = "0.4.14"

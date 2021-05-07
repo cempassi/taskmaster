@@ -31,7 +31,7 @@ fn main() -> Result<()> {
         let config = matches.value_of("config").unwrap();
 
         log::info!("starting server");
-        server::start(config);
+        server::start(config)?;
     } else if cli.subcommand_matches("client").is_some() {
         log::info!("starting client");
         client::start();
