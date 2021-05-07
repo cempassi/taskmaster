@@ -84,10 +84,12 @@ impl State {
 
     pub fn list(&mut self, chan: &Sender<String>) {
         log::debug!("listing list");
-        chan.send("\nAvailable jobs:\n".to_string()).unwrap();
-        for (name, task) in &self.tasks {
-            chan.send(format!("Id: {}\n{}\n----------\n", name, task))
-                .unwrap();
-        }
+        // chan.send("\nAvailable jobs:\n".to_string()).unwrap();
+        let data = serde_yaml::to_string(&self.tasks).unwrap();
+        chan.send(data).unwrap();
+        // for (name, task) in &self.tasks {
+        //     chan.send(format!("Id: {}\n{}\n----------\n", name, task))
+        //         .unwrap();
+        // }
     }
 }

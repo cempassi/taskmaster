@@ -1,7 +1,7 @@
 use super::watcher::Watcher;
 use super::{default, error, relaunch::Relaunch};
 use libc::{gid_t, mode_t, uid_t};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::convert::TryFrom;
 use std::fmt;
@@ -9,7 +9,7 @@ use std::fs;
 
 pub type ConfigFile = BTreeMap<String, ReadTask>;
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Clone)]
+#[derive(Debug, Deserialize, Serialize, Eq, PartialEq, Clone)]
 pub struct ReadTask {
     pub cmd: String,
     pub autostart: Option<bool>,

@@ -1,7 +1,7 @@
-use serde::{self, Deserialize};
+use serde::{self, Deserialize, Serialize};
 use std::fmt::{self, Display, Formatter};
 
-#[derive(Debug, Eq, Clone, PartialEq, Deserialize)]
+#[derive(Debug, Eq, Clone, PartialEq, Deserialize, Serialize)]
 pub enum Relaunch {
     #[serde(rename = "always")]
     Always,
