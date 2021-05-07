@@ -1,3 +1,5 @@
+from features.steps.lib.client_mock import ClientMock
+from features.steps.lib.taskmaster_utils import connect_to_socket
 from os import write
 from typing import List
 from behave import then, register_type, use_step_matcher
@@ -12,8 +14,12 @@ use_step_matcher('cfparse')
 
 @then('server has read {task_to_read:Int} tasks')
 def assert_tasks_read(ctx, task_to_read):
+    mock = ClientMock()
     l = log.getChild(assert_tasks_read.__name__)
     l.debug(f'task_to_read={task_to_read}')
+    mock.send_list()
+    data = mock.readlines(4096)
+    l.debug(f'data={data}')
     raise NotImplementedError
 
 
