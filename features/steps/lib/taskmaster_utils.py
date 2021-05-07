@@ -16,3 +16,10 @@ def get_taskmaster_args(config: SimpleNamespace) -> List[str]:
         args.extend(['--verbose', config.verbose])
     l.debug(f'args={args}')
     return args
+
+
+def connect_to_socket():
+    import socket
+    sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    sock.connect(TASKMASTER_SOCK)
+    return sock
