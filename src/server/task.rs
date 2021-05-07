@@ -1,6 +1,8 @@
+use libc::{gid_t, mode_t, uid_t};
 use serde::Deserialize;
 use std::convert::TryFrom;
 use std::fs::File;
+use std::os::unix::process::CommandExt;
 use std::path::PathBuf;
 use std::process::{Child, Command};
 use std::str::FromStr;
@@ -20,7 +22,7 @@ pub struct Task {
     cmd: Vec<String>,
     numprocess: u32,
     autostart: bool,
-    umask: u32,
+    umask: mode_t,
     workingdir: PathBuf,
 
     stdout: PathBuf,
@@ -38,6 +40,8 @@ pub struct Task {
     restart: Relaunch,
 
     env: Vec<String>,
+    uid: Option<uid_t>,
+    gid: Option<gid_t>,
 }
 
 impl TryFrom<&ReadTask> for Task {
@@ -57,6 +61,9 @@ impl TryFrom<&ReadTask> for Task {
             retry: readtask.retry.unwrap_or(default::RETRY),
 
             successdelay: readtask.successdelay.unwrap_or(default::SUCCESS_DELAY),
+
+            uid: readtask.uid,
+            gid: readtask.gid,
 
             env: readtask
                 .env
@@ -112,9 +119,10 @@ impl TryFrom<&ReadTask> for Task {
 impl Task {
     pub fn run(&self) -> Vec<Child> {
         let mut jobs = Vec::new();
-        let mut command: Command = Command::new(&self.cmd[0]);
+        let mut command = Command::new(&self.cmd[0]);
         let stdout = File::create(self.stdout.as_path()).unwrap();
         let stderr = File::create(self.stderr.as_path()).unwrap();
+        self.setup_command(&mut command);
         if self.cmd.len() > 1 {
             command.args(&self.cmd[1..]);
         }
@@ -125,5 +133,23 @@ impl Task {
             jobs.push(command.spawn().expect("Couldn't run command!"));
         }
         jobs
+    }
+
+    fn setup_command(&self, command: &mut impl CommandExt) {
+        if let Some(uid) = self.uid {
+            command.uid(uid);
+        }
+        if let Some(gid) = self.gid {
+            command.gid(gid);
+        }
+        if self.umask != 0 {
+            let umask: mode_t = self.umask;
+            unsafe {
+                command.pre_exec(move || {
+                    libc::umask(umask);
+                    Ok(())
+                });
+            }
+        }
     }
 }
