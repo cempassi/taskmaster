@@ -28,6 +28,8 @@ def assert_server_running(ctx):
 @then('client is still running')
 def assert_client_running(ctx):
     l = log.getChild(assert_client_running.__name__)
+    stderr_lines = ctx.client.readlines_stderr()
+    l.debug(f'err_lines={stderr_lines}')
     isrunning = ctx.client.is_running()
     l.debug(f'isrunning={isrunning}')
     assert isrunning

@@ -50,6 +50,9 @@ class ClientProc:
     def readlines_stdout(self, hint: int = -1) -> list[bytes]:
         return self.proc.stdout.readlines(hint)
 
+    def readlines_stderr(self, hint: int = -1) -> list[bytes]:
+        return self.proc.stderr.readlines(hint)
+
     def seek_stdout(self, offset, whence=SEEK_SET) -> int:
         return self.proc.stdout.seek(offset, whence)
 
@@ -57,4 +60,5 @@ class ClientProc:
         if self.proc.stdout.seekable():
             self.seek_stdout(0, SEEK_END)
         else:
-            self.readlines_stdout()
+            lines = self.readlines_stdout()
+            self.log.debug(f'skipped lines: {lines}')

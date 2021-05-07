@@ -9,5 +9,6 @@ Feature: Test Client with basic interaction
     When we skip current output
     And we write help
     # When we write help
-    Then client is still running
+    Then server is still running
+    And client is still running
     And we read the help command output
