@@ -1,0 +1,6 @@
+foo:
+  cmd: test/bin/show_uid_gid.py
+  uid: 42
+  gid: 42
+  stdout: /dev/stdout
+  autostart: true

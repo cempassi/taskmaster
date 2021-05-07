@@ -1,4 +1,4 @@
-use libc::mode_t;
+use libc::{gid_t, mode_t, uid_t};
 use serde::Deserialize;
 use std::convert::TryFrom;
 use std::fs::File;
@@ -40,6 +40,8 @@ pub struct Task {
     restart: Relaunch,
 
     env: Vec<String>,
+    uid: Option<uid_t>,
+    gid: Option<gid_t>,
 }
 
 impl TryFrom<&ReadTask> for Task {
@@ -59,6 +61,9 @@ impl TryFrom<&ReadTask> for Task {
             retry: readtask.retry.unwrap_or(default::RETRY),
 
             successdelay: readtask.successdelay.unwrap_or(default::SUCCESS_DELAY),
+
+            uid: readtask.uid,
+            gid: readtask.gid,
 
             env: readtask
                 .env
@@ -131,6 +136,12 @@ impl Task {
     }
 
     fn setup_command(&self, command: &mut impl CommandExt) {
+        if let Some(uid) = self.uid {
+            command.uid(uid);
+        }
+        if let Some(gid) = self.gid {
+            command.gid(gid);
+        }
         if self.umask != 0 {
             let umask: mode_t = self.umask;
             unsafe {
