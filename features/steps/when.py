@@ -8,11 +8,6 @@ import logging
 log = logging.getLogger('when')
 
 
-@fixture
-def after_feature(ctx):
-    log.warn('calling after feature')
-
-
 @when('server is running')
 def run_server(ctx):
     l = log.getChild(run_server.__name__)
