@@ -60,10 +60,14 @@ impl State {
 
     pub fn start(&mut self, name: &str) {
         log::debug!("starting task {}", name);
-        let task = Task::try_from(self.tasks.get(name).unwrap()).unwrap();
-        let (sender, receiver) = channel::<Action>();
-        self.workers.insert(name.to_string(), sender.clone());
-        worker::run(task, sender, receiver);
+        if let Some(t) = self.tasks.get(name) {
+            let task = Task::try_from(t).unwrap();
+            let (sender, receiver) = channel::<Action>();
+            self.workers.insert(name.to_string(), sender.clone());
+            worker::run(task, sender, receiver);
+        } else {
+            log::debug!("Task '{}' not found", name);
+        }
     }
 
     pub fn stop(&mut self, name: &str) {
