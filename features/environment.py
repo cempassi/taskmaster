@@ -10,10 +10,8 @@ log = logging.getLogger('environment')
 log.setLevel(logging.DEBUG)
 log.addHandler(handler)
 
-print('hello')
 
-
-@ fixture
+@fixture
 def clean_server(ctx):
     log.debug('stopping server')
     ctx.server.close()
