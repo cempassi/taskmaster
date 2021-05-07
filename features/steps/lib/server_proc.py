@@ -28,6 +28,9 @@ class ServerProc:
         self.proc = Popen(self.args, executable=TASKMASTER_PATH,
                           stdout=PIPE, stderr=PIPE)
 
+    def __str__(self) -> str:
+        return ' '.join(self.args)
+
     def close(self):
         self.proc.terminate()
         try:
