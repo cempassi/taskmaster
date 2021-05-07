@@ -4,7 +4,7 @@ Feature: testing loading configuration file with taskmaster
     Given the verbose level as debug
 
   Scenario Outline: Load valid yaml config file
-    Given the config file <File> in YAML
+    Given the config file configs/<File> in YAML
     When server is running
     Then server is still running
     And server has read <N> tasks
@@ -15,7 +15,7 @@ Feature: testing loading configuration file with taskmaster
       | example.yml | 3 | ls, ls homer, ls test |
 
   Scenario Outline: Load valid toml config file
-    Given the config file <File> in TOML
+    Given the config file configs/<File> in TOML
     When server is running
     Then server is still running
     And server has read <N> tasks
