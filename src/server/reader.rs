@@ -1,5 +1,6 @@
 use super::watcher::Watcher;
 use super::{default, error, relaunch::Relaunch};
+use libc::mode_t;
 use serde::Deserialize;
 use std::collections::BTreeMap;
 use std::convert::TryFrom;
@@ -14,7 +15,7 @@ pub struct ReadTask {
     pub autostart: Option<bool>,
     pub numprocess: Option<u32>,
 
-    pub umask: Option<u32>,
+    pub umask: Option<mode_t>,
 
     pub workingdir: Option<String>,
 

@@ -1,3 +1,4 @@
+use libc::mode_t;
 use serde::Deserialize;
 use std::convert::TryFrom;
 use std::fs::File;
@@ -21,7 +22,7 @@ pub struct Task {
     cmd: Vec<String>,
     numprocess: u32,
     autostart: bool,
-    umask: u32,
+    umask: mode_t,
     workingdir: PathBuf,
 
     stdout: PathBuf,
@@ -131,7 +132,7 @@ impl Task {
 
     fn setup_command(&self, command: &mut impl CommandExt) {
         if self.umask != 0 {
-            let umask: u32 = self.umask;
+            let umask: mode_t = self.umask;
             unsafe {
                 command.pre_exec(move || {
                     libc::umask(umask);
