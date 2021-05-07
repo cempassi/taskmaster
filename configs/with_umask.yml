@@ -1,5 +1,4 @@
-task:
-- name: "foo"
+foo:
   cmd: "test/bin/show_umask.py"
   umask: 0o42
   autostart: true
