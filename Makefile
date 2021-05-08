@@ -42,7 +42,7 @@ setup-testing-env: | $(VENV_DIR)
 	echo "Don't forget to load the virtual env ( source $(VENV_DIR)/bin/activate )"
 
 check: $(RELEASE_TM)
-	behave
+	. $(VENV_DIR)/bin/activate; behave
 
 clean: clean-dev clean-release
 re: re-dev re-release
