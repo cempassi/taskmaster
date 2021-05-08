@@ -7,16 +7,32 @@ DEP := $(addsuffix .d, $(TM))
 DEV_TM := $(addprefix $(DEV_DIR)/, $(TM))
 RELEASE_TM := $(addprefix $(RELEASE_DIR)/, $(TM))
 
-DEV_DEP := $(addprefix $(DEV_DIR)/, $(DEP))
-RELEASE_DEP := $(addprefix $(RELEASE_DIR)/, $(DEP))
+SOURCES_FILE := \
+	main.rs \
+	cli.rs \
+	server/relaunch.rs \
+	server/default.rs \
+	server/signal.rs \
+	server/worker.rs \
+	server/task.rs \
+	server/reader.rs \
+	server/error.rs \
+	server/mod.rs \
+	server/watcher.rs \
+	server/state.rs \
+	server/listener.rs \
+	client/editor.rs \
+	client/history.rs \
+	client/mod.rs \
+	shared/logger.rs \
+	shared/mod.rs \
+
+TASKMASTER_DEP := $(addprefix src/, $(SOURCES_FILE))
 
 VENV_DIR := venv
 
-include $(DEV_DEP)
-include $(RELEASE_DEP)
-
 .PHONY: all check clean clean-dev clean-release re re-dev re-release build-release setup-testing-env
-all: $(DEV_TM)
+all: $(DEV_TM) $(RELEASE_TM)
 
 build-release: $(RELEASE_TM)
 
@@ -45,9 +61,8 @@ re-release:
 	$(MAKE) clean-release
 	$(MAKE) $(RELEASE_TM)
 
-
-$(DEV_DEP) $(DEV_TM):
+$(DEV_TM): $(TASKMASTER_DEP)
 	cargo build
 
-$(RELEASE_DEP) $(RELEASE_TM):
+$(RELEASE_TM): $(TASKMASTER_DEP)
 	cargo build --release
