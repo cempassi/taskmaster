@@ -27,19 +27,6 @@ def start_client(ctx):
     ctx.client = ClientProc()
 
 
-@given("we remove previous unix socket")
-def remove_previous_unix(ctx):
-    import os
-    from features.steps.lib.taskmaster_utils import TASKMASTER_SOCK
-
-    l = log.getChild(remove_previous_unix.__name__)
-    try:
-        os.unlink(TASKMASTER_SOCK)
-        l.debug(f'{TASKMASTER_SOCK} deleted')
-    except FileNotFoundError:
-        l.debug(f'{TASKMASTER_SOCK} not exising, skipping')
-
-
 @given("server is running")
 def start_server(ctx):
     ctx.server = ServerProc('configs/example.yml', 'debug')

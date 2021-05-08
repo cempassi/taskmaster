@@ -2,7 +2,6 @@ Feature: testing loading configuration file with taskmaster
 
   Background: Setting option for taskmaster server
     Given the verbose level as debug
-    And we remove previous unix socket
 
   @fixture.clean_server
   Scenario Outline: Load valid yaml config file
