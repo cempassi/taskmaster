@@ -1,7 +1,9 @@
 from __future__ import annotations
+from os import stat
 from features.steps.lib.utils import Namespace
-from features.steps.lib.taskmaster_utils import TASKMASTER_PATH, get_taskmaster_args
-from subprocess import PIPE, Popen
+from features.steps.lib.taskmaster_utils import TASKMASTER_PATH, TASKMASTER_SOCK, get_taskmaster_args
+from subprocess import Popen, STDOUT
+from inotify.adapters import Inotify
 import logging
 
 
@@ -22,11 +24,32 @@ class ServerProc:
 
     log = log.getChild(__qualname__)  # type: ignore
 
+    @staticmethod
+    def prepare_to_wait() -> Inotify:
+        from os.path import dirname
+
+        i = Inotify()
+        i.add_watch(dirname(TASKMASTER_SOCK))
+        return i
+
+    @staticmethod
+    def wait_for_server_to_be_ready(watcher: Inotify):
+        from os.path import join
+        for event in watcher.event_gen(yield_nones=False):
+            (_, type_names, path, filename) = event
+            filepath = join(path, filename)
+            ServerProc.log.debug(
+                f'type_names={type_names}, path={path}, filename={filename}')
+            if filepath == TASKMASTER_SOCK and 'IN_CREATE' in type_names:
+                break
+
     def __init__(self, config: str, verbose: str) -> None:
         cfg = Namespace(configfile=config, verbose=verbose)
         self.args = get_server_args(cfg)
+        watch = ServerProc.prepare_to_wait()
         self.proc = Popen(self.args, executable=TASKMASTER_PATH,
-                          stdout=PIPE, stderr=PIPE)
+                          stdout=open('server.log', 'w'), stderr=STDOUT)
+        ServerProc.wait_for_server_to_be_ready(watch)
 
     def __str__(self) -> str:
         return ' '.join(self.args)
