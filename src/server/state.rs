@@ -66,7 +66,7 @@ impl State {
             let (send_status, receive_status) = channel::<Status>();
             self.workers
                 .insert(name.to_string(), (send_action, receive_status));
-            worker::run(task, send_status, receive_action);
+            worker::run(name, task, send_status, receive_action);
         } else {
             log::debug!("Task '{}' not found", name);
         }
@@ -96,8 +96,7 @@ impl State {
             .workers
             .get(taskname)
             .map_or(Status::NotStarted, |worker| {
-                worker.0.send(Action::Status).unwrap();
-                worker.1.recv().unwrap()
+                worker.1.try_recv().unwrap_or(Status::Running)
             });
         response
             .send(format!("status of {}: {}", taskname, status))
