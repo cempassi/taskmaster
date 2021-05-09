@@ -1,4 +1,25 @@
-foo:
-  name: foo
-  cmd: echo foo
-  umask: 0o722
+ls:
+  cmd: ls -l /home/cempass
+  autostart: true
+  numprocess: 1
+  umask: 777
+  workingdir: /tmp
+  stdout: /tmp/ls.out
+  stderr: /tmp/ls.err
+  stopsignal: TERM
+
+ls-homer:
+  cmd: ls -l /Users/cempassi/Programming
+  autostart: false
+  numprocess: 1
+  umask: 777
+  workingdir: /tmp
+  stopsignal: TERM
+  stdout: /tmp/ls_home.out
+  stderr: /tmp/ls_home.err
+
+wait:
+  cmd: sleep 10
+
+failing-wait:
+  cmd: sh -c "sleep 10; false"
