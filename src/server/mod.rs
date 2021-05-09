@@ -48,9 +48,7 @@ pub fn start(config: &str) -> Result<(), error::Taskmaster> {
                 Message::Start(task) => state.start(&task),
                 Message::Stop(task) => state.stop(&task),
                 Message::List => state.list(&com.channel.unwrap()),
-                Message::Status(_task) => {
-                    unimplemented!();
-                }
+                Message::Status(taskname) => state.status(&taskname),
                 Message::Quit => break,
             };
         };

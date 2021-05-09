@@ -87,4 +87,8 @@ impl State {
             chan.send("\n----------\n".to_string()).unwrap();
         }
     }
+
+    pub fn status(&mut self, taskname: &String) {
+        log::debug!("retrieving status of {}", taskname);
+    }
 }
