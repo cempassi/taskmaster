@@ -33,65 +33,67 @@ impl std::fmt::Display for Status {
     }
 }
 
-fn monitor(m: Arc<Mutex<Vec<Child>>>, sender: Sender<Status>) {
+fn monitor(m: Arc<(String, Mutex<Vec<Child>>)>, sender: Sender<Status>) {
     thread::spawn(move || {
         let delay: Duration = Duration::from_secs(10);
         let mut finished: Vec<u32> = Vec::new();
         log::debug!("Start monitoring");
         loop {
-            let mut jobs = m.lock().unwrap();
+            let mut jobs = m.1.lock().unwrap();
+            let name = &m.0;
 
             for child in &mut *jobs {
                 match child.try_wait() {
                     Ok(Some(status)) => {
-                        log::debug!("Exited with status {}", status);
+                        log::debug!("[{}] child exited with status {}", name, status);
                         finished.push(child.id())
                     }
                     Ok(None) => {
-                        log::debug!("Not finished yet!");
+                        log::debug!("[{}] Not finished yet!", name);
                     }
                     Err(_) => {
-                        log::debug!("Something went wrong");
+                        log::debug!("[{}] Something went wrong", name);
                     }
                 }
             }
-            jobs.retain(|child| finished.iter().any(|&done| done == child.id()));
+            jobs.retain(|child| !finished.iter().any(|&done| done == child.id()));
             finished.clear();
             if jobs.is_empty() {
-                log::debug!("Finished!");
+                log::debug!("[{}] Finished!", name);
                 sender.send(Status::Finished).unwrap();
                 break;
             }
             drop(jobs);
-            log::debug!("Went to sleep");
+            log::debug!("[{}] Went to sleep", name);
             thread::sleep(delay);
         }
     });
 }
 
-pub fn run(task: Task, sender: Sender<Status>, receiver: Receiver<Action>) {
+pub fn run(taskname: &str, task: Task, sender: Sender<Status>, receiver: Receiver<Action>) {
+    let taskid = String::from(taskname);
     thread::spawn(move || {
         let jobs = task.run();
 
-        let m = Arc::new(Mutex::new(jobs));
+        let m = Arc::new((taskid, Mutex::new(jobs)));
         monitor(m.clone(), sender.clone());
         loop {
             if let Ok(action) = receiver.try_recv() {
                 match action {
                     Action::Reload(t) => {
                         let task = Task::try_from(&t).unwrap();
-                        let mut vec = m.lock().unwrap();
+                        let mut vec = m.1.lock().unwrap();
                         vec.iter_mut().for_each(|child| child.kill().unwrap());
                         vec.clear();
                         *vec = task.run();
                     }
                     Action::Stop => {
-                        let mut vec = m.lock().unwrap();
+                        let mut vec = m.1.lock().unwrap();
                         vec.iter_mut().for_each(|child| child.kill().unwrap());
                         break;
                     }
                     Action::Status => {
-                        sender.send(Status::NotStarted).unwrap();
+                        sender.send(Status::Running).unwrap();
                     }
                 }
             }
