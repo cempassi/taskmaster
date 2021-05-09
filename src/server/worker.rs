@@ -14,6 +14,7 @@ pub enum Action {
 }
 
 // Status of the task
+#[derive(Copy, Clone)]
 pub enum Status {
     NotStarted,
     Running,
@@ -33,16 +34,36 @@ impl std::fmt::Display for Status {
     }
 }
 
-fn monitor(m: Arc<(String, Mutex<Vec<Child>>)>, sender: Sender<Status>) {
+struct MonitorTask {
+    name: String,
+    childs: Vec<Child>,
+    status: Status,
+}
+
+impl MonitorTask {
+    fn new(name: String, childs: Vec<Child>) -> Self {
+        MonitorTask {
+            name,
+            childs,
+            status: Status::Running,
+        }
+    }
+
+    fn sname(&self) -> String {
+        self.name.to_string()
+    }
+}
+
+fn monitor(m: Arc<Mutex<MonitorTask>>, _sender: &Sender<Status>) {
     thread::spawn(move || {
         let delay: Duration = Duration::from_secs(10);
         let mut finished: Vec<u32> = Vec::new();
         log::debug!("Start monitoring");
         loop {
-            let mut jobs = m.1.lock().unwrap();
-            let name = &m.0;
+            let mut mon = m.lock().unwrap();
+            let name = mon.sname();
 
-            for child in &mut *jobs {
+            for child in &mut mon.childs {
                 match child.try_wait() {
                     Ok(Some(status)) => {
                         log::debug!("[{}] child exited with status {}", name, status);
@@ -56,14 +77,15 @@ fn monitor(m: Arc<(String, Mutex<Vec<Child>>)>, sender: Sender<Status>) {
                     }
                 }
             }
-            jobs.retain(|child| !finished.iter().any(|&done| done == child.id()));
+            mon.childs
+                .retain(|child| !finished.iter().any(|&done| done == child.id()));
             finished.clear();
-            if jobs.is_empty() {
+            if mon.childs.is_empty() {
                 log::debug!("[{}] Finished!", name);
-                sender.send(Status::Finished).unwrap();
+                mon.status = Status::Finished;
                 break;
             }
-            drop(jobs);
+            drop(mon);
             log::debug!("[{}] Went to sleep", name);
             thread::sleep(delay);
         }
@@ -75,25 +97,30 @@ pub fn run(taskname: &str, task: Task, sender: Sender<Status>, receiver: Receive
     thread::spawn(move || {
         let jobs = task.run();
 
-        let m = Arc::new((taskid, Mutex::new(jobs)));
-        monitor(m.clone(), sender.clone());
+        let m = Arc::new(Mutex::new(MonitorTask::new(taskid, jobs)));
+        monitor(m.clone(), &sender);
         loop {
             if let Ok(action) = receiver.try_recv() {
                 match action {
                     Action::Reload(t) => {
                         let task = Task::try_from(&t).unwrap();
-                        let mut vec = m.1.lock().unwrap();
-                        vec.iter_mut().for_each(|child| child.kill().unwrap());
-                        vec.clear();
-                        *vec = task.run();
+                        let mut mon = m.lock().unwrap();
+                        mon.childs
+                            .iter_mut()
+                            .for_each(|child| child.kill().unwrap());
+                        mon.childs.clear();
+                        mon.childs = task.run();
                     }
                     Action::Stop => {
-                        let mut vec = m.1.lock().unwrap();
-                        vec.iter_mut().for_each(|child| child.kill().unwrap());
+                        let mut mon = m.lock().unwrap();
+                        mon.childs
+                            .iter_mut()
+                            .for_each(|child| child.kill().unwrap());
                         break;
                     }
                     Action::Status => {
-                        sender.send(Status::Running).unwrap();
+                        let mon = m.lock().unwrap();
+                        sender.send(mon.status).unwrap();
                     }
                 }
             }
