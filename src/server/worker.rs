@@ -2,7 +2,10 @@ use std::sync::mpsc::{Receiver, Sender};
 use std::sync::Mutex;
 use std::time::Duration;
 use std::{convert::TryFrom, sync::Arc};
-use std::{process::Child, thread};
+use std::{
+    process::{Child, ExitStatus},
+    thread,
+};
 
 use super::reader::ReadTask;
 use super::task::Task;
@@ -20,6 +23,7 @@ pub enum Status {
     Running,
     Failing,
     Finished,
+    Unknown,
 }
 
 impl std::fmt::Display for Status {
@@ -29,6 +33,7 @@ impl std::fmt::Display for Status {
             Status::Running => "running",
             Status::Failing => "failing",
             Status::Finished => "finished",
+            Status::Unknown => "unknown",
         };
         write!(f, "{}", name)
     }
@@ -37,6 +42,7 @@ impl std::fmt::Display for Status {
 struct MonitorTask {
     name: String,
     childs: Vec<Child>,
+    finished: Vec<(u32, ExitStatus)>,
     status: Status,
 }
 
@@ -45,29 +51,27 @@ impl MonitorTask {
         MonitorTask {
             name,
             childs,
+            finished: Vec::new(),
             status: Status::Running,
         }
-    }
-
-    fn sname(&self) -> String {
-        self.name.to_string()
     }
 }
 
 fn monitor(m: Arc<Mutex<MonitorTask>>, _sender: &Sender<Status>) {
     thread::spawn(move || {
         let delay: Duration = Duration::from_secs(10);
-        let mut finished: Vec<u32> = Vec::new();
+        // let mut finished: Vec<u32> = Vec::new();
         log::debug!("Start monitoring");
         loop {
             let mut mon = m.lock().unwrap();
-            let name = mon.sname();
+            let name = mon.name.to_string();
+            let mut finished = mon.finished.clone();
 
             for child in &mut mon.childs {
                 match child.try_wait() {
                     Ok(Some(status)) => {
                         log::debug!("[{}] child exited with status {}", name, status);
-                        finished.push(child.id())
+                        finished.push((child.id(), status))
                     }
                     Ok(None) => {
                         log::debug!("[{}] Not finished yet!", name);
@@ -78,8 +82,8 @@ fn monitor(m: Arc<Mutex<MonitorTask>>, _sender: &Sender<Status>) {
                 }
             }
             mon.childs
-                .retain(|child| !finished.iter().any(|&done| done == child.id()));
-            finished.clear();
+                .retain(|child| !finished.iter().any(|&(id, _st)| id == child.id()));
+            mon.finished = finished;
             if mon.childs.is_empty() {
                 log::debug!("[{}] Finished!", name);
                 mon.status = Status::Finished;
@@ -97,7 +101,7 @@ pub fn run(taskname: &str, task: Task, sender: Sender<Status>, receiver: Receive
     thread::spawn(move || {
         let jobs = task.run();
 
-        let m = Arc::new(Mutex::new(MonitorTask::new(taskid, jobs)));
+        let m = Arc::new(Mutex::new(MonitorTask::new(taskid.to_string(), jobs)));
         monitor(m.clone(), &sender);
         loop {
             if let Ok(action) = receiver.try_recv() {
@@ -120,7 +124,23 @@ pub fn run(taskname: &str, task: Task, sender: Sender<Status>, receiver: Receive
                     }
                     Action::Status => {
                         let mon = m.lock().unwrap();
-                        sender.send(mon.status).unwrap();
+
+                        log::debug!("[{}] current worker status: {}", taskid, mon.status);
+                        let st = match mon.status {
+                            Status::Finished => {
+                                if mon
+                                    .finished
+                                    .iter()
+                                    .any(|&(_id, status)| task.check_exit_status(status))
+                                {
+                                    Status::Failing
+                                } else {
+                                    Status::Finished
+                                }
+                            }
+                            _ => mon.status,
+                        };
+                        sender.send(st).unwrap();
                     }
                 }
             }
