@@ -152,4 +152,12 @@ impl Task {
             }
         }
     }
+
+    pub fn check_exit_status(&self, status: std::process::ExitStatus) -> bool {
+        status.code().map_or(false, |exitcode| {
+            self.expected_exit_codes
+                .iter()
+                .any(|&code| code != exitcode)
+        })
+    }
 }
