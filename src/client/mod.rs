@@ -37,12 +37,17 @@ fn process_line(history: &History, line: &str) -> Result<()> {
         "start" => {
             if vec.len() > 1 {
                 for taskname in vec.iter().skip(1) {
-                    let name = *taskname;
-                    send_message(&Message::Start(name.to_string()));
+                    send_message(&Message::Start((*taskname).to_string()));
                 }
             }
         }
-        "status" => {}
+        "status" => {
+            if vec.len() > 1 {
+                for taskname in vec.iter().skip(1) {
+                    send_message(&Message::Status((*taskname).to_string()));
+                }
+            }
+        }
         _ => {
             println!("Invalid command: {}", line);
             return Err(error::Taskmaster::InvalidCmd);
