@@ -92,8 +92,15 @@ impl State {
 
     pub fn status(&self, taskname: &str, response: &Sender<String>) {
         log::debug!("retrieving status of {}", taskname);
+        let status = self
+            .workers
+            .get(taskname)
+            .map_or(Status::NotStarted, |worker| {
+                worker.0.send(Action::Status).unwrap();
+                worker.1.recv().unwrap()
+            });
         response
-            .send(format!("status of {}: unkown", taskname))
+            .send(format!("status of {}: {}", taskname, status))
             .unwrap();
     }
 }

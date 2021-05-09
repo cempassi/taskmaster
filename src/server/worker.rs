@@ -9,6 +9,7 @@ use super::task::Task;
 
 pub enum Action {
     Reload(ReadTask),
+    Status,
     Stop,
 }
 
@@ -18,6 +19,18 @@ pub enum Status {
     Running,
     Failing,
     Finished,
+}
+
+impl std::fmt::Display for Status {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let name = match self {
+            Status::NotStarted => "not started",
+            Status::Running => "running",
+            Status::Failing => "failing",
+            Status::Finished => "finished",
+        };
+        write!(f, "{}", name)
+    }
 }
 
 fn monitor(m: Arc<Mutex<Vec<Child>>>, sender: Sender<Status>) {
@@ -61,7 +74,7 @@ pub fn run(task: Task, sender: Sender<Status>, receiver: Receiver<Action>) {
         let jobs = task.run();
 
         let m = Arc::new(Mutex::new(jobs));
-        monitor(m.clone(), sender);
+        monitor(m.clone(), sender.clone());
         loop {
             if let Ok(action) = receiver.try_recv() {
                 match action {
@@ -76,6 +89,9 @@ pub fn run(task: Task, sender: Sender<Status>, receiver: Receiver<Action>) {
                         let mut vec = m.lock().unwrap();
                         vec.iter_mut().for_each(|child| child.kill().unwrap());
                         break;
+                    }
+                    Action::Status => {
+                        sender.send(Status::NotStarted).unwrap();
                     }
                 }
             }
