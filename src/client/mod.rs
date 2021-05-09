@@ -5,7 +5,7 @@ mod editor;
 mod history;
 
 use crate::server::error;
-use crate::server::Message;
+use crate::shared::message::Message;
 
 use self::{editor::Editor, history::History};
 use std::os::unix::net::UnixStream;
@@ -42,6 +42,7 @@ fn process_line(history: &History, line: &str) -> Result<()> {
                 }
             }
         }
+        "status" => {}
         _ => {
             println!("Invalid command: {}", line);
             return Err(error::Taskmaster::InvalidCmd);

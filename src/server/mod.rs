@@ -1,4 +1,4 @@
-use serde::{Deserialize, Serialize};
+use crate::shared::message::Message;
 use std::convert::TryFrom;
 use std::sync::mpsc::channel;
 use std::sync::mpsc::Sender;
@@ -26,16 +26,6 @@ impl Communication {
     pub fn new(message: Message, channel: Option<Sender<String>>) -> Communication {
         Communication { message, channel }
     }
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub enum Message {
-    Reload,
-    Start(String),
-    Stop(String),
-    Status(String),
-    List,
-    Quit,
 }
 
 pub fn start(config: &str) -> Result<(), error::Taskmaster> {
