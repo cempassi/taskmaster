@@ -24,6 +24,7 @@ pub enum Status {
     Failing,
     Finished,
     Unknown,
+    Stopped,
 }
 
 impl std::fmt::Display for Status {
@@ -33,6 +34,7 @@ impl std::fmt::Display for Status {
             Status::Running => "running",
             Status::Failing => "failing",
             Status::Finished => "finished",
+            Status::Stopped => "stopped",
             Status::Unknown => "unknown",
         };
         write!(f, "{}", name)
@@ -120,6 +122,7 @@ pub fn run(taskname: &str, task: Task, sender: Sender<Status>, receiver: Receive
                         mon.childs
                             .iter_mut()
                             .for_each(|child| child.kill().unwrap());
+                        mon.status = Status::Stopped;
                         break;
                     }
                     Action::Status => {
