@@ -10,10 +10,17 @@ use super::task::Task;
 pub enum Action {
     Reload(ReadTask),
     Stop,
+}
+
+// Status of the task
+pub enum Status {
+    NotStarted,
+    Running,
+    Failing,
     Finished,
 }
 
-fn monitor(m: Arc<Mutex<Vec<Child>>>, sender: Sender<Action>) {
+fn monitor(m: Arc<Mutex<Vec<Child>>>, sender: Sender<Status>) {
     thread::spawn(move || {
         let delay: Duration = Duration::from_secs(10);
         let mut finished: Vec<u32> = Vec::new();
@@ -39,7 +46,7 @@ fn monitor(m: Arc<Mutex<Vec<Child>>>, sender: Sender<Action>) {
             finished.clear();
             if jobs.is_empty() {
                 log::debug!("Finished!");
-                sender.send(Action::Finished).unwrap();
+                sender.send(Status::Finished).unwrap();
                 break;
             }
             drop(jobs);
@@ -49,7 +56,7 @@ fn monitor(m: Arc<Mutex<Vec<Child>>>, sender: Sender<Action>) {
     });
 }
 
-pub fn run(task: Task, sender: Sender<Action>, receiver: Receiver<Action>) {
+pub fn run(task: Task, sender: Sender<Status>, receiver: Receiver<Action>) {
     thread::spawn(move || {
         let jobs = task.run();
 
@@ -70,7 +77,6 @@ pub fn run(task: Task, sender: Sender<Action>, receiver: Receiver<Action>) {
                         vec.iter_mut().for_each(|child| child.kill().unwrap());
                         break;
                     }
-                    Action::Finished => break,
                 }
             }
         }

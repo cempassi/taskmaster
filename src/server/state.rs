@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::convert::TryFrom;
-use std::sync::mpsc::{channel, Sender};
+use std::sync::mpsc::{channel, Receiver, Sender};
 
 use super::worker;
 
@@ -9,14 +9,14 @@ use super::{
     reader::{ConfigFile, ReadTask},
     task::Task,
     watcher::Watcher,
-    worker::Action,
+    worker::{Action, Status},
     Message,
 };
 
 #[derive(Debug)]
 pub struct State {
     pub tasks: HashMap<String, ReadTask>,
-    pub workers: HashMap<String, Sender<Action>>,
+    pub workers: HashMap<String, (Sender<Action>, Receiver<Status>)>,
 }
 
 impl State {
@@ -43,7 +43,7 @@ impl State {
 
                     if let Some(w) = self.workers.get(&name) {
                         log::debug!("asking to reload running process for {}", name.clone());
-                        w.send(Action::Reload(task.clone())).unwrap();
+                        w.0.send(Action::Reload(task.clone())).unwrap();
                     }
                     self.tasks.insert(name.clone(), task);
                     //Replace in hashmap and relaunch
@@ -62,9 +62,11 @@ impl State {
         log::debug!("starting task {}", name);
         if let Some(t) = self.tasks.get(name) {
             let task = Task::try_from(t).unwrap();
-            let (sender, receiver) = channel::<Action>();
-            self.workers.insert(name.to_string(), sender.clone());
-            worker::run(task, sender, receiver);
+            let (send_action, receive_action) = channel::<Action>();
+            let (send_status, receive_status) = channel::<Status>();
+            self.workers
+                .insert(name.to_string(), (send_action, receive_status));
+            worker::run(task, send_status, receive_action);
         } else {
             log::debug!("Task '{}' not found", name);
         }
@@ -73,7 +75,7 @@ impl State {
     pub fn stop(&mut self, name: &str) {
         log::debug!("stopping task {}", name);
         if let Some(worker) = self.workers.get(name) {
-            worker.send(Action::Stop).unwrap();
+            worker.0.send(Action::Stop).unwrap();
         } else {
             log::warn!("task {} is not running", name);
         }
