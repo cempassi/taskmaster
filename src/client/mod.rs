@@ -41,6 +41,13 @@ fn process_line(history: &History, line: &str) -> Result<()> {
                 }
             }
         }
+        "stop" => {
+            if vec.len() > 1 {
+                for taskname in vec.iter().skip(1) {
+                    send_message(&Message::Stop((*taskname).to_string()));
+                }
+            }
+        }
         "status" => {
             if vec.len() > 1 {
                 for taskname in vec.iter().skip(1) {
@@ -59,6 +66,7 @@ fn process_line(history: &History, line: &str) -> Result<()> {
 fn print_help() {
     let s = r#"Usage:
         start: start task
+        stop: stop task
         quit: quit the server
         list: list all available tasks
         history: display previous valid commands

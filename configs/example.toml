@@ -1,7 +1,7 @@
 [ls]
 name = "ls"
-cmd = "ls -l /home/cempass"
-autostart = true
+cmd = "ls -lR /"
+autostart = false
 numprocess = 1
 umask = 777
 workingdir = "/tmp"
