@@ -88,7 +88,10 @@ impl State {
         }
     }
 
-    pub fn status(&mut self, taskname: &String) {
+    pub fn status(&self, taskname: &str, response: &Sender<String>) {
         log::debug!("retrieving status of {}", taskname);
+        response
+            .send(format!("status of {}: unkown", taskname))
+            .unwrap();
     }
 }
