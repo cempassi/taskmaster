@@ -1,4 +1,30 @@
-foo:
-  name: foo
-  cmd: echo foo
-  umask: 0o722
+ls:
+  name: ls
+  cmd: ls -l /home/cempass
+  autostart: true
+  numprocess: 1
+  umask: 777
+  workingdir: /tmp
+  stdout: /tmp/ls.out
+  stderr: /tmp/ls.err
+  stopsignal: TERM
+ls-homer:
+  name: ls homer
+  cmd: ls -l /Users/cempassi/Programming
+  autostart: false
+  numprocess: 1
+  umask: 777
+  workingdir: /tmp
+  stopsignal: TERM
+  stdout: /tmp/ls_home.out
+  stderr: /tmp/ls_home.err
+ls-test:
+  name: ls test
+  cmd: ls -l /Users/cempassi/Programming
+  autostart: false
+  numprocess: 1
+  umask: 777
+  workingdir: /tmp
+  stopsignal: TERM
+  stdout: /tmp/ls_test.out
+  stderr: /tmp/ls_test.err
