@@ -4,8 +4,8 @@ use std::io::{prelude::*, BufReader};
 mod editor;
 mod history;
 
-use crate::server::Message;
 use crate::server::error;
+use crate::server::Message;
 
 use self::{editor::Editor, history::History};
 use std::os::unix::net::UnixStream;
@@ -24,31 +24,29 @@ fn send_message(msg: &Message) {
 }
 
 fn process_line(history: &History, line: &str) -> Result<()> {
-    let vec: Vec<&str> = line.splitn(2, ' ').collect();
+    let vec: Vec<&str> = line.split(' ').collect();
 
-    if vec.len() == 1 {
-        match vec[0].as_ref() {
-            "list" => send_message(&Message::List),
-            "history" => history.print(),
-            "help" => print_help(),
-            "quit" => {
-                send_message(&Message::Quit);
-                return Ok(());
-            }
-            _ => {
-                println!("Invalid command: {}", line);
-                return Err(error::Taskmaster::InvalidCmd);
+    match *vec.get(0).unwrap() {
+        "list" => send_message(&Message::List),
+        "history" => history.print(),
+        "help" => print_help(),
+        "quit" => {
+            send_message(&Message::Quit);
+            return Ok(());
+        }
+        "start" => {
+            if vec.len() > 1 {
+                for taskname in vec.iter().skip(1) {
+                    let name = *taskname;
+                    send_message(&Message::Start(name.to_string()));
+                }
             }
         }
-    } else if vec.len() == 2 {
-        match vec[0].as_ref() {
-            "start" => send_message(&Message::Start(vec[1].to_string())),
-            _ => {
-                println!("Invalid command: {}", line);
-                return Err(error::Taskmaster::InvalidCmd);
-            }
+        _ => {
+            println!("Invalid command: {}", line);
+            return Err(error::Taskmaster::InvalidCmd);
         }
-    }
+    };
     Ok(())
 }
 
@@ -69,9 +67,11 @@ pub fn start() {
 
         loop {
             match Editor::default().readline(&mut history) {
-                Ok(line) => if process_line(&history, &line).is_ok() {
-                    history.push(line);
-                },
+                Ok(line) => {
+                    if process_line(&history, &line).is_ok() {
+                        history.push(line);
+                    }
+                }
                 Err(e) if e.kind() == ErrorKind::Interrupted => break,
                 Err(_) => break,
             }
