@@ -17,7 +17,8 @@ pub struct Monitor {
 }
 
 impl Monitor {
-    pub fn new(task: Task) -> Self {
+    // Only create Monitoring struct
+    pub fn new_only(task: Task) -> Self {
         Monitor {
             task,
             children: Vec::new(),
@@ -25,15 +26,24 @@ impl Monitor {
         }
     }
 
+    // Create new Monitoring struct and start the task if required
+    pub fn new(task: Task) -> Self {
+        let mon = Monitor::new_only(task);
+        if mon.task.autostart {
+            mon.start();
+        }
+        mon
+    }
+
     fn change_state(&mut self, status: Status) {
         self.state = status
     }
 
-    pub fn start() {
+    pub fn start(&self) {
         unimplemented!();
     }
 
-    pub fn stop() {
+    pub fn stop(&self) {
         unimplemented!();
     }
 
@@ -41,5 +51,7 @@ impl Monitor {
         self.state
     }
 
-    pub fn reload(task: Task) {}
+    pub fn reload(&self, task: Task) {
+        unimplemented!()
+    }
 }
