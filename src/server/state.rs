@@ -1,29 +1,25 @@
 use std::collections::HashMap;
 use std::convert::TryFrom;
-use std::sync::mpsc::{channel, Receiver, Sender};
-
-use super::worker;
+use std::sync::mpsc::Sender;
 
 use super::{
-    default,
+    monitor::Monitor,
     reader::{ConfigFile, ReadTask},
     task::Task,
     watcher::Watcher,
-    worker::{Action, Status},
-    Message,
 };
 
 #[derive(Debug)]
 pub struct State {
     pub tasks: HashMap<String, ReadTask>,
-    pub workers: HashMap<String, (Sender<Action>, Receiver<Status>)>,
+    pub monitors: HashMap<String, Monitor>,
 }
 
 impl State {
     pub fn new() -> Self {
         State {
             tasks: HashMap::new(),
-            workers: HashMap::new(),
+            monitors: HashMap::new(),
         }
     }
 
@@ -33,51 +29,49 @@ impl State {
         for (name, task) in configfile {
             log::debug!("parsed task: {}: {:?}", name, task);
 
-            //Si la tache existe deja
-            if let Some(t) = self.tasks.get(&name) {
-                //Si la tache a ete modifiee
-                if t != &task {
-                    log::debug!("task {} as been changed", name.clone());
-                    //Si la tache est deja en cours de lancement, la relancer, sinon
-                    //simplement changer la configuration
-
-                    if let Some(w) = self.workers.get(&name) {
-                        log::debug!("asking to reload running process for {}", name.clone());
-                        w.0.send(Action::Reload(task.clone())).unwrap();
-                    }
-                    self.tasks.insert(name.clone(), task);
-                    //Replace in hashmap and relaunch
-                }
+            if self.tasks.get(&name).is_some() {
+                self.reload_task(&name, &task);
             } else {
-                if task.autostart.unwrap_or(default::AUTOSTART) {
-                    log::debug!("asking to start {}", name.clone());
-                    watcher.send(Message::Start(name.clone()))
-                }
-                self.tasks.insert(name.clone(), task);
+                self.add_task(&name, &task);
             }
         }
     }
 
+    fn reload_task(&mut self, name: &str, task: &ReadTask) {
+        let current_task = self.tasks.get(name).unwrap();
+        if current_task != task {
+            self.tasks.insert(name.to_string(), task.clone());
+            let mon = self.monitors.get_mut(name).unwrap();
+            mon.reload(Task::try_from(task).unwrap());
+        }
+    }
+
+    fn add_task(&mut self, name: &str, task: &ReadTask) {
+        self.tasks.insert(name.to_string(), task.clone());
+        self.monitors.insert(
+            name.to_string(),
+            Monitor::new(Task::try_from(task).unwrap()),
+        );
+    }
+
     pub fn start(&mut self, name: &str) {
         log::debug!("starting task {}", name);
-        if let Some(t) = self.tasks.get(name) {
-            let task = Task::try_from(t).unwrap();
-            let (send_action, receive_action) = channel::<Action>();
-            let (send_status, receive_status) = channel::<Status>();
-            self.workers
-                .insert(name.to_string(), (send_action, receive_status));
-            worker::run(name, task, send_status, receive_action);
+        // FIXME: we don't need to start a monitor that is already started
+        if let Some(mon) = self.monitors.get_mut(name) {
+            mon.start();
         } else {
-            log::debug!("Task '{}' not found", name);
+            log::error!("task {} doesn't exist", name);
         }
+        unimplemented!();
     }
 
     pub fn stop(&mut self, name: &str) {
         log::debug!("stopping task {}", name);
-        if let Some(worker) = self.workers.get(name) {
-            worker.0.send(Action::Stop).unwrap();
+        // FIXME: we can't stop a monitors that is not running
+        if let Some(mon) = self.monitors.get_mut(name) {
+            mon.stop();
         } else {
-            log::warn!("task {} is not running", name);
+            log::error!("task {} doesn't exist", name);
         }
     }
 
@@ -92,13 +86,7 @@ impl State {
 
     pub fn status(&self, taskname: &str, response: &Sender<String>) {
         log::debug!("retrieving status of {}", taskname);
-        let status = self
-            .workers
-            .get(taskname)
-            .map_or(Status::NotStarted, |worker| {
-                worker.0.send(Action::Status);
-                worker.1.recv().unwrap_or(Status::Unknown)
-            });
+        let status = self.monitors.get(taskname).unwrap().status();
         response
             .send(format!("status of {}: {}", taskname, status))
             .unwrap();
