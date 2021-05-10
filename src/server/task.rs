@@ -21,7 +21,7 @@ enum AutoRestart {
 pub struct Task {
     cmd: Vec<String>,
     numprocess: u32,
-    autostart: bool,
+    pub autostart: bool,
     umask: mode_t,
     workingdir: PathBuf,
 
