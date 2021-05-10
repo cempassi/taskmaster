@@ -25,7 +25,7 @@ impl log::Log for Simple {
     fn log(&self, record: &Record) {
         if self.enabled(record.metadata()) {
             println!(
-                "{:>5}[{:03}]  - {}",
+                "{:>5}[{:04}] {}",
                 record.level(),
                 self.now.map_or(0, |time| time.elapsed().as_secs()),
                 record.args()
