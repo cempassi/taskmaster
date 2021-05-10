@@ -40,13 +40,15 @@ impl Monitor {
     }
 
     pub fn start(&mut self) {
-        unimplemented!();
+        // code here
         self.change_state(Status::Active);
+        unimplemented!();
     }
 
     pub fn stop(&mut self) {
-        unimplemented!();
+        // code here
         self.change_state(Status::Finished);
+        unimplemented!();
     }
 
     pub fn status(&self) -> Status {
