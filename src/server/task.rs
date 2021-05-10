@@ -1,5 +1,6 @@
 use libc::{gid_t, mode_t, uid_t};
 use serde::Deserialize;
+use serde::Serialize;
 use std::convert::TryFrom;
 use std::fs::File;
 use std::os::unix::process::CommandExt;
@@ -17,7 +18,7 @@ enum AutoRestart {
     False,
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Serialize, Eq)]
 pub struct Task {
     cmd: Vec<String>,
     numprocess: u32,

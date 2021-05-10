@@ -1,3 +1,4 @@
+use serde::Serialize;
 use signal_hook::{
     consts::{SIGHUP, SIGINT},
     iterator::Signals,
@@ -8,7 +9,7 @@ use std::sync::mpsc::Sender;
 use super::{Communication, Message};
 use crate::error;
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Serialize)]
 pub enum Signal {
     Hup,
     Int,
