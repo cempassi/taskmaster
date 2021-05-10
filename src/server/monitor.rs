@@ -1,6 +1,6 @@
 use super::task::Task;
 use serde::Serialize;
-use std::fmt::{self, Debug, Formatter};
+use std::fmt::{self, Debug, Display, Formatter};
 use std::process::Child;
 
 #[derive(Copy, Clone, Serialize)]
@@ -9,7 +9,20 @@ pub enum Status {
     Active,
     Reloading,
     Finished,
-    Failing,
+    Failed,
+}
+
+impl Display for Status {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        let s = match self {
+            Status::Inactive => "inactive",
+            Status::Active => "active",
+            Status::Reloading => "reloading",
+            Status::Finished => "finished",
+            Status::Failed => "failed",
+        };
+        write!(f, "{}", s)
+    }
 }
 
 #[derive(Serialize)]
