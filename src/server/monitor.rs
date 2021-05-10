@@ -1,7 +1,9 @@
 use super::task::Task;
+use serde::Serialize;
+use std::fmt::{self, Debug, Formatter};
 use std::process::Child;
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Serialize)]
 pub enum Status {
     Inactive,
     Active,
@@ -10,8 +12,11 @@ pub enum Status {
     Failing,
 }
 
+#[derive(Serialize)]
 pub struct Monitor {
     task: Task,
+
+    #[serde(skip_serializing)]
     children: Vec<Child>,
     state: Status,
 }
@@ -58,5 +63,15 @@ impl Monitor {
     pub fn reload(&mut self, task: Task) {
         self.change_state(Status::Reloading);
         unimplemented!()
+    }
+}
+
+impl Debug for Monitor {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        if let Ok(s) = serde_json::to_string(self) {
+            write!(f, "{}", s)
+        } else {
+            Err(fmt::Error)
+        }
     }
 }
