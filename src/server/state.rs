@@ -35,9 +35,9 @@ impl State {
     }
 
     fn reload_task(&mut self, name: &str, task: Task) {
-        let mon = self.monitors.get(name).unwrap();
+        let mon = self.monitors.get_mut(name).unwrap();
+
         if mon.get_task() != &task {
-            let mon = self.monitors.get_mut(name).unwrap();
             mon.reload(task);
         }
     }
