@@ -5,14 +5,19 @@ use serde::Deserialize;
 use std::collections::BTreeMap;
 use std::convert::TryFrom;
 use std::fmt;
-use std::fs;
+use std::fs::{self, File};
+use std::os::unix::process::CommandExt;
 use std::path::PathBuf;
+use std::process::{Child, Command};
 
 pub type ConfigFile = BTreeMap<String, ReadTask>;
 
 #[derive(Debug, Deserialize, Eq, PartialEq, Clone)]
 pub struct ReadTask {
     pub cmd: String,
+
+    #[serde(skip)]
+    args: Vec<String>,
 
     #[serde(default = "default::autostart")]
     pub autostart: bool,
@@ -120,5 +125,58 @@ impl TryFrom<&Watcher> for ConfigFile {
                 Err(error::Taskmaster::Cli)
             }
         }
+    }
+}
+
+impl ReadTask {
+    pub fn run(&self) -> Vec<Child> {
+        let mut jobs = Vec::new();
+        let mut command = Command::new(&self.args[0]);
+        let stdout = File::create(self.stdout.as_path()).unwrap();
+        let stderr = File::create(self.stderr.as_path()).unwrap();
+        self.setup_command(&mut command);
+        if self.args.len() > 1 {
+            command.args(&self.args[1..]);
+        }
+        command.current_dir(self.workingdir.as_path());
+        command.stdout(stdout);
+        command.stderr(stderr);
+        for _ in 0..self.numprocess {
+            jobs.push(command.spawn().expect("Couldn't run command!"));
+        }
+        jobs
+    }
+
+    fn update_args(&mut self) -> Vec<String> {
+        self.args = self
+            .cmd
+            .split(' ')
+            .map(std::string::ToString::to_string)
+            .collect();
+        self.args
+    }
+
+    fn setup_command(&self, command: &mut impl CommandExt) {
+        if let Some(uid) = self.uid {
+            command.uid(uid);
+        }
+        if let Some(gid) = self.gid {
+            command.gid(gid);
+        }
+        if self.umask != 0 {
+            let umask: mode_t = self.umask;
+            unsafe {
+                command.pre_exec(move || {
+                    libc::umask(umask);
+                    Ok(())
+                });
+            }
+        }
+    }
+
+    pub fn check_exit_status(&self, status: std::process::ExitStatus) -> bool {
+        status.code().map_or(false, |exitcode| {
+            self.exitcodes.iter().any(|&code| code != exitcode)
+        })
     }
 }
