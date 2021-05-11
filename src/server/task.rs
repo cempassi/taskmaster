@@ -8,6 +8,7 @@ use std::fs::{self, File};
 use std::os::unix::process::CommandExt;
 use std::path::PathBuf;
 use std::process::{Child, Command};
+use std::vec::Vec;
 
 pub type ConfigFile = BTreeMap<String, Task>;
 

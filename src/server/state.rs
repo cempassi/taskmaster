@@ -93,7 +93,7 @@ impl State {
             .workers
             .get(taskname)
             .map_or(Status::NotStarted, |worker| {
-                worker.0.send(Action::Status);
+                worker.0.send(Action::Status).unwrap();
                 worker.1.recv().unwrap_or(Status::Unknown)
             });
         response
