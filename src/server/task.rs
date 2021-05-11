@@ -1,5 +1,4 @@
 use libc::{gid_t, mode_t, uid_t};
-use serde::Deserialize;
 use std::convert::TryFrom;
 use std::fs::File;
 use std::os::unix::process::CommandExt;
@@ -8,13 +7,6 @@ use std::process::{Child, Command};
 use std::vec::Vec;
 
 use super::{error, reader::ReadTask, relaunch::Relaunch, signal};
-
-#[derive(Debug, Deserialize)]
-enum AutoRestart {
-    Unexpected,
-    True,
-    False,
-}
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct Task {
