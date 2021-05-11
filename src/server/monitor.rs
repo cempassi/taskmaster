@@ -2,6 +2,8 @@ use super::task::Task;
 use serde::Serialize;
 use std::fmt::{self, Debug, Display, Formatter};
 use std::process::Child;
+use std::sync::{Arc, Mutex};
+use std::time::Duration;
 
 #[derive(Copy, Clone, Serialize)]
 pub enum Status {
@@ -34,8 +36,8 @@ pub struct Monitor {
     id: String,
     task: Task,
 
-    #[serde(skip_serializing)]
-    children: Vec<Child>,
+    #[serde(skip)]
+    children: Arc<Mutex<Vec<Child>>>,
     state: Status,
 }
 
@@ -45,7 +47,7 @@ impl Monitor {
         Monitor {
             id,
             task,
-            children: Vec::new(),
+            children: Arc::new(Mutex::new(Vec::new())),
             state: Status::Inactive,
         }
     }
@@ -65,9 +67,58 @@ impl Monitor {
 
     pub fn start(&mut self) {
         log::debug!("[{}] starting ...", self.id);
-        // code here
+        self.children.lock().unwrap().extend(self.task.run());
+        self.spaw_children_watcher();
         self.change_state(Status::Active);
-        unimplemented!();
+    }
+
+    fn spaw_children_watcher(&mut self) {
+        let id = self.id.clone();
+        let children_mutex = self.children.clone();
+        std::thread::spawn(move || {
+            let sleep_delay = Duration::from_secs(10);
+            loop {
+                let mut children = children_mutex.lock().unwrap();
+                let mut finished = Vec::<u32>::new();
+
+                for child in children.iter_mut() {
+                    match child.try_wait() {
+                        Ok(Some(st)) => {
+                            log::debug!(
+                                "[{}] child-{} finished with status {}",
+                                id,
+                                child.id(),
+                                st
+                            );
+                            // FIXME: check status with exitcodes and update monitor status
+                            finished.push(child.id())
+                        }
+                        Ok(None) => {
+                            log::debug!("[{}] child-{} not finished yet!", id, child.id());
+                        }
+                        Err(e) => {
+                            log::error!(
+                                "[{}] while waiting for child {} got error {}",
+                                id,
+                                child.id(),
+                                e
+                            );
+                        }
+                    }
+                }
+
+                children.retain(|child| !finished.iter().any(|&id| id == child.id()));
+
+                if children.is_empty() {
+                    log::info!("[{}] task finished !", id);
+                    // FIXME: update monitor status
+                    break;
+                }
+                drop(children);
+                log::debug!("[{}] watcher went to sleep", id);
+                std::thread::sleep(sleep_delay);
+            }
+        });
     }
 
     pub fn stop(&mut self) {
@@ -78,10 +129,11 @@ impl Monitor {
     }
 
     fn stop_raw(&mut self) {
-        self.children
+        let mut children = self.children.lock().unwrap();
+        children
             .iter_mut()
             .for_each(|child| child.kill().expect("cannot kill children"));
-        self.children.clear();
+        children.clear();
     }
 
     pub fn status(&self) -> Status {
