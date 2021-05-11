@@ -77,6 +77,10 @@ impl Monitor {
         self.change_state(Status::Reloading);
         unimplemented!()
     }
+
+    pub fn get_task(&self) -> &Task {
+        &self.task
+    }
 }
 
 impl Debug for Monitor {
