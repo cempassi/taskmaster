@@ -68,6 +68,14 @@ impl Monitor {
     }
 
     pub fn start(&mut self) {
+        if self.status() == Status::Inactive {
+            self.start_raw();
+        } else {
+            log::warn!("[{}] already started", self.id);
+        }
+    }
+
+    fn start_raw(&mut self) {
         log::debug!("[{}] starting ...", self.id);
         self.children.lock().unwrap().extend(self.task.run());
         self.spaw_children_watcher();
@@ -141,10 +149,14 @@ impl Monitor {
     }
 
     pub fn stop(&mut self) {
-        log::debug!("[{}] stopping ...", self.id);
-        self.change_state(Status::Stopping);
-        self.stop_raw();
-        self.change_state(Status::Stopped);
+        if self.status() == Status::Active {
+            log::debug!("[{}] stopping ...", self.id);
+            self.change_state(Status::Stopping);
+            self.stop_raw();
+            self.change_state(Status::Stopped);
+        } else {
+            log::warn!("[{}] can't stop task that is not started", self.id);
+        }
     }
 
     fn stop_raw(&mut self) {
