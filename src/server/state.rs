@@ -10,14 +10,12 @@ use super::{
 
 #[derive(Debug)]
 pub struct State {
-    pub tasks: HashMap<String, Task>,
     pub monitors: HashMap<String, Monitor>,
 }
 
 impl State {
     pub fn new() -> Self {
         State {
-            tasks: HashMap::new(),
             monitors: HashMap::new(),
         }
     }
@@ -28,29 +26,24 @@ impl State {
         for (name, task) in configfile {
             log::debug!("parsed task: {}: {:?}", name, task);
 
-            if self.tasks.get(&name).is_some() {
-                self.reload_task(&name, &task);
+            if self.monitors.get(&name).is_some() {
+                self.reload_task(&name, task);
             } else {
-                self.add_task(&name, &task);
+                self.add_task(&name, task);
             }
         }
     }
 
-    fn reload_task(&mut self, name: &str, task: &ReadTask) {
-        let current_task = self.tasks.get(name).unwrap();
-        if current_task != task {
-            self.tasks.insert(name.to_string(), task.clone());
+    fn reload_task(&mut self, name: &str, task: Task) {
+        let mon = self.monitors.get(name).unwrap();
+        if mon.get_task() != &task {
             let mon = self.monitors.get_mut(name).unwrap();
-            mon.reload(Task::try_from(task).unwrap());
+            mon.reload(task);
         }
     }
 
-    fn add_task(&mut self, name: &str, task: &ReadTask) {
-        self.tasks.insert(name.to_string(), task.clone());
-        self.monitors.insert(
-            name.to_string(),
-            Monitor::new(Task::try_from(task).unwrap()),
-        );
+    fn add_task(&mut self, name: &str, task: Task) {
+        self.monitors.insert(name.to_string(), Monitor::new(task));
     }
 
     pub fn start(&mut self, name: &str) {
@@ -77,8 +70,8 @@ impl State {
     pub fn list(&mut self, chan: &Sender<String>) {
         log::debug!("setting list");
         chan.send("\nAvailable jobs:\n".to_string()).unwrap();
-        for task in self.tasks.values() {
-            chan.send(format!("{}", task)).unwrap();
+        for mon in self.monitors.values() {
+            chan.send(format!("{}", mon.get_task())).unwrap();
             chan.send("\n----------\n".to_string()).unwrap();
         }
     }
