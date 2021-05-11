@@ -1,5 +1,6 @@
 use super::{relaunch::Relaunch, signal::Signal};
 use libc::mode_t;
+use std::path::PathBuf;
 
 pub fn autostart() -> bool {
     false
@@ -13,8 +14,8 @@ pub fn umask() -> mode_t {
     0
 }
 
-pub fn workdir() -> String {
-    String::from(".")
+pub fn workdir() -> PathBuf {
+    PathBuf::from(".")
 }
 
 pub fn relaunch_mode() -> Relaunch {
@@ -41,12 +42,12 @@ pub fn stop_delay() -> u32 {
     2
 }
 
-pub fn stdout() -> String {
-    String::from("/dev/null")
+pub fn stdout() -> PathBuf {
+    PathBuf::from("/dev/null")
 }
 
-pub fn stderr() -> String {
-    String::from("/dev/null")
+pub fn stderr() -> PathBuf {
+    PathBuf::from("/dev/null")
 }
 
 pub fn env() -> Vec<String> {

@@ -73,9 +73,9 @@ impl TryFrom<&ReadTask> for Task {
             stopsignal: readtask.stopsignal.clone(),
             stopdelay: readtask.stopdelay,
 
-            workingdir: PathBuf::from(readtask.workingdir.as_str()),
-            stdout: PathBuf::from(readtask.stdout.as_str()),
-            stderr: PathBuf::from(readtask.stderr.as_str()),
+            workingdir: PathBuf::from(&readtask.workingdir),
+            stdout: PathBuf::from(&readtask.stdout),
+            stderr: PathBuf::from(&readtask.stderr),
         })
     }
 }

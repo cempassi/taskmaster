@@ -6,6 +6,7 @@ use std::collections::BTreeMap;
 use std::convert::TryFrom;
 use std::fmt;
 use std::fs;
+use std::path::PathBuf;
 
 pub type ConfigFile = BTreeMap<String, ReadTask>;
 
@@ -23,7 +24,7 @@ pub struct ReadTask {
     pub umask: mode_t,
 
     #[serde(default = "default::workdir")]
-    pub workingdir: String,
+    pub workingdir: PathBuf,
 
     #[serde(default = "default::stop_signal")]
     pub stopsignal: Signal,
@@ -32,10 +33,10 @@ pub struct ReadTask {
     pub stopdelay: u32,
 
     #[serde(default = "default::stdout")]
-    pub stdout: String,
+    pub stdout: PathBuf,
 
     #[serde(default = "default::stderr")]
-    pub stderr: String,
+    pub stderr: PathBuf,
 
     #[serde(default = "default::retry")]
     pub retry: u32,
@@ -60,7 +61,7 @@ impl fmt::Display for ReadTask {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "Command: {}\nNumber of processes: {}\nAutostart: {}\nUmask: {:#05o}\nWorking Directory: {}\nStdout: {}\nStderr: {}\nStop signal: {}\nStop delay: {}\nretry: {}\nSuccess Delay: {}\nExit Codes: {:?}\nRestart: {}\nEnv: {:?}\nPermission: uid: {:?}, gid: {:?}",
+            "Command: {}\nNumber of processes: {}\nAutostart: {}\nUmask: {:#05o}\nWorking Directory: {:?}\nStdout: {:?}\nStderr: {:?}\nStop signal: {}\nStop delay: {}\nretry: {}\nSuccess Delay: {}\nExit Codes: {:?}\nRestart: {}\nEnv: {:?}\nPermission: uid: {:?}, gid: {:?}",
             self.cmd,
             self.numprocess,
             self.autostart,
