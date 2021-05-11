@@ -5,7 +5,7 @@ use std::process::Child;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
-#[derive(Copy, Clone, Serialize)]
+#[derive(Copy, Clone, Serialize, PartialEq)]
 pub enum Status {
     Inactive,
     Active,
@@ -38,7 +38,9 @@ pub struct Monitor {
 
     #[serde(skip)]
     children: Arc<Mutex<Vec<Child>>>,
-    state: Status,
+
+    #[serde(skip)]
+    state: Arc<Mutex<Status>>,
 }
 
 impl Monitor {
@@ -48,7 +50,7 @@ impl Monitor {
             id,
             task,
             children: Arc::new(Mutex::new(Vec::new())),
-            state: Status::Inactive,
+            state: Arc::new(Mutex::new(Status::Inactive)),
         }
     }
 
@@ -62,7 +64,7 @@ impl Monitor {
     }
 
     fn change_state(&mut self, status: Status) {
-        self.state = status
+        *self.state.lock().unwrap() = status;
     }
 
     pub fn start(&mut self) {
@@ -75,6 +77,9 @@ impl Monitor {
     fn spaw_children_watcher(&mut self) {
         let id = self.id.clone();
         let children_mutex = self.children.clone();
+        let state_mutex = self.state.clone();
+        let expected_exit_codes = self.task.exitcodes.clone();
+
         std::thread::spawn(move || {
             let sleep_delay = Duration::from_secs(10);
             loop {
@@ -90,6 +95,16 @@ impl Monitor {
                                 child.id(),
                                 st
                             );
+                            match st.code() {
+                                Some(code) => {
+                                    if !expected_exit_codes.iter().any(|wanted| code == *wanted) {
+                                        *state_mutex.lock().unwrap() = Status::Failed;
+                                    }
+                                }
+                                None => {
+                                    *state_mutex.lock().unwrap() = Status::Failed;
+                                }
+                            }
                             // FIXME: check status with exitcodes and update monitor status
                             finished.push(child.id())
                         }
@@ -111,6 +126,10 @@ impl Monitor {
 
                 if children.is_empty() {
                     log::info!("[{}] task finished !", id);
+                    let mut state = state_mutex.lock().unwrap();
+                    if *state != Status::Failed {
+                        *state = Status::Finished;
+                    }
                     // FIXME: update monitor status
                     break;
                 }
@@ -137,7 +156,7 @@ impl Monitor {
     }
 
     pub fn status(&self) -> Status {
-        self.state
+        *self.state.lock().unwrap()
     }
 
     pub fn reload(&mut self, task: Task) {

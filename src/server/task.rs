@@ -128,7 +128,7 @@ pub struct Task {
     stderr: PathBuf,
     retry: u32,
     successdelay: u32,
-    exitcodes: Vec<i32>,
+    pub exitcodes: Vec<i32>,
     restart: Relaunch,
     env: Vec<String>,
     gid: Option<gid_t>,
