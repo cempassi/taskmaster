@@ -12,7 +12,6 @@ mod signal;
 mod state;
 mod task;
 mod watcher;
-mod worker;
 
 use self::watcher::Watcher;
 use self::{listener::Listener, state::State};
