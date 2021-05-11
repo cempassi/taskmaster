@@ -49,18 +49,15 @@ impl State {
 
     pub fn start(&mut self, name: &str) {
         log::debug!("starting task {}", name);
-        // FIXME: we don't need to start a monitor that is already started
         if let Some(mon) = self.monitors.get_mut(name) {
             mon.start();
         } else {
             log::error!("task {} doesn't exist", name);
         }
-        unimplemented!();
     }
 
     pub fn stop(&mut self, name: &str) {
         log::debug!("stopping task {}", name);
-        // FIXME: we can't stop a monitors that is not running
         if let Some(mon) = self.monitors.get_mut(name) {
             mon.stop();
         } else {
