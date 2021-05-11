@@ -5,8 +5,7 @@ use std::sync::mpsc::{channel, Receiver, Sender};
 use super::worker;
 
 use super::{
-    reader::{ConfigFile, ReadTask},
-    task::Task,
+    task::{ConfigFile, Task},
     watcher::Watcher,
     worker::{Action, Status},
     Message,
@@ -14,7 +13,7 @@ use super::{
 
 #[derive(Debug)]
 pub struct State {
-    pub tasks: HashMap<String, ReadTask>,
+    pub tasks: HashMap<String, Task>,
     pub workers: HashMap<String, (Sender<Action>, Receiver<Status>)>,
 }
 
@@ -60,12 +59,11 @@ impl State {
     pub fn start(&mut self, name: &str) {
         log::debug!("starting task {}", name);
         if let Some(t) = self.tasks.get(name) {
-            let task = Task::try_from(t).unwrap();
             let (send_action, receive_action) = channel::<Action>();
             let (send_status, receive_status) = channel::<Status>();
             self.workers
                 .insert(name.to_string(), (send_action, receive_status));
-            worker::run(name, task, send_status, receive_action);
+            worker::run(name, t.clone(), send_status, receive_action);
         } else {
             log::debug!("Task '{}' not found", name);
         }
