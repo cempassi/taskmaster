@@ -5,7 +5,6 @@ use std::sync::mpsc::{channel, Receiver, Sender};
 use super::worker;
 
 use super::{
-    default,
     reader::{ConfigFile, ReadTask},
     task::Task,
     watcher::Watcher,
@@ -49,7 +48,7 @@ impl State {
                     //Replace in hashmap and relaunch
                 }
             } else {
-                if task.autostart.unwrap_or(default::AUTOSTART) {
+                if task.autostart {
                     log::debug!("asking to start {}", name.clone());
                     watcher.send(Message::Start(name.clone()))
                 }
