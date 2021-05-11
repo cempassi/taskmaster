@@ -43,7 +43,8 @@ impl State {
     }
 
     fn add_task(&mut self, name: &str, task: Task) {
-        self.monitors.insert(name.to_string(), Monitor::new(task));
+        self.monitors
+            .insert(name.to_string(), Monitor::new(name.to_string(), task));
     }
 
     pub fn start(&mut self, name: &str) {

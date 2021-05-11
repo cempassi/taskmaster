@@ -31,6 +31,7 @@ impl Display for Status {
 
 #[derive(Serialize)]
 pub struct Monitor {
+    id: String,
     task: Task,
 
     #[serde(skip_serializing)]
@@ -40,8 +41,9 @@ pub struct Monitor {
 
 impl Monitor {
     // Only create Monitoring struct
-    pub fn new_only(task: Task) -> Self {
+    pub fn new_only(id: String, task: Task) -> Self {
         Monitor {
+            id,
             task,
             children: Vec::new(),
             state: Status::Inactive,
@@ -49,8 +51,8 @@ impl Monitor {
     }
 
     // Create new Monitoring struct and start the task if required
-    pub fn new(task: Task) -> Self {
-        let mut mon = Monitor::new_only(task);
+    pub fn new(id: String, task: Task) -> Self {
+        let mut mon = Monitor::new_only(id, task);
         if mon.task.autostart {
             mon.start();
         }
