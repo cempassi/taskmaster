@@ -1,6 +1,6 @@
 use super::{default, error, relaunch::Relaunch, signal::Signal, watcher::Watcher};
 use libc::{gid_t, mode_t, uid_t};
-use serde::{self, Deserialize, Deserializer};
+use serde::{self, Deserialize, Deserializer, Serialize, Serializer};
 use std::collections::BTreeMap;
 use std::convert::TryFrom;
 use std::fmt;
@@ -44,7 +44,7 @@ impl TryFrom<&Watcher> for ConfigFile {
     }
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize)]
 struct TaskPartial {
     pub cmd: String,
 
@@ -91,7 +91,7 @@ struct TaskPartial {
     pub uid: Option<uid_t>,
 }
 
-#[derive(Debug, PartialEq, Serialize, Eq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Task {
     cmd: String,
     args: Vec<String>,
@@ -122,6 +122,16 @@ impl<'de> Deserialize<'de> for Task {
     }
 }
 
+impl Serialize for Task {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let partial: TaskPartial = self.clone().into();
+        partial.serialize(serializer)
+    }
+}
+
 impl From<TaskPartial> for Task {
     fn from(partial: TaskPartial) -> Self {
         Self {
@@ -146,6 +156,29 @@ impl From<TaskPartial> for Task {
             env: partial.env,
             gid: partial.gid,
             uid: partial.uid,
+        }
+    }
+}
+
+impl Into<TaskPartial> for Task {
+    fn into(self) -> TaskPartial {
+        TaskPartial {
+            cmd: self.cmd,
+            autostart: self.autostart,
+            numprocess: self.numprocess,
+            umask: self.umask,
+            workingdir: self.workingdir,
+            stopsignal: self.stopsignal,
+            stopdelay: self.stopdelay,
+            stdout: self.stdout,
+            stderr: self.stderr,
+            retry: self.retry,
+            successdelay: self.successdelay,
+            exitcodes: self.exitcodes,
+            restart: self.restart,
+            env: self.env,
+            gid: self.gid,
+            uid: self.uid,
         }
     }
 }
