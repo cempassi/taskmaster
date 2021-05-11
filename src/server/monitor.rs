@@ -10,6 +10,8 @@ pub enum Status {
     Reloading,
     Finished,
     Failed,
+    Stopping,
+    Stopped,
 }
 
 impl Display for Status {
@@ -20,6 +22,8 @@ impl Display for Status {
             Status::Reloading => "reloading",
             Status::Finished => "finished",
             Status::Failed => "failed",
+            Status::Stopping => "stopping",
+            Status::Stopped => "stopped",
         };
         write!(f, "{}", s)
     }
@@ -64,9 +68,16 @@ impl Monitor {
     }
 
     pub fn stop(&mut self) {
-        // code here
-        self.change_state(Status::Finished);
-        unimplemented!();
+        self.change_state(Status::Stopping);
+        self.stop_raw();
+        self.change_state(Status::Stopped);
+    }
+
+    fn stop_raw(&mut self) {
+        self.children
+            .iter_mut()
+            .for_each(|child| child.kill().expect("cannot kill children"));
+        self.children.clear();
     }
 
     pub fn status(&self) -> Status {
@@ -74,8 +85,16 @@ impl Monitor {
     }
 
     pub fn reload(&mut self, task: Task) {
-        self.change_state(Status::Reloading);
-        unimplemented!()
+        if self.task != task {
+            self.change_state(Status::Reloading);
+            self.stop_raw();
+            self.task = task;
+            if self.task.autostart {
+                self.start();
+            } else {
+                self.change_state(Status::Inactive);
+            }
+        }
     }
 
     pub fn get_task(&self) -> &Task {
