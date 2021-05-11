@@ -11,6 +11,7 @@ use super::{Communication, Message};
 use crate::error;
 
 #[derive(Debug, PartialEq, Eq, Clone, Deserialize)]
+#[serde(rename_all = "UPPERCASE")]
 pub enum Signal {
     Hup,
     Int,
