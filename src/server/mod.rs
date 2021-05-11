@@ -6,12 +6,12 @@ use std::sync::mpsc::Sender;
 mod default;
 pub mod error;
 mod listener;
+mod monitor;
 mod relaunch;
 mod signal;
 mod state;
 mod task;
 mod watcher;
-mod worker;
 
 use self::watcher::Watcher;
 use self::{listener::Listener, state::State};

@@ -1,4 +1,4 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use signal_hook::{
     consts::{SIGHUP, SIGINT},
     iterator::Signals,
@@ -10,7 +10,7 @@ use std::sync::mpsc::Sender;
 use super::{Communication, Message};
 use crate::error;
 
-#[derive(Debug, PartialEq, Eq, Clone, Deserialize)]
+#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "UPPERCASE")]
 pub enum Signal {
     Hup,

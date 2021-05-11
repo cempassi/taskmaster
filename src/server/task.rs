@@ -1,6 +1,6 @@
 use super::{default, error, relaunch::Relaunch, signal::Signal, watcher::Watcher};
 use libc::{gid_t, mode_t, uid_t};
-use serde::{self, Deserialize, Deserializer};
+use serde::{self, Deserialize, Deserializer, Serialize, Serializer};
 use std::collections::BTreeMap;
 use std::convert::TryFrom;
 use std::fmt;
@@ -8,7 +8,6 @@ use std::fs::{self, File};
 use std::os::unix::process::CommandExt;
 use std::path::PathBuf;
 use std::process::{Child, Command};
-use std::vec::Vec;
 
 pub type ConfigFile = BTreeMap<String, Task>;
 
@@ -45,7 +44,7 @@ impl TryFrom<&Watcher> for ConfigFile {
     }
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize)]
 struct TaskPartial {
     pub cmd: String,
 
@@ -92,7 +91,30 @@ struct TaskPartial {
     pub uid: Option<uid_t>,
 }
 
-#[derive(Debug, Eq, PartialEq, Clone)]
+impl From<Task> for TaskPartial {
+    fn from(task: Task) -> TaskPartial {
+        TaskPartial {
+            cmd: task.cmd,
+            autostart: task.autostart,
+            numprocess: task.numprocess,
+            umask: task.umask,
+            workingdir: task.workingdir,
+            stopsignal: task.stopsignal,
+            stopdelay: task.stopdelay,
+            stdout: task.stdout,
+            stderr: task.stderr,
+            retry: task.retry,
+            successdelay: task.successdelay,
+            exitcodes: task.exitcodes,
+            restart: task.restart,
+            env: task.env,
+            gid: task.gid,
+            uid: task.uid,
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Task {
     cmd: String,
     args: Vec<String>,
@@ -106,7 +128,7 @@ pub struct Task {
     stderr: PathBuf,
     retry: u32,
     successdelay: u32,
-    exitcodes: Vec<i32>,
+    pub exitcodes: Vec<i32>,
     restart: Relaunch,
     env: Vec<String>,
     gid: Option<gid_t>,
@@ -120,6 +142,16 @@ impl<'de> Deserialize<'de> for Task {
     {
         let partial = TaskPartial::deserialize(deserializer)?;
         Ok(Task::from(partial))
+    }
+}
+
+impl Serialize for Task {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let partial: TaskPartial = self.clone().into();
+        partial.serialize(serializer)
     }
 }
 
