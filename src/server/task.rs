@@ -91,6 +91,29 @@ struct TaskPartial {
     pub uid: Option<uid_t>,
 }
 
+impl From<Task> for TaskPartial {
+    fn from(task: Task) -> TaskPartial {
+        TaskPartial {
+            cmd: task.cmd,
+            autostart: task.autostart,
+            numprocess: task.numprocess,
+            umask: task.umask,
+            workingdir: task.workingdir,
+            stopsignal: task.stopsignal,
+            stopdelay: task.stopdelay,
+            stdout: task.stdout,
+            stderr: task.stderr,
+            retry: task.retry,
+            successdelay: task.successdelay,
+            exitcodes: task.exitcodes,
+            restart: task.restart,
+            env: task.env,
+            gid: task.gid,
+            uid: task.uid,
+        }
+    }
+}
+
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Task {
     cmd: String,
@@ -156,29 +179,6 @@ impl From<TaskPartial> for Task {
             env: partial.env,
             gid: partial.gid,
             uid: partial.uid,
-        }
-    }
-}
-
-impl Into<TaskPartial> for Task {
-    fn into(self) -> TaskPartial {
-        TaskPartial {
-            cmd: self.cmd,
-            autostart: self.autostart,
-            numprocess: self.numprocess,
-            umask: self.umask,
-            workingdir: self.workingdir,
-            stopsignal: self.stopsignal,
-            stopdelay: self.stopdelay,
-            stdout: self.stdout,
-            stderr: self.stderr,
-            retry: self.retry,
-            successdelay: self.successdelay,
-            exitcodes: self.exitcodes,
-            restart: self.restart,
-            env: self.env,
-            gid: self.gid,
-            uid: self.uid,
         }
     }
 }
