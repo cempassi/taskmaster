@@ -16,49 +16,6 @@ pub enum Action {
     Stop,
 }
 
-// Status of the task
-#[derive(Copy, Clone)]
-pub enum Status {
-    NotStarted,
-    Running,
-    Failing,
-    Finished,
-    Unknown,
-    Stopped,
-}
-
-impl std::fmt::Display for Status {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let name = match self {
-            Status::NotStarted => "not started",
-            Status::Running => "running",
-            Status::Failing => "failing",
-            Status::Finished => "finished",
-            Status::Stopped => "stopped",
-            Status::Unknown => "unknown",
-        };
-        write!(f, "{}", name)
-    }
-}
-
-struct MonitorTask {
-    name: String,
-    childs: Vec<Child>,
-    finished: Vec<(u32, ExitStatus)>,
-    status: Status,
-}
-
-impl MonitorTask {
-    fn new(name: String, childs: Vec<Child>) -> Self {
-        MonitorTask {
-            name,
-            childs,
-            finished: Vec::new(),
-            status: Status::Running,
-        }
-    }
-}
-
 fn monitor(m: Arc<Mutex<MonitorTask>>, _sender: &Sender<Status>) {
     thread::spawn(move || {
         let delay: Duration = Duration::from_secs(10);
@@ -109,20 +66,20 @@ pub fn run(taskname: &str, task: Task, sender: Sender<Status>, receiver: Receive
             if let Ok(action) = receiver.try_recv() {
                 match action {
                     Action::Reload(t) => {
-                        let mut mon = m.lock().unwrap();
-                        mon.childs
-                            .iter_mut()
-                            .for_each(|child| child.kill().unwrap());
-                        mon.childs.clear();
-                        mon.childs = t.run();
+                        // let mut mon = m.lock().unwrap();
+                        // mon.childs
+                        //     .iter_mut()
+                        //     .for_each(|child| child.kill().unwrap());
+                        // mon.childs.clear();
+                        // mon.childs = t.run();
                     }
                     Action::Stop => {
-                        let mut mon = m.lock().unwrap();
-                        mon.childs
-                            .iter_mut()
-                            .for_each(|child| child.kill().unwrap());
-                        mon.status = Status::Stopped;
-                        break;
+                        // let mut mon = m.lock().unwrap();
+                        // mon.childs
+                        //     .iter_mut()
+                        //     .for_each(|child| child.kill().unwrap());
+                        // mon.status = Status::Stopped;
+                        // break;
                     }
                     Action::Status => {
                         let mon = m.lock().unwrap();
