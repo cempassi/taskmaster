@@ -1,17 +1,17 @@
-use std::sync::mpsc::{Receiver, Sender};
-use std::sync::Mutex;
+use std::sync::{
+    mpsc::{Receiver, Sender},
+    Arc, Mutex,
+};
 use std::time::Duration;
-use std::{convert::TryFrom, sync::Arc};
 use std::{
     process::{Child, ExitStatus},
     thread,
 };
 
-use super::reader::ReadTask;
 use super::task::Task;
 
 pub enum Action {
-    Reload(ReadTask),
+    Reload(Task),
     Status,
     Stop,
 }
@@ -109,13 +109,12 @@ pub fn run(taskname: &str, task: Task, sender: Sender<Status>, receiver: Receive
             if let Ok(action) = receiver.try_recv() {
                 match action {
                     Action::Reload(t) => {
-                        let task = Task::try_from(&t).unwrap();
                         let mut mon = m.lock().unwrap();
                         mon.childs
                             .iter_mut()
                             .for_each(|child| child.kill().unwrap());
                         mon.childs.clear();
-                        mon.childs = task.run();
+                        mon.childs = t.run();
                     }
                     Action::Stop => {
                         let mut mon = m.lock().unwrap();

@@ -6,7 +6,6 @@ use std::sync::mpsc::Sender;
 mod default;
 pub mod error;
 mod listener;
-mod reader;
 mod relaunch;
 mod signal;
 mod state;
