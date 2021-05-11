@@ -7,24 +7,24 @@ mod client;
 mod server;
 mod shared;
 
-use log::{Level, LevelFilter, SetLoggerError};
+use log::{LevelFilter, SetLoggerError};
 use server::error;
+use shared::logger::LOGGER;
 
 type Result<T> = std::result::Result<T, error::Taskmaster>;
-
-static LOGGER: shared::logger::Simple = shared::logger::Simple {
-    level: Level::Debug,
-};
 
 /// # Errors
 ///
 /// Will return `Err` when failing to initialise `LOGGER`
-pub fn init() -> std::result::Result<(), SetLoggerError> {
+unsafe fn init() -> std::result::Result<(), SetLoggerError> {
+    LOGGER.set_instant(std::time::Instant::now());
     log::set_logger(&LOGGER).map(|()| log::set_max_level(LevelFilter::Debug))
 }
 
 fn main() -> Result<()> {
-    init().unwrap();
+    unsafe {
+        init().unwrap();
+    }
     let cli = cli::generate();
 
     if let Some(matches) = cli.subcommand_matches("server") {
