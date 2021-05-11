@@ -2,15 +2,11 @@ use serde::{self, Deserialize};
 use std::fmt::{self, Display, Formatter};
 
 #[derive(Debug, Eq, Clone, PartialEq, Deserialize)]
+#[serde(rename_all = "kebab-case")]
 pub enum Relaunch {
-    #[serde(rename = "always")]
-    Always,
-
-    #[serde(rename = "on-error")]
-    OnError,
-
-    #[serde(rename = "never")]
     Never,
+    Always,
+    OnError,
 }
 
 impl Display for Relaunch {
