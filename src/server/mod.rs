@@ -7,7 +7,6 @@ mod default;
 pub mod error;
 mod listener;
 mod monitor;
-mod reader;
 mod relaunch;
 mod signal;
 mod state;

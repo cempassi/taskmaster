@@ -4,14 +4,13 @@ use std::sync::mpsc::Sender;
 
 use super::{
     monitor::Monitor,
-    reader::{ConfigFile, ReadTask},
-    task::Task,
+    task::{ConfigFile, Task},
     watcher::Watcher,
 };
 
 #[derive(Debug)]
 pub struct State {
-    pub tasks: HashMap<String, ReadTask>,
+    pub tasks: HashMap<String, Task>,
     pub monitors: HashMap<String, Monitor>,
 }
 
