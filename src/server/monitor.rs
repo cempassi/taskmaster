@@ -64,12 +64,14 @@ impl Monitor {
     }
 
     pub fn start(&mut self) {
+        log::debug!("[{}] starting ...", self.id);
         // code here
         self.change_state(Status::Active);
         unimplemented!();
     }
 
     pub fn stop(&mut self) {
+        log::debug!("[{}] stopping ...", self.id);
         self.change_state(Status::Stopping);
         self.stop_raw();
         self.change_state(Status::Stopped);
@@ -88,6 +90,7 @@ impl Monitor {
 
     pub fn reload(&mut self, task: Task) {
         if self.task != task {
+            log::debug!("[{}] reloading ...", self.id);
             self.change_state(Status::Reloading);
             self.stop_raw();
             self.task = task;
