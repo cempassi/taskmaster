@@ -6,10 +6,9 @@ use std::fs::File;
 use std::os::unix::process::CommandExt;
 use std::path::PathBuf;
 use std::process::{Child, Command};
-use std::str::FromStr;
 use std::vec::Vec;
 
-use super::{default, error, reader::ReadTask, relaunch::Relaunch, signal};
+use super::{error, reader::ReadTask, relaunch::Relaunch, signal};
 
 #[derive(Debug, Deserialize)]
 enum AutoRestart {
@@ -55,64 +54,29 @@ impl TryFrom<&ReadTask> for Task {
                 .split(' ')
                 .map(std::string::ToString::to_string)
                 .collect(),
-            numprocess: readtask.numprocess.unwrap_or(default::NUMPROCESS),
-            autostart: readtask.autostart.unwrap_or(default::AUTOSTART),
-            umask: readtask.umask.unwrap_or(default::UMASK),
+            numprocess: readtask.numprocess,
+            autostart: readtask.autostart,
+            umask: readtask.umask,
 
-            retry: readtask.retry.unwrap_or(default::RETRY),
+            retry: readtask.retry,
 
-            successdelay: readtask.successdelay.unwrap_or(default::SUCCESS_DELAY),
+            successdelay: readtask.successdelay,
 
             uid: readtask.uid,
             gid: readtask.gid,
 
-            env: readtask
-                .env
-                .as_ref()
-                .unwrap_or(&Vec::from(default::ENV))
-                .clone(),
+            env: readtask.env.clone(),
 
-            restart: readtask
-                .restart
-                .as_ref()
-                .unwrap_or(&default::RELAUNCH_MODE)
-                .clone(),
+            restart: readtask.restart.clone(),
 
-            expected_exit_codes: readtask
-                .exitcodes
-                .as_ref()
-                .unwrap_or(&Vec::from(default::EXPECTED_EXIT_CODES))
-                .clone(),
+            expected_exit_codes: readtask.exitcodes.clone(),
 
-            stopsignal: signal::Signal::from_str(
-                &readtask
-                    .stopsignal
-                    .as_ref()
-                    .unwrap_or(&String::from(default::STOP_SIGNAL)),
-            )?,
-            stopdelay: readtask.stopdelay.unwrap_or(default::STOP_DELAY),
+            stopsignal: readtask.stopsignal.clone(),
+            stopdelay: readtask.stopdelay,
 
-            workingdir: PathBuf::from(
-                readtask
-                    .workingdir
-                    .as_ref()
-                    .unwrap_or(&String::from(default::WORKDIR))
-                    .as_str(),
-            ),
-            stdout: PathBuf::from(
-                readtask
-                    .stdout
-                    .as_ref()
-                    .unwrap_or(&String::from(default::STDOUT))
-                    .as_str(),
-            ),
-            stderr: PathBuf::from(
-                readtask
-                    .stderr
-                    .as_ref()
-                    .unwrap_or(&String::from(default::STDERR))
-                    .as_str(),
-            ),
+            workingdir: PathBuf::from(&readtask.workingdir),
+            stdout: PathBuf::from(&readtask.stdout),
+            stderr: PathBuf::from(&readtask.stderr),
         })
     }
 }

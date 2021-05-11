@@ -1,39 +1,57 @@
 use super::watcher::Watcher;
-use super::{default, error, relaunch::Relaunch};
+use super::{default, error, relaunch::Relaunch, signal::Signal};
 use libc::{gid_t, mode_t, uid_t};
 use serde::Deserialize;
 use std::collections::BTreeMap;
 use std::convert::TryFrom;
 use std::fmt;
 use std::fs;
+use std::path::PathBuf;
 
 pub type ConfigFile = BTreeMap<String, ReadTask>;
 
 #[derive(Debug, Deserialize, Eq, PartialEq, Clone)]
 pub struct ReadTask {
     pub cmd: String,
-    pub autostart: Option<bool>,
-    pub numprocess: Option<u32>,
 
-    pub umask: Option<mode_t>,
+    #[serde(default = "default::autostart")]
+    pub autostart: bool,
 
-    pub workingdir: Option<String>,
+    #[serde(default = "default::numprocess")]
+    pub numprocess: u32,
 
-    pub stopsignal: Option<String>,
-    pub stopdelay: Option<u32>,
+    #[serde(default = "default::umask")]
+    pub umask: mode_t,
 
-    pub stdout: Option<String>,
-    pub stderr: Option<String>,
+    #[serde(default = "default::workdir")]
+    pub workingdir: PathBuf,
 
-    pub retry: Option<u32>,
+    #[serde(default = "default::stop_signal")]
+    pub stopsignal: Signal,
 
-    pub successdelay: Option<u32>,
+    #[serde(default = "default::stop_delay")]
+    pub stopdelay: u32,
 
-    pub exitcodes: Option<Vec<i32>>,
+    #[serde(default = "default::stdout")]
+    pub stdout: PathBuf,
 
-    pub restart: Option<Relaunch>,
+    #[serde(default = "default::stderr")]
+    pub stderr: PathBuf,
 
-    pub env: Option<Vec<String>>,
+    #[serde(default = "default::retry")]
+    pub retry: u32,
+
+    #[serde(default = "default::success_delay")]
+    pub successdelay: u32,
+
+    #[serde(default = "default::exit_codes")]
+    pub exitcodes: Vec<i32>,
+
+    #[serde(default = "default::relaunch_mode")]
+    pub restart: Relaunch,
+
+    #[serde(default = "default::env")]
+    pub env: Vec<String>,
 
     pub gid: Option<gid_t>,
     pub uid: Option<uid_t>,
@@ -43,28 +61,28 @@ impl fmt::Display for ReadTask {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "Command: {}\nNumber of processes: {}\nAutostart: {}\nUmask: {:#05o}\nWorking Directory: {}\nStdout: {}\nStderr: {}\nStop signal: {}\nStop delay: {}\nretry: {}\nSuccess Delay: {}\nExit Codes: {:?}\nRestart: {}\nEnv: {:?}\nPermission: uid: {:?}, gid: {:?}",
+            "Command: {}\nNumber of processes: {}\nAutostart: {}\nUmask: {:#05o}\nWorking Directory: {:?}\nStdout: {:?}\nStderr: {:?}\nStop signal: {}\nStop delay: {}\nretry: {}\nSuccess Delay: {}\nExit Codes: {:?}\nRestart: {}\nEnv: {:?}\nPermission: uid: {:?}, gid: {:?}",
             self.cmd,
-            self.numprocess.unwrap_or(default::NUMPROCESS),
-            self.autostart.unwrap_or(default::AUTOSTART),
-            self.umask.unwrap_or(default::UMASK),
-            self.workingdir.as_ref().unwrap_or(&String::from(default::WORKDIR)),
+            self.numprocess,
+            self.autostart,
+            self.umask,
+            self.workingdir,
 
-            self.stdout.as_ref().unwrap_or(&String::from(default::STDOUT)),
-            self.stderr.as_ref().unwrap_or(&String::from(default::STDERR)),
+            self.stdout,
+            self.stderr,
 
-            self.stopsignal.as_ref().unwrap_or(&String::from(default::STOP_SIGNAL)),
-            self.stopdelay.unwrap_or(default::STOP_DELAY),
+            self.stopsignal,
+            self.stopdelay,
 
-            self.retry.unwrap_or(default::RETRY),
+            self.retry,
 
-            self.successdelay.unwrap_or(default::SUCCESS_DELAY),
+            self.successdelay,
 
-            self.exitcodes.as_ref().unwrap_or(&Vec::from(default::EXPECTED_EXIT_CODES)),
+            self.exitcodes,
 
-            self.restart.as_ref().unwrap_or(&default::RELAUNCH_MODE),
+            self.restart,
 
-            self.env.as_ref().unwrap_or(&Vec::from(default::ENV)),
+            self.env,
 
             self.uid,
             self.gid,

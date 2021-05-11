@@ -1,15 +1,17 @@
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use signal_hook::{
     consts::{SIGHUP, SIGINT},
     iterator::Signals,
 };
+use std::fmt::{self, Display, Formatter};
 use std::str::FromStr;
 use std::sync::mpsc::Sender;
 
 use super::{Communication, Message};
 use crate::error;
 
-#[derive(Debug, PartialEq, Eq, Serialize)]
+#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "UPPERCASE")]
 pub enum Signal {
     Hup,
     Int,
@@ -82,6 +84,45 @@ impl FromStr for Signal {
             "USR2" => Ok(Signal::Usr2),
             &_ => Err(error::Taskmaster::Signal),
         }
+    }
+}
+
+impl Display for Signal {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        let s = match self {
+            Signal::Hup => "HUP",
+            Signal::Int => "INT",
+            Signal::Quit => "QUIT",
+            Signal::Ill => "ILL",
+            Signal::Trap => "TRAP",
+            Signal::Abrt => "ABRT",
+            Signal::Emt => "EMT",
+            Signal::Fpe => "FPE",
+            Signal::Kill => "KILL",
+            Signal::Bus => "BUS",
+            Signal::Segv => "SEGV",
+            Signal::Sys => "SYS",
+            Signal::Pipe => "PIPE",
+            Signal::Alrm => "ALRM",
+            Signal::Term => "TERM",
+            Signal::Urg => "URG",
+            Signal::Stop => "STOP",
+            Signal::Tstp => "TSTP",
+            Signal::Cont => "CONT",
+            Signal::Chld => "CHLD",
+            Signal::Ttin => "TTIN",
+            Signal::Ttou => "TTOU",
+            Signal::Io => "IO",
+            Signal::Xcpu => "XCPU",
+            Signal::Xfsz => "XFSZ",
+            Signal::Vtal => "VTAL",
+            Signal::Prof => "PROF",
+            Signal::Winc => "WINC",
+            Signal::Info => "INFO",
+            Signal::Usr1 => "USR1",
+            Signal::Usr2 => "USR2",
+        };
+        write!(f, "{}", s)
     }
 }
 
