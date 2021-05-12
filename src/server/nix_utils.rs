@@ -70,11 +70,11 @@ impl UidGid for Gid {
 
 pub struct SerdeOptionnalUidGid<T>(Option<T>)
 where
-    T: UidGid + Clone;
+    T: UidGid;
 
 impl<T> SerdeOptionnalUidGid<T>
 where
-    T: UidGid + Clone,
+    T: UidGid,
 {
     pub fn deserialize<'de, D>(deserializer: D) -> Result<Option<T>, D::Error>
     where
