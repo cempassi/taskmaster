@@ -43,6 +43,14 @@ pub struct Monitor {
     state: Arc<Mutex<Status>>,
 }
 
+impl Drop for Monitor {
+    fn drop(&mut self) {
+        for child in &mut (*self.children.lock().unwrap()) {
+            child.kill().expect("cannot kill children");
+        }
+    }
+}
+
 impl Monitor {
     // Only create Monitoring struct
     pub fn new_only(id: String, task: Task) -> Self {
