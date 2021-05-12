@@ -1,4 +1,4 @@
-use super::{default, error, relaunch::Relaunch, signal::Signal, watcher::Watcher};
+use super::{default, error, nix_utils, relaunch::Relaunch, signal::Signal, watcher::Watcher};
 use nix::{
     sys::stat::{self, Mode},
     unistd::{Gid, Uid},
@@ -57,7 +57,7 @@ struct TaskPartial {
     #[serde(default = "default::numprocess")]
     pub numprocess: u32,
 
-    #[serde(default = "default::umask")]
+    #[serde(default = "default::umask", with = "nix_utils::SerdeMode")]
     pub umask: Mode,
 
     #[serde(default = "default::workdir")]
@@ -90,7 +90,9 @@ struct TaskPartial {
     #[serde(default = "default::env")]
     pub env: Vec<String>,
 
+    #[serde(with = "nix_utils::SerdeOptionnalUidGid", default)]
     pub uid: Option<Uid>,
+    #[serde(with = "nix_utils::SerdeOptionnalUidGid", default)]
     pub gid: Option<Gid>,
 }
 
@@ -247,10 +249,12 @@ impl Task {
         }
         if self.umask != default::umask() {
             let umask: Mode = self.umask;
-            command.pre_exec(move || {
-                stat::umask(umask);
-                Ok(())
-            });
+            unsafe {
+                command.pre_exec(move || {
+                    stat::umask(umask);
+                    Ok(())
+                });
+            }
         }
     }
 
