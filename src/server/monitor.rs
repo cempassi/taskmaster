@@ -45,9 +45,11 @@ pub struct Monitor {
 
 impl Drop for Monitor {
     fn drop(&mut self) {
-        for child in &mut (*self.children.lock().unwrap()) {
+        let mut children = self.children.lock().unwrap();
+        for child in children.iter_mut() {
             child.kill().expect("cannot kill children");
         }
+        children.clear();
     }
 }
 
@@ -146,7 +148,6 @@ impl Monitor {
                     if *state != Status::Failed {
                         *state = Status::Finished;
                     }
-                    // FIXME: update monitor status
                     break;
                 }
                 drop(children);
