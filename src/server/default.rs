@@ -1,5 +1,5 @@
 use super::{relaunch::Relaunch, signal::Signal};
-use libc::mode_t;
+use nix::sys::stat::Mode;
 use std::path::PathBuf;
 
 pub fn autostart() -> bool {
@@ -10,8 +10,8 @@ pub fn numprocess() -> u32 {
     1
 }
 
-pub fn umask() -> mode_t {
-    0
+pub fn umask() -> Mode {
+    Mode::from_bits(0).expect("cannot create default mode")
 }
 
 pub fn workdir() -> PathBuf {
