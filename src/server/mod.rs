@@ -16,7 +16,7 @@ mod waiter;
 mod watcher;
 
 use self::{
-    communication::Communication, listener::Listener, message::Inter, state::State,
+    communication::Communication, listener::Listener, message::Inter, state::State, waiter::Waiter,
     watcher::Watcher,
 };
 
@@ -29,8 +29,9 @@ pub fn start(config: &str) -> Result<(), error::Taskmaster> {
     let (sender, receiver) = channel::<Inter>();
     let mut watcher = Watcher::try_from(config)?;
     let mut msg_listener = Listener::new();
+    let mut waiter = Waiter::new(sender.clone());
     let mut server = Server {
-        state: State::new(),
+        state: State::new(sender.clone()),
         event_sender: sender.clone(),
     };
 
@@ -43,8 +44,8 @@ pub fn start(config: &str) -> Result<(), error::Taskmaster> {
             log::info!("received internal message: {:?}", message);
             match message {
                 Inter::ChildrenExited(_pid, _status) => unimplemented!(),
-                Inter::ChildrenToWait => unimplemented!(),
-                Inter::NoMoreChildrenInTask => unimplemented!(),
+                Inter::ChildrenToWait => waiter.wait_children(),
+                Inter::NoMoreChildrenInTask => waiter.done_wait_children(),
                 Inter::FromClient(com) => server.handle_client_message(com),
                 Inter::Reload => server.reload_config(&watcher),
                 Inter::Quit => break,

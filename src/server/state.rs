@@ -3,6 +3,7 @@ use std::convert::TryFrom;
 use std::sync::mpsc::Sender;
 
 use super::{
+    message::Inter,
     monitor::Monitor,
     task::{ConfigFile, Task},
     watcher::Watcher,
@@ -11,12 +12,14 @@ use super::{
 #[derive(Debug)]
 pub struct State {
     pub monitors: HashMap<String, Monitor>,
+    sender: Sender<Inter>,
 }
 
 impl State {
-    pub fn new() -> Self {
+    pub fn new(sender: Sender<Inter>) -> Self {
         State {
             monitors: HashMap::new(),
+            sender,
         }
     }
 
@@ -43,8 +46,10 @@ impl State {
     }
 
     fn add_task(&mut self, name: &str, task: Task) {
-        self.monitors
-            .insert(name.to_string(), Monitor::new(name.to_string(), task));
+        self.monitors.insert(
+            name.to_string(),
+            Monitor::new(name.to_string(), task, self.sender.clone()),
+        );
     }
 
     pub fn start(&mut self, name: &str) {
