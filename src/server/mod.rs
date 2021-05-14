@@ -1,6 +1,6 @@
 use crate::shared::message::Message;
 use std::convert::TryFrom;
-use std::sync::mpsc::channel;
+use std::sync::mpsc::{channel, Sender};
 
 mod communication;
 mod default;
@@ -24,6 +24,7 @@ struct Server {
     state: State,
     watcher: Watcher,
     msg_listener: Listener,
+    event_sender: Sender<Inter>,
 }
 
 pub fn start(config: &str) -> Result<(), error::Taskmaster> {
@@ -39,6 +40,7 @@ pub fn start(config: &str) -> Result<(), error::Taskmaster> {
         state,
         watcher,
         msg_listener: listener,
+        event_sender: sender.clone(),
     };
 
     signal::handle_signals(sender)?;
@@ -48,7 +50,8 @@ pub fn start(config: &str) -> Result<(), error::Taskmaster> {
             match message {
                 Inter::ChildrenExited(pid, status) => unimplemented!(),
                 Inter::ChildrenToWait => unimplemented!(),
-                Inter::FromClient(com) => server.handle_client_message(&mut state, com),
+                Inter::FromClient(com) => server.handle_client_message(com),
+                Inter::Quit => break,
             }
         };
     }
@@ -66,7 +69,10 @@ impl Server {
             Message::Stop(taskname) => self.state.stop(&taskname),
             Message::List => self.state.list(&com.channel.unwrap()),
             Message::Status(taskname) => self.state.status(&taskname, &com.channel.unwrap()),
-            Message::Quit => break,
+            Message::Quit => self
+                .event_sender
+                .send(Inter::Quit)
+                .expect("cannot send quit message"),
         };
     }
 }
