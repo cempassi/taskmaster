@@ -1,6 +1,7 @@
 use crate::shared::message::Message;
 use std::sync::mpsc::Sender;
 
+#[derive(Debug, Clone)]
 pub struct Communication {
     pub message: Message,
     pub channel: Option<Sender<String>>,
