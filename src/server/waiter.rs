@@ -61,7 +61,7 @@ impl Waiter {
                     }
                 }
             }
-            sender.send(Inter::NoMoreChildrenToWait);
+            sender.send(Inter::NoMoreChildrenToWait).unwrap();
             log::debug!("wait counter at zero, finished waiting for subprocess");
         }));
     }
