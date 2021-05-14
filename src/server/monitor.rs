@@ -83,7 +83,9 @@ impl Monitor {
         log::debug!("[{}] starting ...", self.id);
         self.children.lock().unwrap().extend(self.task.run());
         // self.spaw_children_watcher();
-        self.sender.send(Inter::ChildrenToWait);
+        self.sender
+            .send(Inter::ChildrenToWait(self.task.numprocess as usize))
+            .unwrap();
         self.change_state(Status::Active);
     }
 

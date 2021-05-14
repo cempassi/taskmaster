@@ -124,7 +124,7 @@ pub struct Task {
     cmd: String,
     args: Vec<String>,
     pub autostart: bool,
-    numprocess: u32,
+    pub numprocess: u32,
     umask: Mode,
     workingdir: PathBuf,
     stopsignal: Signal,
