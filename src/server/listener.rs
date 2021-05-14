@@ -5,7 +5,7 @@ use std::os::unix::net::{UnixListener, UnixStream};
 use std::sync::mpsc::{channel, Sender};
 use std::thread;
 
-use super::{Communication, Message};
+use super::{communication::Communication, Message};
 
 pub struct Listener {
     pub sock: UnixListener,

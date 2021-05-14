@@ -5,7 +5,7 @@ use std::thread;
 use std::time::{Duration, Instant, SystemTime};
 
 use super::error;
-use super::{Communication, Message};
+use super::{communication::Communication, Message};
 
 #[derive(Clone)]
 struct PathData {

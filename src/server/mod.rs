@@ -1,11 +1,12 @@
 use crate::shared::message::Message;
 use std::convert::TryFrom;
 use std::sync::mpsc::channel;
-use std::sync::mpsc::Sender;
 
+mod communication;
 mod default;
 pub mod error;
 mod listener;
+mod message;
 mod monitor;
 mod nix_utils;
 mod relaunch;
@@ -16,17 +17,6 @@ mod watcher;
 
 use self::watcher::Watcher;
 use self::{listener::Listener, state::State};
-
-pub struct Communication {
-    message: Message,
-    channel: Option<Sender<String>>,
-}
-
-impl Communication {
-    pub fn new(message: Message, channel: Option<Sender<String>>) -> Communication {
-        Communication { message, channel }
-    }
-}
 
 pub fn start(config: &str) -> Result<(), error::Taskmaster> {
     let (sender, receiver) = channel();

@@ -7,7 +7,7 @@ use std::fmt::{self, Display, Formatter};
 use std::str::FromStr;
 use std::sync::mpsc::Sender;
 
-use super::{Communication, Message};
+use super::{communication::Communication, Message};
 use crate::error;
 
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
