@@ -1,8 +1,8 @@
-use super::task::Task;
+use super::{message::Inter, task::Task};
 use serde::Serialize;
 use std::fmt::{self, Debug, Display, Formatter};
 use std::process::Child;
-use std::sync::{Arc, Mutex};
+use std::sync::{mpsc::Sender, Arc, Mutex};
 use std::time::Duration;
 
 #[derive(Copy, Clone, Serialize, PartialEq)]
@@ -41,22 +41,26 @@ pub struct Monitor {
 
     #[serde(skip)]
     state: Arc<Mutex<Status>>,
+
+    #[serde(skip)]
+    sender: Sender<Inter>,
 }
 
 impl Monitor {
     // Only create Monitoring struct
-    pub fn new_only(id: String, task: Task) -> Self {
+    pub fn new_only(id: String, task: Task, sender: Sender<Inter>) -> Self {
         Monitor {
             id,
             task,
             children: Arc::new(Mutex::new(Vec::new())),
             state: Arc::new(Mutex::new(Status::Inactive)),
+            sender,
         }
     }
 
     // Create new Monitoring struct and start the task if required
-    pub fn new(id: String, task: Task) -> Self {
-        let mut mon = Monitor::new_only(id, task);
+    pub fn new(id: String, task: Task, sender: Sender<Inter>) -> Self {
+        let mut mon = Monitor::new_only(id, task, sender);
         if mon.task.autostart {
             mon.start();
         }
@@ -78,7 +82,8 @@ impl Monitor {
     fn start_raw(&mut self) {
         log::debug!("[{}] starting ...", self.id);
         self.children.lock().unwrap().extend(self.task.run());
-        self.spaw_children_watcher();
+        // self.spaw_children_watcher();
+        self.sender.send(Inter::ChildrenToWait);
         self.change_state(Status::Active);
     }
 
