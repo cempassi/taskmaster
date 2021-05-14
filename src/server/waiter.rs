@@ -15,43 +15,52 @@ use std::{
 pub struct Waiter {
     counter: Arc<AtomicUsize>,
     thread: Option<JoinHandle<()>>,
+    sender: Sender<Inter>,
 }
 
 impl Waiter {
-    pub fn new() -> Self {
+    pub fn new(sender: Sender<Inter>) -> Self {
         Self {
             counter: Arc::new(AtomicUsize::new(0)),
             thread: None,
+            sender,
         }
     }
 
-    pub fn wait_children(&mut self, sender: Sender<Inter>) {
+    pub fn wait_children(&mut self) {
         self.counter.fetch_add(1, Ordering::SeqCst);
+
         if self.thread.is_none() {
-            let counter = self.counter.clone();
-            self.thread = Some(thread::spawn(move || {
-                while counter.load(Ordering::SeqCst) > 0 {
-                    match waitpid(Pid::from_raw(-1), None) {
-                        Ok(status) => match status {
-                            WaitStatus::Exited(pid, _) | WaitStatus::Signaled(pid, _, _) => {
-                                log::debug!("a process has exited {:?}", status);
-                                sender.send(Inter::ChildrenExited(pid, status)).unwrap()
-                            }
-                            _ => {
-                                log::warn!("exit status {:?} not handled", status);
-                            }
-                        },
-                        Err(error) => {
-                            log::error!("error while using waitpid: {}", error);
-                            panic!("error while waiting for subproccess");
-                        }
-                    }
-                }
-                log::debug!("wait counter at zero, finished waiting for subprocess");
-            }));
+            self.spawn_waiting_thread();
         } else {
             log::debug!("waiting thread already running");
         }
+    }
+
+    fn spawn_waiting_thread(&mut self) {
+        let sender = self.sender.clone();
+        let counter = self.counter.clone();
+
+        self.thread = Some(thread::spawn(move || {
+            while counter.load(Ordering::SeqCst) > 0 {
+                match waitpid(Pid::from_raw(-1), None) {
+                    Ok(status) => match status {
+                        WaitStatus::Exited(pid, _) | WaitStatus::Signaled(pid, _, _) => {
+                            log::debug!("a process has exited {:?}", status);
+                            sender.send(Inter::ChildrenExited(pid, status)).unwrap()
+                        }
+                        _ => {
+                            log::warn!("exit status {:?} not handled", status);
+                        }
+                    },
+                    Err(error) => {
+                        log::error!("error while using waitpid: {}", error);
+                        panic!("error while waiting for subproccess");
+                    }
+                }
+            }
+            log::debug!("wait counter at zero, finished waiting for subprocess");
+        }));
     }
 
     pub fn done_wait_children(&mut self) {
