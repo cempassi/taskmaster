@@ -22,36 +22,30 @@ use self::{
 
 struct Server {
     state: State,
-    watcher: Watcher,
-    msg_listener: Listener,
     event_sender: Sender<Inter>,
 }
 
 pub fn start(config: &str) -> Result<(), error::Taskmaster> {
     let (sender, receiver) = channel::<Inter>();
-    let mut state = State::new();
-    let mut watcher = Watcher::try_from(config).unwrap();
-    let mut listener = Listener::new();
-
-    listener.run(sender.clone());
-    watcher.run(sender.clone());
-
+    let mut watcher = Watcher::try_from(config)?;
+    let mut msg_listener = Listener::new();
     let mut server = Server {
-        state,
-        watcher,
-        msg_listener: listener,
+        state: State::new(),
         event_sender: sender.clone(),
     };
+
+    watcher.run(sender.clone());
+    msg_listener.run(sender.clone());
 
     signal::handle_signals(sender)?;
     loop {
         if let Ok(message) = receiver.recv() {
             log::info!("received internal message: {:?}", message);
             match message {
-                Inter::ChildrenExited(pid, status) => unimplemented!(),
+                Inter::ChildrenExited(_pid, _status) => unimplemented!(),
                 Inter::ChildrenToWait => unimplemented!(),
                 Inter::FromClient(com) => server.handle_client_message(com),
-                Inter::Reload => server.reload_config(),
+                Inter::Reload => server.reload_config(&watcher),
                 Inter::Quit => break,
             }
         };
@@ -60,8 +54,8 @@ pub fn start(config: &str) -> Result<(), error::Taskmaster> {
 }
 
 impl Server {
-    fn reload_config(&mut self) {
-        self.state.reload(&self.watcher)
+    fn reload_config(&mut self, watcher: &Watcher) {
+        self.state.reload(watcher)
     }
 
     fn handle_client_message(&mut self, com: Communication) {

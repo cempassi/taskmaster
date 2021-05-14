@@ -5,7 +5,7 @@ use std::thread;
 use std::time::{Duration, Instant, SystemTime};
 
 use super::error;
-use super::{communication::Communication, Message};
+use super::message::Inter;
 
 #[derive(Clone)]
 struct PathData {
@@ -16,7 +16,6 @@ struct PathData {
 #[derive(Clone)]
 pub struct Watcher {
     pub path: PathBuf,
-    pub sender: Option<Sender<Communication>>,
     data: PathData,
 }
 
@@ -29,7 +28,6 @@ impl TryFrom<&str> for Watcher {
         if path.exists() {
             let watcher = Self {
                 path,
-                sender: None,
                 data: PathData {
                     mtime: SystemTime::now(),
                     last_check: None,
@@ -43,10 +41,9 @@ impl TryFrom<&str> for Watcher {
 }
 
 impl Watcher {
-    pub fn run(&mut self, sender: Sender<Communication>) {
+    pub fn run(&mut self, sender: Sender<Inter>) {
         let path = self.path.clone();
         let mut data = self.data.clone();
-        self.sender = Some(sender.clone());
         thread::spawn(move || loop {
             let delay: Duration = Duration::from_secs(10);
             if path.is_file() {
@@ -61,11 +58,7 @@ impl Watcher {
                         } else {
                             log::info!("ask to reload config");
                             data.mtime = mtime;
-                            let com = Communication {
-                                message: Message::Reload,
-                                channel: None,
-                            };
-                            sender.send(com).unwrap();
+                            sender.send(Inter::Reload).unwrap();
                         }
                     }
                 }
@@ -77,15 +70,5 @@ impl Watcher {
             }
             thread::sleep(delay);
         });
-    }
-
-    pub fn send(&self, msg: Message) {
-        if let Some(sender) = &self.sender {
-            let com = Communication {
-                message: msg,
-                channel: None,
-            };
-            sender.send(com).unwrap();
-        }
     }
 }
