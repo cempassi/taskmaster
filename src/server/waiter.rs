@@ -27,8 +27,8 @@ impl Waiter {
         }
     }
 
-    pub fn wait_children(&mut self) {
-        self.counter.fetch_add(1, Ordering::SeqCst);
+    pub fn wait_children(&mut self, children_to_wait: usize) {
+        self.counter.fetch_add(children_to_wait, Ordering::SeqCst);
 
         if self.thread.is_none() {
             self.spawn_waiting_thread();
@@ -49,6 +49,7 @@ impl Waiter {
                         WaitStatus::Exited(pid, _) | WaitStatus::Signaled(pid, _, _) => {
                             log::debug!("a process has exited {:?}", status);
                             sender.send(Inter::ChildrenExited(pid, status)).unwrap();
+                            counter.fetch_sub(1, Ordering::SeqCst);
                         }
                         _ => {
                             log::warn!("exit status {:?} not handled", status);
@@ -60,21 +61,16 @@ impl Waiter {
                     }
                 }
             }
+            sender.send(Inter::NoMoreChildrenToWait);
             log::debug!("wait counter at zero, finished waiting for subprocess");
         }));
     }
 
     pub fn done_wait_children(&mut self) {
-        let previous_value = self.counter.fetch_sub(1, Ordering::SeqCst);
-
-        if previous_value == 0 {
-            panic!("We wasn't waiting !");
-        } else if previous_value == 1 {
-            self.thread
-                .take()
-                .expect("expected a waiting thread")
-                .join()
-                .expect("cannot join waiting thread");
+        if let Some(thread) = self.thread.take() {
+            thread.join().expect("cannot join waiting thread");
+        } else {
+            log::error!("waiter: no thread to join as being asked !");
         }
     }
 }

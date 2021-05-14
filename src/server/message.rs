@@ -15,9 +15,9 @@ pub enum Inter {
     // When a children have exited
     ChildrenExited(Pid, WaitStatus),
 
-    // When we've to wait children
-    ChildrenToWait,
+    // When we've to wait `usize` children
+    ChildrenToWait(usize),
 
     // When all the children in a task have exited
-    NoMoreChildrenInTask,
+    NoMoreChildrenToWait,
 }
