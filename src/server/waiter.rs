@@ -42,12 +42,13 @@ impl Waiter {
         let counter = self.counter.clone();
 
         self.thread = Some(thread::spawn(move || {
+            log::debug!("thread to wait subprocess spawned !");
             while counter.load(Ordering::SeqCst) > 0 {
                 match waitpid(Pid::from_raw(-1), None) {
                     Ok(status) => match status {
                         WaitStatus::Exited(pid, _) | WaitStatus::Signaled(pid, _, _) => {
                             log::debug!("a process has exited {:?}", status);
-                            sender.send(Inter::ChildrenExited(pid, status)).unwrap()
+                            sender.send(Inter::ChildrenExited(pid, status)).unwrap();
                         }
                         _ => {
                             log::warn!("exit status {:?} not handled", status);
