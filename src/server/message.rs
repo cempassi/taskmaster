@@ -14,4 +14,7 @@ pub enum Inter {
 
     // Server need to quit
     Quit,
+
+    // Reload the configuration file
+    Reload,
 }

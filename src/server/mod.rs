@@ -51,6 +51,7 @@ pub fn start(config: &str) -> Result<(), error::Taskmaster> {
                 Inter::ChildrenExited(pid, status) => unimplemented!(),
                 Inter::ChildrenToWait => unimplemented!(),
                 Inter::FromClient(com) => server.handle_client_message(com),
+                Inter::Reload => server.reload_config(),
                 Inter::Quit => break,
             }
         };
@@ -59,9 +60,13 @@ pub fn start(config: &str) -> Result<(), error::Taskmaster> {
 }
 
 impl Server {
+    fn reload_config(&mut self) {
+        self.state.reload(&self.watcher)
+    }
+
     fn handle_client_message(&mut self, com: Communication) {
         match com.message {
-            Message::Reload => self.state.reload(&self.watcher),
+            Message::Reload => self.event_sender.send(Inter::Reload),
             Message::Start(taskname) if com.channel.is_some() => {
                 self.state.start(&taskname);
             }
