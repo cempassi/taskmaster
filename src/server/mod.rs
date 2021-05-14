@@ -1,4 +1,3 @@
-use crate::shared::message::Message;
 use std::convert::TryFrom;
 use std::sync::mpsc::{channel, Sender};
 
@@ -59,6 +58,8 @@ impl Server {
     }
 
     fn handle_client_message(&mut self, com: Communication) {
+        use crate::shared::message::Message;
+
         match com.message {
             Message::Reload => self.event_sender.send(Inter::Reload).unwrap(),
             Message::Start(taskname) => self.state.start(&taskname),
