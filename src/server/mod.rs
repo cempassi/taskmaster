@@ -66,10 +66,7 @@ impl Server {
 
     fn handle_client_message(&mut self, com: Communication) {
         match com.message {
-            Message::Reload => self.event_sender.send(Inter::Reload),
-            Message::Start(taskname) if com.channel.is_some() => {
-                self.state.start(&taskname);
-            }
+            Message::Reload => self.event_sender.send(Inter::Reload).unwrap(),
             Message::Start(taskname) => self.state.start(&taskname),
             Message::Stop(taskname) => self.state.stop(&taskname),
             Message::List => self.state.list(&com.channel.unwrap()),
