@@ -12,6 +12,7 @@ mod relaunch;
 mod signal;
 mod state;
 mod task;
+mod waiter;
 mod watcher;
 
 use self::{
@@ -43,6 +44,7 @@ pub fn start(config: &str) -> Result<(), error::Taskmaster> {
             match message {
                 Inter::ChildrenExited(_pid, _status) => unimplemented!(),
                 Inter::ChildrenToWait => unimplemented!(),
+                Inter::NoMoreChildrenInTask => unimplemented!(),
                 Inter::FromClient(com) => server.handle_client_message(com),
                 Inter::Reload => server.reload_config(&watcher),
                 Inter::Quit => break,

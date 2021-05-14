@@ -6,15 +6,18 @@ pub enum Inter {
     // When we receive a message from the client
     FromClient(Communication),
 
+    // Server need to quit
+    Quit,
+
+    // Reload the configuration file
+    Reload,
+
     // When a children have exited
     ChildrenExited(Pid, WaitStatus),
 
     // When we've to wait children
     ChildrenToWait,
 
-    // Server need to quit
-    Quit,
-
-    // Reload the configuration file
-    Reload,
+    // When all the children in a task have exited
+    NoMoreChildrenInTask,
 }
