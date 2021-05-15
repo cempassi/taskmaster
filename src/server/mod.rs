@@ -44,7 +44,7 @@ pub fn start(config: &str) -> Result<(), error::Taskmaster> {
         if let Ok(message) = receiver.recv() {
             log::info!("received internal message: {:?}", message);
             match message {
-                Inter::ChildrenExited(pid, status) => server.ev_child_has_exited(pid, status),
+                Inter::ChildHasExited(pid, status) => server.ev_child_has_exited(pid, status),
                 Inter::ChildrenToWait(count) => waiter.wait_children(count),
                 Inter::NoMoreChildrenToWait => waiter.done_wait_children(),
                 Inter::FromClient(com) => server.handle_client_message(com),
