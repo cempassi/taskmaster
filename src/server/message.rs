@@ -12,8 +12,8 @@ pub enum Inter {
     // Reload the configuration file
     Reload,
 
-    // When a children have exited
-    ChildrenExited(Pid, WaitStatus),
+    // When a child have exited
+    ChildHasExited(Pid, WaitStatus),
 
     // When we've to wait `usize` children
     ChildrenToWait(usize),

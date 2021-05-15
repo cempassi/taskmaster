@@ -48,7 +48,7 @@ impl Waiter {
                     Ok(status) => match status {
                         WaitStatus::Exited(pid, _) | WaitStatus::Signaled(pid, _, _) => {
                             log::debug!("a process has exited {:?}", status);
-                            sender.send(Inter::ChildrenExited(pid, status)).unwrap();
+                            sender.send(Inter::ChildHasExited(pid, status)).unwrap();
                             counter.fetch_sub(1, Ordering::SeqCst);
                         }
                         _ => {
