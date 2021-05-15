@@ -1,3 +1,4 @@
+use nix::{sys::wait::WaitStatus, unistd::Pid};
 use std::collections::HashMap;
 use std::convert::TryFrom;
 use std::sync::mpsc::Sender;
@@ -85,5 +86,15 @@ impl State {
         response
             .send(format!("status of {}: {}", taskname, status))
             .unwrap();
+    }
+
+    pub fn ev_child_has_exited(&mut self, pid: Pid, status: WaitStatus) {
+        if !self
+            .monitors
+            .values_mut()
+            .any(|mon| mon.ev_child_has_exited(pid, &status))
+        {
+            log::error!("no monitor was managing {}", pid);
+        }
     }
 }
