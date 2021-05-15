@@ -30,7 +30,7 @@ fn process_line(history: &History, line: &str) -> Result<()> {
         "list" => send_message(&Message::List),
         "history" => history.print(),
         "help" => print_help(),
-        "quit" => {
+        "stop-server" => {
             send_message(&Message::Quit);
             return Ok(());
         }
@@ -65,12 +65,14 @@ fn process_line(history: &History, line: &str) -> Result<()> {
 
 fn print_help() {
     let s = r#"Usage:
-        start: start task
-        stop: stop task
+        start: start <task>
+        stop: stop <task>
         quit: quit the server
         list: list all available tasks
         history: display previous valid commands
         help: show this help menu
+        status: show status of <command>
+        stop-server: stop the server
         "#;
     print!("{}", s);
 }
