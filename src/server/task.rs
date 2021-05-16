@@ -130,7 +130,7 @@ pub struct Task {
     pub numprocess: u32,
     umask: Mode,
     workingdir: PathBuf,
-    stopsignal: Signal,
+    pub stopsignal: Signal,
     pub stopdelay: u32,
     stdout: PathBuf,
     stderr: PathBuf,

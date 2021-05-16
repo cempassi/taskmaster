@@ -1,9 +1,6 @@
 use super::{message::Inter, task::Task};
 use nix::{
-    sys::{
-        signal::{self, Signal},
-        wait::WaitStatus,
-    },
+    sys::{signal, wait::WaitStatus},
     unistd::Pid,
 };
 use serde::Serialize;
@@ -109,11 +106,14 @@ impl Monitor {
 
     #[allow(clippy::cast_possible_wrap)]
     fn stop_raw(&mut self) {
+        let stopsig = self.task.stopsignal;
+
         // send stop signal to children
         self.children.iter_mut().for_each(|child| {
-            signal::kill(Pid::from_raw(child.id() as i32), Signal::SIGSTOP)
-                .expect("cannot send stop signal to child")
+            let id: i32 = child.id() as i32;
+            signal::kill(Pid::from_raw(id), stopsig).expect("cannot send stop signal to child")
         });
+
         // wait stop delay
         std::thread::sleep(std::time::Duration::from_secs(self.task.stopdelay.into()));
 
