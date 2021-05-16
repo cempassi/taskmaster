@@ -94,7 +94,7 @@ impl State {
             .values_mut()
             .any(|mon| mon.ev_child_has_exited(pid, &status))
         {
-            log::error!("no monitor was managing {}", pid);
+            log::error!("no monitor was managing child-{}", pid);
         }
     }
 }
