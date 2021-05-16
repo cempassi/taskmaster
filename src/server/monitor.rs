@@ -1,8 +1,14 @@
 use super::{message::Inter, task::Task};
-use nix::{sys::wait::WaitStatus, unistd::Pid};
+use nix::{
+    sys::{
+        signal::{self, Signal},
+        wait::WaitStatus,
+    },
+    unistd::Pid,
+};
 use serde::Serialize;
 use std::fmt::{self, Debug, Display, Formatter};
-use std::process::Child;
+use std::process::{Child, ExitStatus};
 use std::sync::mpsc::Sender;
 
 #[derive(Copy, Clone, Serialize, PartialEq)]
@@ -101,10 +107,23 @@ impl Monitor {
         }
     }
 
+    #[allow(clippy::cast_possible_wrap)]
     fn stop_raw(&mut self) {
-        self.children
-            .iter_mut()
-            .for_each(|child| child.kill().expect("cannot kill children"));
+        // send stop signal to children
+        self.children.iter_mut().for_each(|child| {
+            signal::kill(Pid::from_raw(child.id() as i32), Signal::SIGSTOP)
+                .expect("cannot send stop signal to child")
+        });
+        // wait stop delay
+        std::thread::sleep(std::time::Duration::from_secs(self.task.stopdelay.into()));
+
+        // kill remaining children that don't have exited
+        self.children.iter_mut().for_each(|child| {
+            let to_kill = child_has_exited(child).is_none();
+            if to_kill {
+                child.kill().expect("cannot kill children")
+            }
+        });
         self.children.clear();
     }
 
@@ -169,6 +188,17 @@ impl Monitor {
         } else {
             self.state = Status::Finished;
         }
+    }
+}
+
+fn child_has_exited(child: &mut Child) -> Option<ExitStatus> {
+    match child.try_wait() {
+        Ok(None) => None,
+        Err(e) => {
+            log::error!("while waiting for child {} got error {}", child.id(), e);
+            None
+        }
+        Ok(Some(status)) => Some(status),
     }
 }
 
