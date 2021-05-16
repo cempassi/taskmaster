@@ -1,5 +1,5 @@
 use nix::{
-    sys::stat::Mode,
+    sys::stat::{mode_t, Mode},
     unistd::{Gid, Uid},
 };
 use serde::{
@@ -29,7 +29,7 @@ impl SerdeMode {
     where
         D: Deserializer<'de>,
     {
-        let raw_mode = u32::deserialize(deserializer)?;
+        let raw_mode = mode_t::deserialize(deserializer)?;
         Mode::from_bits(raw_mode).ok_or_else(|| D::Error::custom(NixError::InvalidMode(raw_mode)))
     }
 
