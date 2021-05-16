@@ -1,11 +1,11 @@
-use crate::shared::message::Message;
 use std::convert::TryFrom;
-use std::sync::mpsc::channel;
-use std::sync::mpsc::Sender;
+use std::sync::mpsc::{channel, Sender};
 
+mod communication;
 mod default;
 pub mod error;
 mod listener;
+mod message;
 mod monitor;
 mod nix_utils;
 mod relaunch;
@@ -14,44 +14,62 @@ mod state;
 mod task;
 mod watcher;
 
-use self::watcher::Watcher;
-use self::{listener::Listener, state::State};
+use self::{
+    communication::Communication, listener::Listener, message::Inter, state::State,
+    watcher::Watcher,
+};
 
-pub struct Communication {
-    message: Message,
-    channel: Option<Sender<String>>,
-}
-
-impl Communication {
-    pub fn new(message: Message, channel: Option<Sender<String>>) -> Communication {
-        Communication { message, channel }
-    }
+struct Server {
+    state: State,
+    event_sender: Sender<Inter>,
 }
 
 pub fn start(config: &str) -> Result<(), error::Taskmaster> {
-    let (sender, receiver) = channel();
-    let mut state = State::new();
-    let mut watcher = Watcher::try_from(config).unwrap();
+    let (sender, receiver) = channel::<Inter>();
+    let mut watcher = Watcher::try_from(config)?;
     let mut listener = Listener::new();
+    let mut server = Server {
+        state: State::new(),
+        event_sender: sender.clone(),
+    };
 
-    listener.run(sender.clone());
     watcher.run(sender.clone());
+    listener.run(sender.clone());
+
     signal::handle_signals(sender)?;
     loop {
-        if let Ok(com) = receiver.recv() {
-            log::info!("received message: {:?}", com.message);
-            match com.message {
-                Message::Reload => state.reload(&watcher),
-                Message::Start(task) if com.channel.is_some() => {
-                    state.start(&task);
-                }
-                Message::Start(task) => state.start(&task),
-                Message::Stop(task) => state.stop(&task),
-                Message::List => state.list(&com.channel.unwrap()),
-                Message::Status(taskname) => state.status(&taskname, &com.channel.unwrap()),
-                Message::Quit => break,
-            };
+        if let Ok(message) = receiver.recv() {
+            log::info!("received internal message: {:?}", message);
+            match message {
+                Inter::ChildrenExited(_pid, _status) => unimplemented!(),
+                Inter::ChildrenToWait => unimplemented!(),
+                Inter::FromClient(com) => server.handle_client_message(com),
+                Inter::Reload => server.reload_config(&watcher),
+                Inter::Quit => break,
+            }
         };
     }
     Ok(())
+}
+
+impl Server {
+    fn reload_config(&mut self, watcher: &Watcher) {
+        self.state.reload(watcher)
+    }
+
+    fn handle_client_message(&mut self, com: Communication) {
+        use crate::shared::message::Message;
+
+        match com.message {
+            Message::Reload => self.event_sender.send(Inter::Reload).unwrap(),
+            Message::Start(taskname) => self.state.start(&taskname),
+            Message::Stop(taskname) => self.state.stop(&taskname),
+            Message::List => self.state.list(&com.channel.unwrap()),
+            Message::Status(taskname) => self.state.status(&taskname, &com.channel.unwrap()),
+            Message::Quit => self
+                .event_sender
+                .send(Inter::Quit)
+                .expect("cannot send quit message"),
+        };
+    }
 }
