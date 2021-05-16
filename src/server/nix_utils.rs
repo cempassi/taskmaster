@@ -1,5 +1,8 @@
 use nix::{
-    sys::{signal::Signal, stat::Mode},
+    sys::{
+        signal::Signal,
+        stat::{mode_t, Mode},
+    },
     unistd::{Gid, Uid},
 };
 use serde::{
@@ -12,7 +15,7 @@ use std::str::FromStr;
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum NixError {
-    InvalidMode(u32),
+    InvalidMode(mode_t),
     InvalidSignal(String),
 }
 
@@ -32,7 +35,7 @@ impl SerdeMode {
     where
         D: Deserializer<'de>,
     {
-        let raw_mode = u32::deserialize(deserializer)?;
+        let raw_mode = mode_t::deserialize(deserializer)?;
         Mode::from_bits(raw_mode).ok_or_else(|| D::Error::custom(NixError::InvalidMode(raw_mode)))
     }
 
