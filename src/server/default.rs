@@ -1,5 +1,5 @@
-use super::{relaunch::Relaunch, signal::Signal};
-use nix::sys::stat::Mode;
+use super::relaunch::Relaunch;
+use nix::sys::{signal::Signal, stat::Mode};
 use std::path::PathBuf;
 
 pub fn autostart() -> bool {
@@ -35,7 +35,7 @@ pub fn success_delay() -> u32 {
 }
 
 pub fn stop_signal() -> Signal {
-    Signal::Term
+    Signal::SIGTERM
 }
 
 pub fn stop_delay() -> u32 {
