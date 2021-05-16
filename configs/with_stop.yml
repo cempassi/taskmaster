@@ -1,0 +1,10 @@
+wont_stop:
+  cmd: python3 test/bin/show_signal.py
+  stopsignal: INT
+  stopdelay: 4
+  stdout: /tmp/wont_stop.out
+
+stop:
+  cmd: python3 test/bin/show_signal.py foo
+  stopsignal: CONT
+  stdout: /tmp/stop.out
