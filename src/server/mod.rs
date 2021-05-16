@@ -32,7 +32,7 @@ pub fn start(config: &str) -> Result<(), error::Taskmaster> {
     let mut listener = Listener::new();
     let mut waiter = Waiter::new(sender.clone());
     let mut server = Server {
-        state: State::new(),
+        state: State::new(sender.clone()),
         event_sender: sender.clone(),
     };
 
