@@ -52,6 +52,15 @@ pub struct Monitor {
     sender: Sender<Inter>,
 }
 
+impl Drop for Monitor {
+    fn drop(&mut self) {
+        for child in &self.children {
+            child.kill().expect("cannot kill children");
+        }
+        self.children.clear();
+    }
+}
+
 impl Monitor {
     // Only create Monitoring struct
     pub fn new_only(id: String, task: Task, sender: Sender<Inter>) -> Self {
