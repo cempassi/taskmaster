@@ -67,7 +67,6 @@ fn print_help() {
     let s = r#"Usage:
         start: start <task>
         stop: stop <task>
-        quit: quit the server
         list: list all available tasks
         history: display previous valid commands
         help: show this help menu
