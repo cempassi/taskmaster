@@ -54,7 +54,7 @@ pub struct Monitor {
 
 impl Drop for Monitor {
     fn drop(&mut self) {
-        for child in &self.children {
+        for child in &mut self.children {
             child.kill().expect("cannot kill children");
         }
         self.children.clear();
