@@ -43,6 +43,16 @@ pub struct Monitor {
     state: Arc<Mutex<Status>>,
 }
 
+impl Drop for Monitor {
+    fn drop(&mut self) {
+        let mut children = self.children.lock().unwrap();
+        for child in children.iter_mut() {
+            child.kill().expect("cannot kill children");
+        }
+        children.clear();
+    }
+}
+
 impl Monitor {
     // Only create Monitoring struct
     pub fn new_only(id: String, task: Task) -> Self {
@@ -138,7 +148,6 @@ impl Monitor {
                     if *state != Status::Failed {
                         *state = Status::Finished;
                     }
-                    // FIXME: update monitor status
                     break;
                 }
                 drop(children);
