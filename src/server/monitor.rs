@@ -5,6 +5,7 @@ use nix::{
 };
 use serde::Serialize;
 use std::fmt::{self, Debug, Display, Formatter};
+use std::os::unix::process::ExitStatusExt;
 use std::process::{Child, ExitStatus};
 use std::sync::mpsc::Sender;
 
@@ -121,6 +122,7 @@ impl Monitor {
         self.children.iter_mut().for_each(|child| {
             let to_kill = child_has_exited(child).is_none();
             if to_kill {
+                log::info!("child-{} didn't stop killing it", child.id());
                 child.kill().expect("cannot kill children")
             }
         });
@@ -195,8 +197,14 @@ fn child_has_exited(child: &mut Child) -> Option<ExitStatus> {
     match child.try_wait() {
         Ok(None) => None,
         Err(e) => {
-            log::error!("while waiting for child {} got error {}", child.id(), e);
-            None
+            log::error!("while waiting for child {} got error {:?}", child.id(), e);
+            if e.kind() == std::io::ErrorKind::Other
+                && format!("{}", e) == "No child processes (os error 10)"
+            {
+                Some(ExitStatus::from_raw(0))
+            } else {
+                None
+            }
         }
         Ok(Some(status)) => Some(status),
     }
