@@ -1,5 +1,8 @@
-use super::{default, error, relaunch::Relaunch, signal::Signal, watcher::Watcher};
-use libc::{gid_t, mode_t, uid_t};
+use super::{default, error, nix_utils, relaunch::Relaunch, signal::Signal, watcher::Watcher};
+use nix::{
+    sys::stat::{self, Mode},
+    unistd::{Gid, Uid},
+};
 use serde::{self, Deserialize, Deserializer, Serialize, Serializer};
 use std::collections::BTreeMap;
 use std::convert::TryFrom;
@@ -54,8 +57,8 @@ struct TaskPartial {
     #[serde(default = "default::numprocess")]
     pub numprocess: u32,
 
-    #[serde(default = "default::umask")]
-    pub umask: mode_t,
+    #[serde(default = "default::umask", with = "nix_utils::SerdeMode")]
+    pub umask: Mode,
 
     #[serde(default = "default::workdir")]
     pub workingdir: PathBuf,
@@ -87,8 +90,10 @@ struct TaskPartial {
     #[serde(default = "default::env")]
     pub env: Vec<String>,
 
-    pub gid: Option<gid_t>,
-    pub uid: Option<uid_t>,
+    #[serde(with = "nix_utils::SerdeOptionnalUidGid", default)]
+    pub uid: Option<Uid>,
+    #[serde(with = "nix_utils::SerdeOptionnalUidGid", default)]
+    pub gid: Option<Gid>,
 }
 
 impl From<Task> for TaskPartial {
@@ -120,7 +125,7 @@ pub struct Task {
     args: Vec<String>,
     pub autostart: bool,
     numprocess: u32,
-    umask: mode_t,
+    umask: Mode,
     workingdir: PathBuf,
     stopsignal: Signal,
     stopdelay: u32,
@@ -131,8 +136,8 @@ pub struct Task {
     pub exitcodes: Vec<i32>,
     restart: Relaunch,
     env: Vec<String>,
-    gid: Option<gid_t>,
-    uid: Option<uid_t>,
+    uid: Option<Uid>,
+    gid: Option<Gid>,
 }
 
 impl<'de> Deserialize<'de> for Task {
@@ -237,16 +242,16 @@ impl Task {
 
     fn setup_command(&self, command: &mut impl CommandExt) {
         if let Some(uid) = self.uid {
-            command.uid(uid);
+            command.uid(uid.as_raw());
         }
         if let Some(gid) = self.gid {
-            command.gid(gid);
+            command.gid(gid.as_raw());
         }
-        if self.umask != 0 {
-            let umask: mode_t = self.umask;
+        if self.umask != default::umask() {
+            let umask: Mode = self.umask;
             unsafe {
                 command.pre_exec(move || {
-                    libc::umask(umask);
+                    stat::umask(umask);
                     Ok(())
                 });
             }

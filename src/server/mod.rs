@@ -7,6 +7,7 @@ mod default;
 pub mod error;
 mod listener;
 mod monitor;
+mod nix_utils;
 mod relaunch;
 mod signal;
 mod state;
