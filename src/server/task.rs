@@ -131,7 +131,7 @@ pub struct Task {
     umask: Mode,
     workingdir: PathBuf,
     stopsignal: Signal,
-    stopdelay: u32,
+    pub stopdelay: u32,
     stdout: PathBuf,
     stderr: PathBuf,
     retry: u32,
