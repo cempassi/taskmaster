@@ -1,6 +1,9 @@
-use super::{default, error, nix_utils, relaunch::Relaunch, signal::Signal, watcher::Watcher};
+use super::{default, error, nix_utils, relaunch::Relaunch, watcher::Watcher};
 use nix::{
-    sys::stat::{self, Mode},
+    sys::{
+        signal::Signal,
+        stat::{self, Mode},
+    },
     unistd::{Gid, Uid},
 };
 use serde::{self, Deserialize, Deserializer, Serialize, Serializer};
@@ -63,7 +66,7 @@ struct TaskPartial {
     #[serde(default = "default::workdir")]
     pub workingdir: PathBuf,
 
-    #[serde(default = "default::stop_signal")]
+    #[serde(with = "nix_utils::SerdeSignal", default = "default::stop_signal")]
     pub stopsignal: Signal,
 
     #[serde(default = "default::stop_delay")]

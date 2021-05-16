@@ -1,5 +1,8 @@
 use nix::{
-    sys::stat::{mode_t, Mode},
+    sys::{
+        signal::Signal,
+        stat::{mode_t, Mode},
+    },
     unistd::{Gid, Uid},
 };
 use serde::{
@@ -8,16 +11,19 @@ use serde::{
     Deserialize, Serialize,
 };
 use std::fmt::{self, Display};
+use std::str::FromStr;
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum NixError {
     InvalidMode(mode_t),
+    InvalidSignal(String),
 }
 
 impl Display for NixError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             NixError::InvalidMode(mode) => write!(f, "invalid mode {}", mode),
+            NixError::InvalidSignal(sig) => write!(f, "invalid signal {}", sig),
         }
     }
 }
@@ -40,6 +46,34 @@ impl SerdeMode {
     {
         let raw_mode = mode.bits();
         raw_mode.serialize(serializer)
+    }
+}
+
+pub struct SerdeSignal;
+
+impl SerdeSignal {
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<Signal, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let raw_signal = String::deserialize(deserializer)?;
+        let raw_sig = if raw_signal.starts_with("SIG") {
+            raw_signal.clone()
+        } else {
+            let mut raw_sig = String::from("SIG");
+            raw_sig.push_str(&raw_signal);
+            raw_sig
+        };
+        Signal::from_str(&raw_sig)
+            .map_err(|_| D::Error::custom(NixError::InvalidSignal(raw_signal)))
+    }
+
+    #[allow(clippy::trivially_copy_pass_by_ref)]
+    pub fn serialize<S>(sig: &Signal, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        String::serialize(&format!("{}", sig), serializer)
     }
 }
 
