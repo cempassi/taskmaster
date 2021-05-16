@@ -11,7 +11,7 @@ use std::fmt::{self, Display};
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum NixError {
-    InvalidMode(u32),
+    InvalidMode(mode_t),
 }
 
 impl Display for NixError {
