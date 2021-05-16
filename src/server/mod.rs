@@ -29,15 +29,15 @@ struct Server {
 pub fn start(config: &str) -> Result<(), error::Taskmaster> {
     let (sender, receiver) = channel::<Inter>();
     let mut watcher = Watcher::try_from(config)?;
-    let mut msg_listener = Listener::new();
+    let mut listener = Listener::new();
     let mut waiter = Waiter::new(sender.clone());
     let mut server = Server {
-        state: State::new(sender.clone()),
+        state: State::new(),
         event_sender: sender.clone(),
     };
 
     watcher.run(sender.clone());
-    msg_listener.run(sender.clone());
+    listener.run(sender.clone());
 
     signal::handle_signals(sender)?;
     loop {
