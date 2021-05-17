@@ -1,4 +1,4 @@
-use super::message::Inter;
+use super::inter::Inter;
 use nix::{
     sys::wait::{waitpid, WaitStatus},
     unistd::Pid,

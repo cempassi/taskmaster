@@ -4,7 +4,7 @@ use signal_hook::{
 };
 use std::sync::mpsc::Sender;
 
-use super::message::Inter;
+use super::inter::Inter;
 use crate::error;
 
 pub fn handle_signals(sender: Sender<Inter>) -> Result<(), error::Taskmaster> {

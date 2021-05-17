@@ -1,4 +1,4 @@
-use super::{message::Inter, task::Task};
+use super::{inter::Inter, task::Task};
 use nix::{
     sys::{signal, wait::WaitStatus},
     unistd::Pid,
