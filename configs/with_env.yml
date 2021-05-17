@@ -1,0 +1,6 @@
+foo:
+  cmd: /usr/bin/env
+  stdout: /tmp/env.out
+  env:
+    FOO: bar
+    PATH: /bin:/usr/bin
