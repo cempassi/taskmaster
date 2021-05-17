@@ -55,6 +55,13 @@ fn process_line(history: &History, line: &str) -> Result<()> {
                 }
             }
         }
+        "restart" => {
+            if vec.len() > 1 {
+                for taskname in vec.iter().skip(1) {
+                    send_message(&Message::Restart((*taskname).to_string()));
+                }
+            }
+        }
         _ => {
             println!("Invalid command: {}", line);
             return Err(error::Taskmaster::InvalidCmd);
@@ -65,8 +72,9 @@ fn process_line(history: &History, line: &str) -> Result<()> {
 
 fn print_help() {
     let s = r#"Usage:
-        start: start <task>
-        stop: stop <task>
+        start: start the task <task>
+        stop: stop the task <task>
+        restart: restart the task <task>
         list: list all available tasks
         history: display previous valid commands
         help: show this help menu

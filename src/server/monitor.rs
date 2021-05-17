@@ -83,7 +83,11 @@ impl Monitor {
     }
 
     pub fn start(&mut self) {
-        if self.status() == Status::Inactive {
+        let current_status = self.status();
+        if current_status == Status::Inactive
+            || current_status == Status::Finished
+            || current_status == Status::Failed
+        {
             self.start_raw();
         } else {
             log::warn!("[{}] already started", self.id);

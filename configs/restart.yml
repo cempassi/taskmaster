@@ -1,0 +1,3 @@
+foo:
+  cmd: test/bin/show_pid.py
+  stdout: /tmp/pid.out

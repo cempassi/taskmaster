@@ -5,8 +5,8 @@ use std::sync::mpsc::{channel, Sender};
 mod communication;
 mod default;
 pub mod error;
-mod listener;
 mod inter;
+mod listener;
 mod monitor;
 mod nix_utils;
 mod relaunch;
@@ -19,7 +19,7 @@ mod watcher;
 use crate::shared::message::Message;
 
 use self::{
-    communication::Com, listener::Listener, inter::Inter, state::State, waiter::Waiter,
+    communication::Com, inter::Inter, listener::Listener, state::State, waiter::Waiter,
     watcher::Watcher,
 };
 
@@ -53,7 +53,7 @@ pub fn start(config: &str) -> Result<(), error::Taskmaster> {
                 Inter::FromClient(msg) => {
                     server.handle_client_message(msg);
                     response.send(Com::End).unwrap();
-                },
+                }
                 Inter::Reload => server.reload_config(&watcher),
                 Inter::Quit => break,
             }
@@ -68,19 +68,21 @@ impl Server {
     }
 
     fn handle_client_message(&mut self, message: Message) {
-
         match message {
             Message::Reload => self.event.send(Inter::Reload).unwrap(),
             Message::Start(taskname) => self.state.start(&taskname),
             Message::Stop(taskname) => self.state.stop(&taskname),
             Message::List => self.state.list(),
             Message::Status(taskname) => self.state.status(&taskname),
+            Message::Restart(taskname) => {
+                self.state.stop(&taskname);
+                self.state.start(&taskname);
+            }
             Message::Quit => self
                 .event
                 .send(Inter::Quit)
                 .expect("cannot send quit message"),
         };
-
     }
 
     fn ev_child_has_exited(&mut self, pid: Pid, status: WaitStatus) {
