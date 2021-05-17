@@ -6,6 +6,7 @@ pub enum Message {
     Start(String),
     Stop(String),
     Status(String),
+    Restart(String),
     List,
     Quit,
 }
