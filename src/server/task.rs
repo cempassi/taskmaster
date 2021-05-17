@@ -243,9 +243,10 @@ impl Task {
         jobs
     }
 
-    fn setup_command(&self, command: &mut impl CommandExt) {
+    fn setup_command(&self, command: &mut Command) {
         self.setup_command_uid_gid(command);
         self.setup_command_umask(command);
+        self.setup_command_env(command);
     }
 
     fn setup_command_umask(&self, command: &mut impl CommandExt) {
@@ -266,6 +267,12 @@ impl Task {
         }
         if let Some(gid) = self.gid {
             command.gid(gid.as_raw());
+        }
+    }
+
+    fn setup_command_env(&self, command: &mut Command) {
+        for (key, value) in &self.env {
+            command.env(key, value);
         }
     }
 
