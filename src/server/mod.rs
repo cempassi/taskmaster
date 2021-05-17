@@ -70,6 +70,10 @@ impl Server {
             Message::Stop(taskname) => self.state.stop(&taskname),
             Message::List => self.state.list(&com.channel.unwrap()),
             Message::Status(taskname) => self.state.status(&taskname, &com.channel.unwrap()),
+            Message::Restart(taskname) => {
+                self.state.stop(&taskname);
+                self.state.start(&taskname);
+            }
             Message::Quit => self
                 .event_sender
                 .send(Inter::Quit)
