@@ -4,23 +4,26 @@ use std::convert::TryFrom;
 use std::sync::mpsc::Sender;
 
 use super::{
-    message::Inter,
+    inter::Inter,
     monitor::Monitor,
     task::{ConfigFile, Task},
     watcher::Watcher,
+    communication::Com
 };
 
 #[derive(Debug)]
 pub struct State {
     pub monitors: HashMap<String, Monitor>,
     sender: Sender<Inter>,
+    response: Sender<Com>
 }
 
 impl State {
-    pub fn new(sender: Sender<Inter>) -> Self {
+    pub fn new(sender: Sender<Inter>, response: Sender<Com>) -> Self {
         State {
             monitors: HashMap::new(),
             sender,
+            response
         }
     }
 
@@ -71,21 +74,23 @@ impl State {
         }
     }
 
-    pub fn list(&mut self, chan: &Sender<String>) {
+    pub fn list(&mut self) {
         log::debug!("setting list");
-        chan.send("\nAvailable jobs:\n".to_string()).unwrap();
+        self.response.send(Com::Msg("\nAvailable jobs:\n".to_string())).unwrap();
         for mon in self.monitors.values() {
-            chan.send(format!("{}", mon.get_task())).unwrap();
-            chan.send("\n----------\n".to_string()).unwrap();
+            self.response.send(Com::Msg(format!("{}", mon.get_task()))).unwrap();
+            self.response.send(Com::Msg("\n----------\n".to_string())).unwrap();
         }
+        self.response.send(Com::End).unwrap();
     }
 
-    pub fn status(&self, taskname: &str, response: &Sender<String>) {
+    pub fn status(&self, taskname: &str) {
         log::debug!("retrieving status of {}", taskname);
         let status = self.monitors.get(taskname).unwrap().status();
-        response
-            .send(format!("status of {}: {}", taskname, status))
+        self.response
+            .send(Com::Msg(format!("status of {}: {}", taskname, status)))
             .unwrap();
+        self.response.send(Com::End).unwrap();
     }
 
     pub fn ev_child_has_exited(&mut self, pid: Pid, status: WaitStatus) {
