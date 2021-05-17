@@ -25,7 +25,7 @@ use self::{
 
 struct Server {
     state: State,
-    event_sender: Sender<Inter>,
+    event: Sender<Inter>,
 }
 
 pub fn start(config: &str) -> Result<(), error::Taskmaster> {
@@ -35,8 +35,8 @@ pub fn start(config: &str) -> Result<(), error::Taskmaster> {
     let mut listener = Listener::new();
     let mut waiter = Waiter::new(sender.clone());
     let mut server = Server {
-        state: State::new(sender.clone(), response),
-        event_sender: sender.clone(),
+        state: State::new(sender.clone(), response.clone()),
+        event: sender.clone(),
     };
 
     watcher.run(sender.clone());
@@ -50,7 +50,10 @@ pub fn start(config: &str) -> Result<(), error::Taskmaster> {
                 Inter::ChildHasExited(pid, status) => server.ev_child_has_exited(pid, status),
                 Inter::ChildrenToWait(count) => waiter.wait_children(count),
                 Inter::NoMoreChildrenToWait => waiter.done_wait_children(),
-                Inter::FromClient(msg) => server.handle_client_message(msg),
+                Inter::FromClient(msg) => {
+                    server.handle_client_message(msg);
+                    response.send(Com::End).unwrap();
+                },
                 Inter::Reload => server.reload_config(&watcher),
                 Inter::Quit => break,
             }
@@ -67,16 +70,17 @@ impl Server {
     fn handle_client_message(&mut self, message: Message) {
 
         match message {
-            Message::Reload => self.event_sender.send(Inter::Reload).unwrap(),
+            Message::Reload => self.event.send(Inter::Reload).unwrap(),
             Message::Start(taskname) => self.state.start(&taskname),
             Message::Stop(taskname) => self.state.stop(&taskname),
             Message::List => self.state.list(),
             Message::Status(taskname) => self.state.status(&taskname),
             Message::Quit => self
-                .event_sender
+                .event
                 .send(Inter::Quit)
                 .expect("cannot send quit message"),
         };
+
     }
 
     fn ev_child_has_exited(&mut self, pid: Pid, status: WaitStatus) {

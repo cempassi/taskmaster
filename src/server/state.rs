@@ -81,7 +81,6 @@ impl State {
             self.response.send(Com::Msg(format!("{}", mon.get_task()))).unwrap();
             self.response.send(Com::Msg("\n----------\n".to_string())).unwrap();
         }
-        self.response.send(Com::End).unwrap();
     }
 
     pub fn status(&self, taskname: &str) {
@@ -90,7 +89,6 @@ impl State {
         self.response
             .send(Com::Msg(format!("status of {}: {}", taskname, status)))
             .unwrap();
-        self.response.send(Com::End).unwrap();
     }
 
     pub fn ev_child_has_exited(&mut self, pid: Pid, status: WaitStatus) {

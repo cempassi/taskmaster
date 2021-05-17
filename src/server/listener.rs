@@ -26,11 +26,11 @@ impl Listener {
         let reference = Arc::new(Mutex::new(receiver));
         thread::spawn(move || {
             for stream in listener.incoming() {
-                let copy = Arc::clone(&reference);
+                let copy = reference.clone();
                 match stream {
                     Ok(stream) => {
                         let s = sender.clone();
-                        thread::spawn(move || process_message(stream, &s, copy));
+                        thread::spawn(move || process_message(stream, &s, &copy));
                     }
                     Err(err) => {
                         log::error!("{}", err);
@@ -48,7 +48,7 @@ impl Drop for Listener {
     }
 }
 
-fn process_message(stream: UnixStream, sender: &Sender<Inter>, receiver: Arc<Mutex<Receiver<Com>>>) {
+fn process_message(stream: UnixStream, sender: &Sender<Inter>, receiver: &Arc<Mutex<Receiver<Com>>>) {
     log::info!("Ready to recieve.");
     let mut response = stream.try_clone().expect("Couldn't clone socket");
     let mut de = serde_json::Deserializer::from_reader(stream);
