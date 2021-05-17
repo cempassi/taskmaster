@@ -6,7 +6,7 @@ mod communication;
 mod default;
 pub mod error;
 mod listener;
-mod message;
+mod inter;
 mod monitor;
 mod nix_utils;
 mod relaunch;
@@ -16,38 +16,44 @@ mod task;
 mod waiter;
 mod watcher;
 
+use crate::shared::message::Message;
+
 use self::{
-    communication::Communication, listener::Listener, message::Inter, state::State, waiter::Waiter,
+    communication::Com, listener::Listener, inter::Inter, state::State, waiter::Waiter,
     watcher::Watcher,
 };
 
 struct Server {
     state: State,
-    event_sender: Sender<Inter>,
+    event: Sender<Inter>,
 }
 
 pub fn start(config: &str) -> Result<(), error::Taskmaster> {
-    let (sender, receiver) = channel::<Inter>();
+    let (sender, event) = channel::<Inter>();
+    let (response, receiver) = channel::<Com>();
     let mut watcher = Watcher::try_from(config)?;
     let mut listener = Listener::new();
     let mut waiter = Waiter::new(sender.clone());
     let mut server = Server {
-        state: State::new(sender.clone()),
-        event_sender: sender.clone(),
+        state: State::new(sender.clone(), response.clone()),
+        event: sender.clone(),
     };
 
     watcher.run(sender.clone());
-    listener.run(sender.clone());
+    listener.run(sender.clone(), receiver);
 
     signal::handle_signals(sender)?;
     loop {
-        if let Ok(message) = receiver.recv() {
+        if let Ok(message) = event.recv() {
             log::info!("received internal message: {:?}", message);
             match message {
                 Inter::ChildHasExited(pid, status) => server.ev_child_has_exited(pid, status),
                 Inter::ChildrenToWait(count) => waiter.wait_children(count),
                 Inter::NoMoreChildrenToWait => waiter.done_wait_children(),
-                Inter::FromClient(com) => server.handle_client_message(com),
+                Inter::FromClient(msg) => {
+                    server.handle_client_message(msg);
+                    response.send(Com::End).unwrap();
+                },
                 Inter::Reload => server.reload_config(&watcher),
                 Inter::Quit => break,
             }
@@ -61,20 +67,20 @@ impl Server {
         self.state.reload(watcher)
     }
 
-    fn handle_client_message(&mut self, com: Communication) {
-        use crate::shared::message::Message;
+    fn handle_client_message(&mut self, message: Message) {
 
-        match com.message {
-            Message::Reload => self.event_sender.send(Inter::Reload).unwrap(),
+        match message {
+            Message::Reload => self.event.send(Inter::Reload).unwrap(),
             Message::Start(taskname) => self.state.start(&taskname),
             Message::Stop(taskname) => self.state.stop(&taskname),
-            Message::List => self.state.list(&com.channel.unwrap()),
-            Message::Status(taskname) => self.state.status(&taskname, &com.channel.unwrap()),
+            Message::List => self.state.list(),
+            Message::Status(taskname) => self.state.status(&taskname),
             Message::Quit => self
-                .event_sender
+                .event
                 .send(Inter::Quit)
                 .expect("cannot send quit message"),
         };
+
     }
 
     fn ev_child_has_exited(&mut self, pid: Pid, status: WaitStatus) {

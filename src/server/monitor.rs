@@ -1,4 +1,4 @@
-use super::{message::Inter, task::Task};
+use super::{inter::Inter, task::Task};
 use nix::{sys::wait::WaitStatus, unistd::Pid};
 use serde::Serialize;
 use std::fmt::{self, Debug, Display, Formatter};
