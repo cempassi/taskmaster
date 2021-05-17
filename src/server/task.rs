@@ -244,12 +244,11 @@ impl Task {
     }
 
     fn setup_command(&self, command: &mut impl CommandExt) {
-        if let Some(uid) = self.uid {
-            command.uid(uid.as_raw());
-        }
-        if let Some(gid) = self.gid {
-            command.gid(gid.as_raw());
-        }
+        self.setup_command_uid_gid(command);
+        self.setup_command_umask(command);
+    }
+
+    fn setup_command_umask(&self, command: &mut impl CommandExt) {
         if self.umask != default::umask() {
             let umask: Mode = self.umask;
             unsafe {
@@ -258,6 +257,15 @@ impl Task {
                     Ok(())
                 });
             }
+        }
+    }
+
+    fn setup_command_uid_gid(&self, command: &mut impl CommandExt) {
+        if let Some(uid) = self.uid {
+            command.uid(uid.as_raw());
+        }
+        if let Some(gid) = self.gid {
+            command.gid(gid.as_raw());
         }
     }
 
