@@ -1,10 +1,10 @@
-use super::communication::Communication;
 use nix::{sys::wait::WaitStatus, unistd::Pid};
+use crate::shared::message::Message;
 
 #[derive(Debug, Clone)]
 pub enum Inter {
     // When we receive a message from the client
-    FromClient(Communication),
+    FromClient(Message),
 
     // Server need to quit
     Quit,
