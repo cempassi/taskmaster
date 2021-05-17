@@ -91,7 +91,7 @@ struct TaskPartial {
     pub restart: Relaunch,
 
     #[serde(default = "default::env")]
-    pub env: Vec<String>,
+    pub env: BTreeMap<String, String>,
 
     #[serde(with = "nix_utils::SerdeOptionnalUidGid", default)]
     pub uid: Option<Uid>,
@@ -138,7 +138,7 @@ pub struct Task {
     successdelay: u32,
     pub exitcodes: Vec<i32>,
     restart: Relaunch,
-    env: Vec<String>,
+    env: BTreeMap<String, String>,
     uid: Option<Uid>,
     gid: Option<Gid>,
 }

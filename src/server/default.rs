@@ -1,6 +1,6 @@
 use super::relaunch::Relaunch;
 use nix::sys::{signal::Signal, stat::Mode};
-use std::path::PathBuf;
+use std::{collections::BTreeMap, path::PathBuf};
 
 pub fn autostart() -> bool {
     false
@@ -50,6 +50,6 @@ pub fn stderr() -> PathBuf {
     PathBuf::from("/dev/null")
 }
 
-pub fn env() -> Vec<String> {
-    Vec::new()
+pub fn env() -> BTreeMap<String, String> {
+    BTreeMap::new()
 }
