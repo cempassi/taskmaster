@@ -1,8 +1,10 @@
+use nix::{sys::wait::WaitStatus, unistd::Pid};
 use std::collections::HashMap;
 use std::convert::TryFrom;
 use std::sync::mpsc::Sender;
 
 use super::{
+    message::Inter,
     monitor::Monitor,
     task::{ConfigFile, Task},
     watcher::Watcher,
@@ -11,12 +13,14 @@ use super::{
 #[derive(Debug)]
 pub struct State {
     pub monitors: HashMap<String, Monitor>,
+    sender: Sender<Inter>,
 }
 
 impl State {
-    pub fn new() -> Self {
+    pub fn new(sender: Sender<Inter>) -> Self {
         State {
             monitors: HashMap::new(),
+            sender,
         }
     }
 
@@ -43,8 +47,10 @@ impl State {
     }
 
     fn add_task(&mut self, name: &str, task: Task) {
-        self.monitors
-            .insert(name.to_string(), Monitor::new(name.to_string(), task));
+        self.monitors.insert(
+            name.to_string(),
+            Monitor::new(name.to_string(), task, self.sender.clone()),
+        );
     }
 
     pub fn start(&mut self, name: &str) {
@@ -80,5 +86,15 @@ impl State {
         response
             .send(format!("status of {}: {}", taskname, status))
             .unwrap();
+    }
+
+    pub fn ev_child_has_exited(&mut self, pid: Pid, status: WaitStatus) {
+        if !self
+            .monitors
+            .values_mut()
+            .any(|mon| mon.ev_child_has_exited(pid, &status))
+        {
+            log::error!("no monitor was managing {}", pid);
+        }
     }
 }
