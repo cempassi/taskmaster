@@ -6,7 +6,6 @@ use nix::{
     },
     unistd::Pid,
 };
-use odds::vec::VecExt;
 use std::{
     collections::BTreeMap,
     convert::TryFrom,
@@ -106,6 +105,7 @@ impl ManageChildren {
 
     fn cycle(&mut self) {
         self.cycle_running().unwrap();
+        self.cycle_stopping().unwrap();
     }
 
     // cycle_running check for Child that has terminated
@@ -124,6 +124,7 @@ impl ManageChildren {
         Ok(())
     }
 
+    // cycle_stopping check for signaled children if they've stop
     fn cycle_stopping(&mut self) -> Result<(), std::io::Error> {
         let mut killed: Vec<Child> = Vec::new();
         let mut i = 0;
@@ -144,8 +145,18 @@ impl ManageChildren {
                 i += 1;
             }
         }
+
+        i = 0;
+        while i != killed.len() {
+            let st = killed[i].wait()?;
+            let chld = killed.remove(i);
+            self.finished.push(FinishedChild::new(chld, st));
+            i += 1;
+        }
         Ok(())
     }
+
+    fn cycle_finished(&mut self) {}
 }
 
 pub struct Waiter {
