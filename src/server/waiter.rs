@@ -1,7 +1,8 @@
 use super::inter::Inter;
 use nix::{
+    self,
     sys::{
-        signal::Signal,
+        signal::{kill, Signal},
         wait::{waitpid, WaitStatus},
     },
     unistd::Pid,
@@ -27,10 +28,30 @@ struct WaitChildren {
 }
 
 struct RunningChild {
+    namespace: String,
     child: Child,
 
     stopdelay: time::Duration,
     stopsignal: Signal,
+}
+
+impl RunningChild {
+    fn try_wait(&mut self) -> Result<Option<ExitStatus>, std::io::Error> {
+        self.child.try_wait()
+    }
+
+    #[allow(clippy::cast_possible_wrap)]
+    fn stop(self) -> Result<StoppingChild, nix::Error> {
+        let pid = self.child.id() as i32;
+
+        kill(Pid::from_raw(pid), self.stopsignal)?;
+        Ok(StoppingChild::new(
+            self.namespace,
+            self.child,
+            time::Instant::now(),
+            self.stopdelay,
+        ))
+    }
 }
 
 impl From<WaitChildren> for Vec<RunningChild> {
@@ -39,6 +60,7 @@ impl From<WaitChildren> for Vec<RunningChild> {
 
         for child in data.children {
             res.push(RunningChild {
+                namespace: data.namespace.clone(),
                 child,
                 stopdelay: data.stopdelay,
                 stopsignal: data.stopsignal,
@@ -50,32 +72,58 @@ impl From<WaitChildren> for Vec<RunningChild> {
 }
 
 struct StoppingChild {
+    namespace: String,
     child: Child,
     signaled_at: time::Instant,
     timeout: time::Duration,
 }
 
 impl StoppingChild {
-    fn new(child: Child, instant: time::Instant, timeout: time::Duration) -> StoppingChild {
+    fn new(
+        namespace: String,
+        child: Child,
+        instant: time::Instant,
+        timeout: time::Duration,
+    ) -> StoppingChild {
         StoppingChild {
+            namespace,
             child,
             signaled_at: instant,
             timeout,
         }
     }
+
+    fn try_wait(&mut self) -> Result<Option<ExitStatus>, std::io::Error> {
+        self.child.try_wait()
+    }
+
+    fn kill(&mut self) -> Result<(), std::io::Error> {
+        self.child.kill()
+    }
 }
 
-struct FinishedChild {
+#[derive(Debug)]
+pub struct FinishedChild {
+    namespace: String,
     child: Child,
     status: ExitStatus,
 }
 
 impl FinishedChild {
-    fn new(child: Child, status: ExitStatus) -> FinishedChild {
-        FinishedChild { child, status }
+    fn new(namespace: String, child: Child, status: ExitStatus) -> FinishedChild {
+        FinishedChild {
+            namespace,
+            child,
+            status,
+        }
     }
 }
 
+impl From<FinishedChild> for super::inter::Inter {
+    fn from(finished: FinishedChild) -> Self {
+        Self::ChildHasExited(finished.namespace, finished.child.id(), finished.status)
+    }
+}
 struct ManageChildren {
     namespace: String,
 
@@ -103,9 +151,10 @@ impl ManageChildren {
         }
     }
 
-    fn cycle(&mut self) {
+    fn cycle(&mut self, sender: &Sender<Inter>) {
         self.cycle_running().unwrap();
         self.cycle_stopping().unwrap();
+        self.cycle_finished(sender);
     }
 
     // cycle_running check for Child that has terminated
@@ -113,9 +162,10 @@ impl ManageChildren {
         let mut i = 0;
 
         while i != self.running.len() {
-            if let Some(st) = self.running[i].child.try_wait()? {
+            if let Some(st) = self.running[i].try_wait()? {
                 let e = self.running.remove(i);
-                self.finished.push(FinishedChild::new(e.child, st));
+                self.finished
+                    .push(FinishedChild::new(e.namespace, e.child, st));
             } else {
                 i += 1;
             }
@@ -126,7 +176,7 @@ impl ManageChildren {
 
     // cycle_stopping check for signaled children if they've stop
     fn cycle_stopping(&mut self) -> Result<(), std::io::Error> {
-        let mut killed: Vec<Child> = Vec::new();
+        let mut killed: Vec<(String, Child)> = Vec::new();
         let mut i = 0;
 
         while i != self.stopping.len() {
@@ -134,29 +184,33 @@ impl ManageChildren {
             let timeout = chld.timeout;
             let during = chld.signaled_at.elapsed();
 
-            if let Some(st) = chld.child.try_wait()? {
+            if let Some(st) = chld.try_wait()? {
                 let e = self.stopping.remove(i);
-                self.finished.push(FinishedChild::new(e.child, st));
+                self.finished
+                    .push(FinishedChild::new(e.namespace, e.child, st));
             } else if during > timeout {
-                chld.child.kill()?;
-                let e = self.stopping.remove(i).child;
-                killed.push(e);
+                chld.kill()?;
+                let e = self.stopping.remove(i);
+                killed.push((e.namespace, e.child));
             } else {
                 i += 1;
             }
         }
 
-        i = 0;
-        while i != killed.len() {
-            let st = killed[i].wait()?;
-            let chld = killed.remove(i);
-            self.finished.push(FinishedChild::new(chld, st));
-            i += 1;
+        while killed.len() > 0 {
+            let chld = killed.remove(0);
+            let st = chld.1.wait()?;
+            self.finished.push(FinishedChild::new(chld.0, chld.1, st));
         }
         Ok(())
     }
 
-    fn cycle_finished(&mut self) {}
+    fn cycle_finished(&mut self, sender: &Sender<Inter>) {
+        while self.finished.len() > 0 {
+            let e = self.finished.remove(0);
+            sender.send(e.into()).unwrap();
+        }
+    }
 }
 
 pub struct Waiter {
