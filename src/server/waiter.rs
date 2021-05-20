@@ -20,11 +20,28 @@ use std::{
     time,
 };
 
-struct WaitChildren {
+#[derive(Debug)]
+pub struct WaitChildren {
     namespace: String,
     children: Vec<Child>,
     stopdelay: time::Duration,
     stopsignal: Signal,
+}
+
+impl WaitChildren {
+    pub fn new(
+        namespace: String,
+        children: Vec<Child>,
+        stopdelay: time::Duration,
+        stopsignal: Signal,
+    ) -> Self {
+        Self {
+            namespace,
+            children,
+            stopdelay,
+            stopsignal,
+        }
+    }
 }
 
 struct RunningChild {
