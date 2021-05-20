@@ -11,11 +11,7 @@ use std::{
     collections::BTreeMap,
     convert::TryFrom,
     process::{Child, ExitStatus},
-    sync::{
-        atomic::{AtomicUsize, Ordering},
-        mpsc::Sender,
-        Arc,
-    },
+    sync::{mpsc::Sender, Arc, Mutex},
     thread::{self, JoinHandle},
     time,
 };
@@ -168,10 +164,25 @@ impl ManageChildren {
         }
     }
 
+    fn stop(&mut self) {
+        self.stopping = self
+            .running
+            .iter_mut()
+            .map(|chld| chld.stop().unwrap())
+            .collect();
+        self.running.clear();
+    }
+
     fn cycle(&mut self, sender: &Sender<Inter>) {
-        self.cycle_running().unwrap();
-        self.cycle_stopping().unwrap();
-        self.cycle_finished(sender);
+        if self.running.len() > 0 {
+            self.cycle_running().unwrap();
+        }
+        if self.stopping.len() > 0 {
+            self.cycle_stopping().unwrap();
+        }
+        if self.finished.len() > 0 {
+            self.cycle_finished(sender);
+        }
     }
 
     // cycle_running check for Child that has terminated
@@ -231,27 +242,35 @@ impl ManageChildren {
 }
 
 pub struct Waiter {
-    counter: Arc<AtomicUsize>,
     thread: Option<JoinHandle<()>>,
     sender: Sender<Inter>,
+    process_manager: Arc<Mutex<BTreeMap<String, ManageChildren>>>,
 }
 
 impl Waiter {
     pub fn new(sender: Sender<Inter>) -> Self {
         Self {
-            counter: Arc::new(AtomicUsize::new(0)),
             thread: None,
             sender,
+            process_manager: Arc::new(Mutex::new(BTreeMap::new())),
         }
     }
 
-    pub fn wait_children(&mut self, children_to_wait: usize) {
-        self.counter.fetch_add(children_to_wait, Ordering::SeqCst);
-
-        if self.thread.is_none() {
-            self.spawn_waiting_thread();
+    pub fn wait_children(&mut self, children_to_wait: WaitChildren) {
+        let namespace = children_to_wait.namespace.clone();
+        let mut process_manager = self.process_manager.lock().unwrap();
+        if let Some(manager) = process_manager.get_mut(&namespace) {
+            let mut running_process = children_to_wait.into();
+            manager.running.append(&mut running_process);
         } else {
-            log::debug!("waiting thread already running");
+            let manager = ManageChildren::new_with_running_children(
+                namespace.clone(),
+                children_to_wait.into(),
+            );
+            process_manager.insert(namespace.clone(), manager);
+            if process_manager.len() == 1 {
+                self.spawn_waiting_thread()
+            }
         }
     }
 
