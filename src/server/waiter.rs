@@ -1,15 +1,11 @@
 use super::inter::Inter;
 use nix::{
     self,
-    sys::{
-        signal::{kill, Signal},
-        wait::{waitpid, WaitStatus},
-    },
+    sys::signal::{kill, Signal},
     unistd::Pid,
 };
 use std::{
     collections::BTreeMap,
-    convert::TryFrom,
     process::{Child, ExitStatus},
     sync::{mpsc::Sender, Arc, Mutex},
     thread::{self, JoinHandle},
@@ -259,6 +255,7 @@ impl Waiter {
     pub fn wait_children(&mut self, children_to_wait: WaitChildren) {
         let namespace = children_to_wait.namespace.clone();
         let mut process_manager = self.process_manager.lock().unwrap();
+
         if let Some(manager) = process_manager.get_mut(&namespace) {
             let mut running_process = children_to_wait.into();
             manager.running.append(&mut running_process);
@@ -274,29 +271,31 @@ impl Waiter {
         }
     }
 
+    pub fn stop(&mut self, namespace: &String) {
+        let process_manager = self.process_manager.lock().unwrap();
+
+        if let Some(manager) = process_manager.get_mut(namespace) {
+            manager.stop()
+        } else {
+            log::warn!("unknown namespace {}", namespace);
+        }
+    }
+
     fn spawn_waiting_thread(&mut self) {
+        let process_manager_mut = self.process_manager.clone();
         let sender = self.sender.clone();
-        let counter = self.counter.clone();
 
         self.thread = Some(thread::spawn(move || {
             log::debug!("thread to wait subprocess spawned !");
-            while counter.load(Ordering::SeqCst) > 0 {
-                match waitpid(Pid::from_raw(-1), None) {
-                    Ok(status) => match status {
-                        WaitStatus::Exited(pid, _) | WaitStatus::Signaled(pid, _, _) => {
-                            log::debug!("a process has exited {:?}", status);
-                            sender.send(Inter::ChildHasExited(pid, status)).unwrap();
-                            counter.fetch_sub(1, Ordering::SeqCst);
-                        }
-                        _ => {
-                            log::warn!("exit status {:?} not handled", status);
-                        }
-                    },
-                    Err(error) => {
-                        log::error!("error while using waitpid: {}", error);
-                        panic!("error while waiting for subproccess");
-                    }
+            loop {
+                let process_manager = process_manager_mut.lock().unwrap();
+                for manager in process_manager.values() {
+                    manager.cycle(&sender);
                 }
+                if process_manager.len() == 0 {
+                    break;
+                }
+                drop(process_manager);
             }
             sender.send(Inter::NoMoreChildrenToWait).unwrap();
             log::debug!("wait counter at zero, finished waiting for subprocess");
