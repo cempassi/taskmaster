@@ -161,7 +161,7 @@ impl ManageChildren {
     }
 
     fn stop(&mut self) {
-        while self.running.len() > 0 {
+        while !self.running.is_empty() {
             let chld = self.running.remove(0);
             let stopping_child = chld.stop().unwrap();
             self.stopping.push(stopping_child);
@@ -170,13 +170,13 @@ impl ManageChildren {
     }
 
     fn cycle(&mut self, sender: &Sender<Inter>) {
-        if self.running.len() > 0 {
+        if !self.running.is_empty() {
             self.cycle_running().unwrap();
         }
-        if self.stopping.len() > 0 {
+        if !self.stopping.is_empty() {
             self.cycle_stopping().unwrap();
         }
-        if self.finished.len() > 0 {
+        if !self.finished.is_empty() {
             self.cycle_finished(sender);
         }
     }
@@ -221,7 +221,7 @@ impl ManageChildren {
             }
         }
 
-        while killed.len() > 0 {
+        while !killed.is_empty() {
             let mut chld = killed.remove(0);
             let st = chld.1.wait()?;
             self.finished.push(FinishedChild::new(chld.0, chld.1, st));
@@ -230,7 +230,7 @@ impl ManageChildren {
     }
 
     fn cycle_finished(&mut self, sender: &Sender<Inter>) {
-        while self.finished.len() > 0 {
+        while !self.finished.is_empty() {
             let e = self.finished.remove(0);
             sender.send(e.into()).unwrap();
         }
