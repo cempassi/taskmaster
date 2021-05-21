@@ -1,21 +1,21 @@
-use nix::{sys::wait::WaitStatus, unistd::Pid};
 use std::collections::HashMap;
 use std::convert::TryFrom;
+use std::process::ExitStatus;
 use std::sync::mpsc::Sender;
 
 use super::{
+    communication::Com,
     inter::Inter,
     monitor::Monitor,
     task::{ConfigFile, Task},
     watcher::Watcher,
-    communication::Com
 };
 
 #[derive(Debug)]
 pub struct State {
     pub monitors: HashMap<String, Monitor>,
     sender: Sender<Inter>,
-    response: Sender<Com>
+    response: Sender<Com>,
 }
 
 impl State {
@@ -23,7 +23,7 @@ impl State {
         State {
             monitors: HashMap::new(),
             sender,
-            response
+            response,
         }
     }
 
@@ -65,21 +65,27 @@ impl State {
         }
     }
 
-    pub fn stop(&mut self, name: &str) {
-        log::debug!("stopping task {}", name);
-        if let Some(mon) = self.monitors.get_mut(name) {
-            mon.stop();
-        } else {
-            log::error!("task {} doesn't exist", name);
-        }
-    }
+    // pub fn stop(&mut self, name: &str) {
+    //     log::debug!("stopping task {}", name);
+    //     if let Some(mon) = self.monitors.get_mut(name) {
+    //         mon.stop();
+    //     } else {
+    //         log::error!("task {} doesn't exist", name);
+    //     }
+    // }
 
     pub fn list(&mut self) {
         log::debug!("setting list");
-        self.response.send(Com::Msg("\nAvailable jobs:\n".to_string())).unwrap();
+        self.response
+            .send(Com::Msg("\nAvailable jobs:\n".to_string()))
+            .unwrap();
         for mon in self.monitors.values() {
-            self.response.send(Com::Msg(format!("{}", mon.get_task()))).unwrap();
-            self.response.send(Com::Msg("\n----------\n".to_string())).unwrap();
+            self.response
+                .send(Com::Msg(format!("{}", mon.get_task())))
+                .unwrap();
+            self.response
+                .send(Com::Msg("\n----------\n".to_string()))
+                .unwrap();
         }
     }
 
@@ -91,13 +97,11 @@ impl State {
             .unwrap();
     }
 
-    pub fn ev_child_has_exited(&mut self, pid: Pid, status: WaitStatus) {
-        if !self
-            .monitors
-            .values_mut()
-            .any(|mon| mon.ev_child_has_exited(pid, &status))
-        {
-            log::error!("no monitor was managing {}", pid);
+    pub fn ev_child_has_exited(&mut self, namespace: &String, pid: u32, status: ExitStatus) {
+        if let Some(monitor) = self.monitors.get(namespace) {
+            monitor.ev_child_has_exited(pid, status);
+        } else {
+            log::error!("no task named {}", namespace);
         }
     }
 }
