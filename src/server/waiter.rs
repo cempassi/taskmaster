@@ -134,26 +134,14 @@ impl From<FinishedChild> for super::inter::Inter {
     }
 }
 struct ManageChildren {
-    namespace: String,
-
     running: Vec<RunningChild>,
     stopping: Vec<StoppingChild>,
     finished: Vec<FinishedChild>,
 }
 
 impl ManageChildren {
-    fn new(namespace: String) -> ManageChildren {
+    fn new(children: Vec<RunningChild>) -> ManageChildren {
         ManageChildren {
-            namespace,
-            running: Vec::new(),
-            stopping: Vec::new(),
-            finished: Vec::new(),
-        }
-    }
-
-    fn new_with_running_children(namespace: String, children: Vec<RunningChild>) -> ManageChildren {
-        ManageChildren {
-            namespace,
             running: children,
             stopping: Vec::new(),
             finished: Vec::new(),
@@ -260,10 +248,7 @@ impl Waiter {
             let mut running_process = children_to_wait.into();
             manager.running.append(&mut running_process);
         } else {
-            let manager = ManageChildren::new_with_running_children(
-                namespace.clone(),
-                children_to_wait.into(),
-            );
+            let manager = ManageChildren::new(children_to_wait.into());
             process_manager.insert(namespace.clone(), manager);
             if process_manager.len() == 1 {
                 drop(process_manager);
@@ -272,7 +257,7 @@ impl Waiter {
         }
     }
 
-    pub fn stop(&mut self, namespace: &String) {
+    pub fn stop(&mut self, namespace: &str) {
         let mut process_manager = self.process_manager.lock().unwrap();
 
         if let Some(manager) = process_manager.get_mut(namespace) {

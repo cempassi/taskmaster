@@ -91,7 +91,7 @@ impl Server {
         };
     }
 
-    fn ev_child_has_exited(&mut self, namespace: &String, pid: u32, status: ExitStatus) {
+    fn ev_child_has_exited(&mut self, namespace: &str, pid: u32, status: ExitStatus) {
         self.state.ev_child_has_exited(namespace, pid, status);
     }
 }

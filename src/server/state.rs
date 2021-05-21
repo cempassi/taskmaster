@@ -97,7 +97,7 @@ impl State {
             .unwrap();
     }
 
-    pub fn ev_child_has_exited(&mut self, namespace: &String, pid: u32, status: ExitStatus) {
+    pub fn ev_child_has_exited(&mut self, namespace: &str, pid: u32, status: ExitStatus) {
         if let Some(monitor) = self.monitors.get_mut(namespace) {
             monitor.ev_child_has_exited(pid, status);
         } else {

@@ -137,11 +137,8 @@ impl Monitor {
         if self.children_pid.iter().any(|&chld_pid| chld_pid == pid) {
             self.children_pid.retain(|&chld_pid| chld_pid != pid);
             self.handle_finished_child(status);
-            if self.children_pid.len() == 0 {
-                self.state = match self.state {
-                    Status::Failing => Status::Failed,
-                    _ => Status::Finished,
-                };
+            if self.children_pid.is_empty() {
+                self.update_finished_task_status();
             }
             true
         } else {
