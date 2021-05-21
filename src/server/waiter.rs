@@ -161,11 +161,11 @@ impl ManageChildren {
     }
 
     fn stop(&mut self) {
-        self.stopping = self
-            .running
-            .iter_mut()
-            .map(|chld| chld.stop().unwrap())
-            .collect();
+        while self.running.len() > 0 {
+            let chld = self.running.remove(0);
+            let stopping_child = chld.stop().unwrap();
+            self.stopping.push(stopping_child);
+        }
         self.running.clear();
     }
 
@@ -222,7 +222,7 @@ impl ManageChildren {
         }
 
         while killed.len() > 0 {
-            let chld = killed.remove(0);
+            let mut chld = killed.remove(0);
             let st = chld.1.wait()?;
             self.finished.push(FinishedChild::new(chld.0, chld.1, st));
         }
@@ -266,13 +266,14 @@ impl Waiter {
             );
             process_manager.insert(namespace.clone(), manager);
             if process_manager.len() == 1 {
+                drop(process_manager);
                 self.spawn_waiting_thread()
             }
         }
     }
 
     pub fn stop(&mut self, namespace: &String) {
-        let process_manager = self.process_manager.lock().unwrap();
+        let mut process_manager = self.process_manager.lock().unwrap();
 
         if let Some(manager) = process_manager.get_mut(namespace) {
             manager.stop()
@@ -288,8 +289,8 @@ impl Waiter {
         self.thread = Some(thread::spawn(move || {
             log::debug!("thread to wait subprocess spawned !");
             loop {
-                let process_manager = process_manager_mut.lock().unwrap();
-                for manager in process_manager.values() {
+                let mut process_manager = process_manager_mut.lock().unwrap();
+                for manager in process_manager.values_mut() {
                     manager.cycle(&sender);
                 }
                 if process_manager.len() == 0 {

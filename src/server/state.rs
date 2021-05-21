@@ -98,7 +98,7 @@ impl State {
     }
 
     pub fn ev_child_has_exited(&mut self, namespace: &String, pid: u32, status: ExitStatus) {
-        if let Some(monitor) = self.monitors.get(namespace) {
+        if let Some(monitor) = self.monitors.get_mut(namespace) {
             monitor.ev_child_has_exited(pid, status);
         } else {
             log::error!("no task named {}", namespace);
