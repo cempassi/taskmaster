@@ -98,9 +98,9 @@ impl Monitor {
 
     fn start_raw(&mut self) {
         log::debug!("[{}] starting ...", self.id);
-        let children = self.task.run();
+        let mut children = self.task.run();
+
         self.children_pid = children.iter_mut().map(|chld| chld.id()).collect();
-        // self.children.extend(self.task.run());
         self.sender
             .send(Inter::ChildrenToWait(WaitChildren::new(
                 self.id.clone(),
