@@ -148,6 +148,10 @@ impl ManageChildren {
         }
     }
 
+    fn has_finished(&self) -> bool {
+        self.running.is_empty() && self.stopping.is_empty()
+    }
+
     fn stop(&mut self) {
         while !self.running.is_empty() {
             let chld = self.running.remove(0);
@@ -272,11 +276,19 @@ impl Waiter {
         let sender = self.sender.clone();
 
         self.thread = Some(thread::spawn(move || {
-            log::debug!("thread to wait subprocess spawned !");
+            log::debug!("waiter thread spawned !");
             loop {
                 let mut process_manager = process_manager_mut.lock().unwrap();
-                for manager in process_manager.values_mut() {
+                let mut finished_manager: Vec<String> = Vec::new();
+
+                for (key, manager) in process_manager.iter_mut() {
                     manager.cycle(&sender);
+                    if manager.has_finished() {
+                        finished_manager.push(key.clone());
+                    }
+                }
+                for key in finished_manager {
+                    process_manager.remove(&key);
                 }
                 if process_manager.len() == 0 {
                     break;
@@ -285,7 +297,7 @@ impl Waiter {
                 thread::sleep(time::Duration::from_millis(500));
             }
             sender.send(Inter::NoMoreChildrenToWait).unwrap();
-            log::debug!("wait counter at zero, finished waiting for subprocess");
+            log::debug!("waiter thread finished !");
         }));
     }
 
