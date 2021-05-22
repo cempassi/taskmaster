@@ -282,6 +282,7 @@ impl Waiter {
                     break;
                 }
                 drop(process_manager);
+                thread::sleep(time::Duration::from_millis(500));
             }
             sender.send(Inter::NoMoreChildrenToWait).unwrap();
             log::debug!("wait counter at zero, finished waiting for subprocess");
