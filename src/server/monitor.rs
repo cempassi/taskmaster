@@ -1,9 +1,11 @@
-use super::{inter::Inter, task::Task};
-use nix::{sys::wait::WaitStatus, unistd::Pid};
+use super::{inter::Inter, task::Task, waiter::WaitChildren};
 use serde::Serialize;
-use std::fmt::{self, Debug, Display, Formatter};
-use std::process::Child;
-use std::sync::mpsc::Sender;
+use std::{
+    fmt::{self, Debug, Display, Formatter},
+    process::ExitStatus,
+    sync::mpsc::Sender,
+    time,
+};
 
 #[derive(Copy, Clone, Serialize, PartialEq)]
 pub enum Status {
@@ -39,7 +41,7 @@ pub struct Monitor {
     task: Task,
 
     #[serde(skip)]
-    children: Vec<Child>,
+    children_pid: Vec<u32>,
 
     #[serde(skip)]
     state: Status,
@@ -48,14 +50,14 @@ pub struct Monitor {
     sender: Sender<Inter>,
 }
 
-impl Drop for Monitor {
-    fn drop(&mut self) {
-        for child in &mut self.children {
-            child.kill().expect("cannot kill children");
-        }
-        self.children.clear();
-    }
-}
+// impl Drop for Monitor {
+//     fn drop(&mut self) {
+//         for child in &mut self.children {
+//             child.kill().expect("cannot kill children");
+//         }
+//         self.children.clear();
+//     }
+// }
 
 impl Monitor {
     // Only create Monitoring struct
@@ -63,7 +65,7 @@ impl Monitor {
         Monitor {
             id,
             task,
-            children: Vec::new(),
+            children_pid: Vec::new(),
             state: Status::Inactive,
             sender,
         }
@@ -96,29 +98,18 @@ impl Monitor {
 
     fn start_raw(&mut self) {
         log::debug!("[{}] starting ...", self.id);
-        self.children.extend(self.task.run());
+        let mut children = self.task.run();
+
+        self.children_pid = children.iter_mut().map(|chld| chld.id()).collect();
         self.sender
-            .send(Inter::ChildrenToWait(self.task.numprocess as usize))
+            .send(Inter::ChildrenToWait(WaitChildren::new(
+                self.id.clone(),
+                children,
+                time::Duration::from_secs(self.task.stopdelay.into()),
+                self.task.stopsignal,
+            )))
             .unwrap();
         self.change_state(Status::Active);
-    }
-
-    pub fn stop(&mut self) {
-        if self.status() == Status::Active {
-            log::debug!("[{}] stopping ...", self.id);
-            self.change_state(Status::Stopping);
-            self.stop_raw();
-            self.change_state(Status::Stopped);
-        } else {
-            log::warn!("[{}] can't stop task that is not started", self.id);
-        }
-    }
-
-    fn stop_raw(&mut self) {
-        self.children
-            .iter_mut()
-            .for_each(|child| child.kill().expect("cannot kill children"));
-        self.children.clear();
     }
 
     pub fn status(&self) -> Status {
@@ -129,7 +120,6 @@ impl Monitor {
         if self.task != task {
             log::debug!("[{}] reloading ...", self.id);
             self.change_state(Status::Reloading);
-            self.stop_raw();
             self.task = task;
             if self.task.autostart {
                 self.start();
@@ -143,36 +133,33 @@ impl Monitor {
         &self.task
     }
 
-    pub fn ev_child_has_exited(&mut self, pid: Pid, status: &WaitStatus) -> bool {
-        let raw_pid = pid.as_raw().abs() as u32;
-
-        if let Some(index) = self.children.iter().position(|child| child.id() == raw_pid) {
-            self.check_wait_status(raw_pid, status);
-            log::debug!("[{}] remove children {}", self.id, raw_pid);
-            self.children.remove(index);
-            if self.children.is_empty() {
+    pub fn ev_child_has_exited(&mut self, pid: u32, status: ExitStatus) -> bool {
+        if self.children_pid.iter().any(|&chld_pid| chld_pid == pid) {
+            self.children_pid.retain(|&chld_pid| chld_pid != pid);
+            self.handle_finished_child(status);
+            if self.children_pid.is_empty() {
                 self.update_finished_task_status();
             }
             true
         } else {
+            log::error!("[{}] pid {} is not registred to this monitor", self.id, pid);
             false
         }
     }
 
-    fn check_wait_status(&mut self, pid: u32, status: &WaitStatus) {
-        if let WaitStatus::Exited(_, code) = status {
-            if !self.task.exitcodes.iter().any(|wanted| wanted == code) {
+    fn handle_finished_child(&mut self, status: ExitStatus) {
+        if let Some(code) = status.code() {
+            if !self.task.exitcodes.iter().any(|&wanted| wanted == code) {
                 log::debug!(
-                    "[{}] child {} exited with unexpected status code {}",
+                    "[{}] child exited with unexpeced status code {}",
                     self.id,
-                    pid,
                     code
                 );
                 self.state = Status::Failing;
             }
         } else {
-            log::warn!("[{}] unexpected wait status {:?}", self.id, status);
-            self.state = Status::Failing
+            log::warn!("[{}] unexpected exit status {:?}", self.id, status);
+            self.state = Status::Failing;
         }
     }
 

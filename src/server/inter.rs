@@ -1,7 +1,8 @@
-use nix::{sys::wait::WaitStatus, unistd::Pid};
+use super::waiter::WaitChildren;
 use crate::shared::message::Message;
+use std::process::ExitStatus;
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub enum Inter {
     // When we receive a message from the client
     FromClient(Message),
@@ -13,10 +14,10 @@ pub enum Inter {
     Reload,
 
     // When a child have exited
-    ChildHasExited(Pid, WaitStatus),
+    ChildHasExited(String, u32, ExitStatus),
 
     // When we've to wait `usize` children
-    ChildrenToWait(usize),
+    ChildrenToWait(WaitChildren),
 
     // When all the children in a task have exited
     NoMoreChildrenToWait,

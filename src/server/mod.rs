@@ -1,5 +1,5 @@
-use nix::{sys::wait::WaitStatus, unistd::Pid};
 use std::convert::TryFrom;
+use std::process::ExitStatus;
 use std::sync::mpsc::{channel, Sender};
 
 mod communication;
@@ -25,6 +25,7 @@ use self::{
 
 struct Server {
     state: State,
+    waiter: Waiter,
     event: Sender<Inter>,
 }
 
@@ -33,9 +34,9 @@ pub fn start(config: &str) -> Result<(), error::Taskmaster> {
     let (response, receiver) = channel::<Com>();
     let mut watcher = Watcher::try_from(config)?;
     let mut listener = Listener::new();
-    let mut waiter = Waiter::new(sender.clone());
     let mut server = Server {
         state: State::new(sender.clone(), response.clone()),
+        waiter: Waiter::new(sender.clone()),
         event: sender.clone(),
     };
 
@@ -47,9 +48,13 @@ pub fn start(config: &str) -> Result<(), error::Taskmaster> {
         if let Ok(message) = event.recv() {
             log::info!("received internal message: {:?}", message);
             match message {
-                Inter::ChildHasExited(pid, status) => server.ev_child_has_exited(pid, status),
-                Inter::ChildrenToWait(count) => waiter.wait_children(count),
-                Inter::NoMoreChildrenToWait => waiter.done_wait_children(),
+                Inter::ChildHasExited(namespace, pid, status) => {
+                    server.ev_child_has_exited(&namespace, pid, status)
+                }
+                Inter::ChildrenToWait(children_to_wait) => {
+                    server.waiter.wait_children(children_to_wait)
+                }
+                Inter::NoMoreChildrenToWait => server.waiter.done_wait_children(),
                 Inter::FromClient(msg) => {
                     server.handle_client_message(msg);
                     response.send(Com::End).unwrap();
@@ -71,11 +76,12 @@ impl Server {
         match message {
             Message::Reload => self.event.send(Inter::Reload).unwrap(),
             Message::Start(taskname) => self.state.start(&taskname),
-            Message::Stop(taskname) => self.state.stop(&taskname),
+            Message::Stop(taskname) => self.waiter.stop(&taskname),
             Message::List => self.state.list(),
             Message::Status(taskname) => self.state.status(&taskname),
             Message::Restart(taskname) => {
-                self.state.stop(&taskname);
+                // self.state.stop(&taskname);
+                self.waiter.stop(&taskname);
                 self.state.start(&taskname);
             }
             Message::Quit => self
@@ -85,7 +91,7 @@ impl Server {
         };
     }
 
-    fn ev_child_has_exited(&mut self, pid: Pid, status: WaitStatus) {
-        self.state.ev_child_has_exited(pid, status);
+    fn ev_child_has_exited(&mut self, namespace: &str, pid: u32, status: ExitStatus) {
+        self.state.ev_child_has_exited(namespace, pid, status);
     }
 }
