@@ -1,5 +1,5 @@
 use std::{
-    collections::{BTreeMap, HashMap},
+    collections::HashMap,
     convert::TryFrom,
     process::ExitStatus,
     sync::{mpsc::Sender, Arc, Mutex},
@@ -10,7 +10,7 @@ use std::{
 use super::{
     communication::Com,
     inter::Inter,
-    manager::{ManageChildren, WaitChildren},
+    manager::WaitChildren,
     monitor::Monitor,
     task::{ConfigFile, Task},
     watcher::Watcher,
@@ -18,21 +18,19 @@ use super::{
 
 #[derive(Debug)]
 pub struct State {
-    pub monitors: HashMap<String, Monitor>,
+    pub monitors: Arc<Mutex<HashMap<String, Monitor>>>,
     sender: Sender<Inter>,
     response: Sender<Com>,
     thread: Option<JoinHandle<()>>,
-    process_manager: Arc<Mutex<BTreeMap<String, ManageChildren>>>,
 }
 
 impl State {
     pub fn new(sender: Sender<Inter>, response: Sender<Com>) -> Self {
         State {
-            monitors: HashMap::new(),
+            monitors: Arc::new(Mutex::new(HashMap::new())),
             sender,
             response,
             thread: None,
-            process_manager: Arc::new(Mutex::new(BTreeMap::new())),
         }
     }
 
@@ -42,7 +40,7 @@ impl State {
         for (name, task) in configfile {
             log::debug!("parsed task: {}: {:?}", name, task);
 
-            if self.monitors.get(&name).is_some() {
+            if self.monitors.lock().unwrap().get(&name).is_some() {
                 self.reload_task(&name, task);
             } else {
                 self.add_task(&name, task);
@@ -51,7 +49,8 @@ impl State {
     }
 
     fn reload_task(&mut self, name: &str, task: Task) {
-        let mon = self.monitors.get_mut(name).unwrap();
+        let mut monitors = self.monitors.lock().unwrap();
+        let mon = monitors.get_mut(name).unwrap();
 
         if mon.get_task() != &task {
             mon.reload(task);
@@ -59,7 +58,7 @@ impl State {
     }
 
     fn add_task(&mut self, name: &str, task: Task) {
-        self.monitors.insert(
+        self.monitors.lock().unwrap().insert(
             name.to_string(),
             Monitor::new(name.to_string(), task, self.sender.clone()),
         );
@@ -67,7 +66,7 @@ impl State {
 
     pub fn start(&mut self, name: &str) {
         log::debug!("starting task {}", name);
-        if let Some(mon) = self.monitors.get_mut(name) {
+        if let Some(mon) = self.monitors.lock().unwrap().get_mut(name) {
             mon.start();
         } else {
             log::error!("task {} doesn't exist", name);
@@ -79,7 +78,7 @@ impl State {
         self.response
             .send(Com::Msg("\nAvailable jobs:\n".to_string()))
             .unwrap();
-        for mon in self.monitors.values() {
+        for mon in self.monitors.lock().unwrap().values() {
             self.response
                 .send(Com::Msg(format!("{}", mon.get_task())))
                 .unwrap();
@@ -91,14 +90,20 @@ impl State {
 
     pub fn status(&self, taskname: &str) {
         log::debug!("retrieving status of {}", taskname);
-        let status = self.monitors.get(taskname).unwrap().status();
+        let status = self
+            .monitors
+            .lock()
+            .unwrap()
+            .get(taskname)
+            .unwrap()
+            .status();
         self.response
             .send(Com::Msg(format!("status of {}: {}", taskname, status)))
             .unwrap();
     }
 
     pub fn ev_child_has_exited(&mut self, namespace: &str, pid: u32, status: ExitStatus) {
-        if let Some(monitor) = self.monitors.get_mut(namespace) {
+        if let Some(monitor) = self.monitors.lock().unwrap().get_mut(namespace) {
             monitor.ev_child_has_exited(pid, status);
         } else {
             log::error!("no task named {}", namespace);
@@ -106,23 +111,24 @@ impl State {
     }
 
     pub fn add_children_to_wait(&mut self, children_to_wait: WaitChildren) {
-        let namespace = children_to_wait.namespace.clone();
-        let mut process_manager = self.process_manager.lock().unwrap();
+        // let namespace = children_to_wait.namespace.clone();
+        // let mut process_manager = self.monitors.lock().unwrap();
 
-        if let Some(manager) = process_manager.get_mut(&namespace) {
-            manager.add_children_to_wait(children_to_wait);
-        } else {
-            let manager = ManageChildren::new(children_to_wait);
-            process_manager.insert(namespace.clone(), manager);
-            if process_manager.len() == 1 {
-                drop(process_manager);
-                self.spawn_waiting_thread()
-            }
-        }
+        // if let Some(manager) = process_manager.get_mut(&namespace) {
+        //     manager.add_children_to_wait(children_to_wait);
+        // } else {
+        //     let manager = ManageChildren::new(children_to_wait);
+        //     process_manager.insert(namespace.clone(), manager);
+        //     if process_manager.len() == 1 {
+        //         drop(process_manager);
+        //         self.spawn_waiting_thread()
+        //     }
+        // }
+        unimplemented!();
     }
 
     pub fn stop(&mut self, namespace: &str) {
-        let mut process_manager = self.process_manager.lock().unwrap();
+        let mut process_manager = self.monitors.lock().unwrap();
 
         if let Some(manager) = process_manager.get_mut(namespace) {
             manager.stop()
@@ -132,7 +138,7 @@ impl State {
     }
 
     fn spawn_waiting_thread(&mut self) {
-        let process_manager_mut = self.process_manager.clone();
+        let process_manager_mut = self.monitors.clone();
         let sender = self.sender.clone();
 
         self.thread = Some(thread::spawn(move || {
