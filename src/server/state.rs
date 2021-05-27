@@ -65,15 +65,6 @@ impl State {
         }
     }
 
-    // pub fn stop(&mut self, name: &str) {
-    //     log::debug!("stopping task {}", name);
-    //     if let Some(mon) = self.monitors.get_mut(name) {
-    //         mon.stop();
-    //     } else {
-    //         log::error!("task {} doesn't exist", name);
-    //     }
-    // }
-
     pub fn list(&mut self) {
         log::debug!("setting list");
         self.response
