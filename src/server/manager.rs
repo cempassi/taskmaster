@@ -34,7 +34,7 @@ impl WaitChildren {
     }
 }
 
-pub struct RunningChild {
+struct RunningChild {
     namespace: String,
     child: Child,
 
@@ -110,7 +110,7 @@ impl StoppingChild {
 }
 
 #[derive(Debug)]
-pub struct FinishedChild {
+struct FinishedChild {
     namespace: String,
     child: Child,
     status: ExitStatus,
@@ -131,6 +131,7 @@ impl From<FinishedChild> for super::inter::Inter {
         Self::ChildHasExited(finished.namespace, finished.child.id(), finished.status)
     }
 }
+
 pub struct ManageChildren {
     running: Vec<RunningChild>,
     stopping: Vec<StoppingChild>,
@@ -138,9 +139,9 @@ pub struct ManageChildren {
 }
 
 impl ManageChildren {
-    pub fn new(children: Vec<RunningChild>) -> ManageChildren {
+    pub fn new(children: WaitChildren) -> ManageChildren {
         ManageChildren {
-            running: children,
+            running: children.into(),
             stopping: Vec::new(),
             finished: Vec::new(),
         }

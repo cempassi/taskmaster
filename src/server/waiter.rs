@@ -31,7 +31,7 @@ impl Waiter {
         if let Some(manager) = process_manager.get_mut(&namespace) {
             manager.add_children_to_wait(children_to_wait);
         } else {
-            let manager = ManageChildren::new(children_to_wait.into());
+            let manager = ManageChildren::new(children_to_wait);
             process_manager.insert(namespace.clone(), manager);
             if process_manager.len() == 1 {
                 drop(process_manager);
