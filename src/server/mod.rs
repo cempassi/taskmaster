@@ -75,7 +75,6 @@ impl Server {
             Message::List => self.state.list(),
             Message::Status(taskname) => self.state.status(&taskname),
             Message::Restart(taskname) => {
-                // self.state.stop(&taskname);
                 self.state.stop(&taskname);
                 self.state.start(&taskname);
             }
