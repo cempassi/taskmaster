@@ -15,6 +15,7 @@ use super::{
     inter::Inter,
     monitor::Monitor,
     task::{ConfigFile, Task},
+    wait_children::WaitChildren,
     watcher::Watcher,
 };
 

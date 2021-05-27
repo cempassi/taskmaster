@@ -12,6 +12,7 @@ mod relaunch;
 mod signal;
 mod state;
 mod task;
+mod wait_children;
 mod watcher;
 
 use crate::shared::message::Message;
