@@ -10,9 +10,9 @@ use std::{
 use super::{
     communication::Com,
     inter::Inter,
-    manager::WaitChildren,
     monitor::Monitor,
     task::{ConfigFile, Task},
+    wait_children::WaitChildren,
     watcher::Watcher,
 };
 

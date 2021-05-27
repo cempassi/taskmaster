@@ -1,4 +1,4 @@
-use super::{inter::Inter, manager::WaitChildren, task::Task};
+use super::{inter::Inter, task::Task, wait_children::WaitChildren};
 use nix::{
     self,
     sys::signal::{kill, Signal},

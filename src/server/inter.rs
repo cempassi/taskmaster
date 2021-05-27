@@ -1,4 +1,4 @@
-use super::manager::WaitChildren;
+use super::wait_children::WaitChildren;
 use crate::shared::message::Message;
 use std::process::ExitStatus;
 

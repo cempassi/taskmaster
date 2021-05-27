@@ -7,13 +7,13 @@ mod default;
 pub mod error;
 mod inter;
 mod listener;
-mod manager;
 mod monitor;
 mod nix_utils;
 mod relaunch;
 mod signal;
 mod state;
 mod task;
+mod wait_children;
 mod watcher;
 
 use crate::shared::message::Message;
