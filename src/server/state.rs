@@ -1,10 +1,3 @@
-use super::{
-    communication::Com,
-    inter::Inter,
-    monitor::Monitor,
-    task::{ConfigFile, Task},
-    watcher::Watcher,
-};
 use std::{
     collections::HashMap,
     convert::TryFrom,
@@ -15,6 +8,14 @@ use std::{
     },
     thread::{self, JoinHandle},
     time,
+};
+
+use super::{
+    communication::Com,
+    inter::Inter,
+    monitor::Monitor,
+    task::{ConfigFile, Task},
+    watcher::Watcher,
 };
 
 #[derive(Debug)]
