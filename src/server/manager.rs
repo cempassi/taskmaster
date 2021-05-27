@@ -34,6 +34,7 @@ impl WaitChildren {
     }
 }
 
+#[derive(Debug)]
 struct RunningChild {
     namespace: String,
     child: Child,
@@ -78,6 +79,7 @@ impl From<WaitChildren> for Vec<RunningChild> {
     }
 }
 
+#[derive(Debug)]
 struct StoppingChild {
     namespace: String,
     child: Child,
@@ -132,6 +134,7 @@ impl From<FinishedChild> for super::inter::Inter {
     }
 }
 
+#[derive(Debug)]
 pub struct ManageChildren {
     running: Vec<RunningChild>,
     stopping: Vec<StoppingChild>,

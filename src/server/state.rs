@@ -1,11 +1,16 @@
-use std::collections::HashMap;
-use std::convert::TryFrom;
-use std::process::ExitStatus;
-use std::sync::mpsc::Sender;
+use std::{
+    collections::{BTreeMap, HashMap},
+    convert::TryFrom,
+    process::ExitStatus,
+    sync::{mpsc::Sender, Arc, Mutex},
+    thread::{self, JoinHandle},
+    time,
+};
 
 use super::{
     communication::Com,
     inter::Inter,
+    manager::{ManageChildren, WaitChildren},
     monitor::Monitor,
     task::{ConfigFile, Task},
     watcher::Watcher,
@@ -16,6 +21,8 @@ pub struct State {
     pub monitors: HashMap<String, Monitor>,
     sender: Sender<Inter>,
     response: Sender<Com>,
+    thread: Option<JoinHandle<()>>,
+    process_manager: Arc<Mutex<BTreeMap<String, ManageChildren>>>,
 }
 
 impl State {
@@ -24,6 +31,8 @@ impl State {
             monitors: HashMap::new(),
             sender,
             response,
+            thread: None,
+            process_manager: Arc::new(Mutex::new(BTreeMap::new())),
         }
     }
 
@@ -93,6 +102,70 @@ impl State {
             monitor.ev_child_has_exited(pid, status);
         } else {
             log::error!("no task named {}", namespace);
+        }
+    }
+
+    pub fn add_children_to_wait(&mut self, children_to_wait: WaitChildren) {
+        let namespace = children_to_wait.namespace.clone();
+        let mut process_manager = self.process_manager.lock().unwrap();
+
+        if let Some(manager) = process_manager.get_mut(&namespace) {
+            manager.add_children_to_wait(children_to_wait);
+        } else {
+            let manager = ManageChildren::new(children_to_wait);
+            process_manager.insert(namespace.clone(), manager);
+            if process_manager.len() == 1 {
+                drop(process_manager);
+                self.spawn_waiting_thread()
+            }
+        }
+    }
+
+    pub fn stop(&mut self, namespace: &str) {
+        let mut process_manager = self.process_manager.lock().unwrap();
+
+        if let Some(manager) = process_manager.get_mut(namespace) {
+            manager.stop()
+        } else {
+            log::warn!("unknown namespace {}", namespace);
+        }
+    }
+
+    fn spawn_waiting_thread(&mut self) {
+        let process_manager_mut = self.process_manager.clone();
+        let sender = self.sender.clone();
+
+        self.thread = Some(thread::spawn(move || {
+            log::debug!("waiter thread spawned !");
+            loop {
+                let mut process_manager = process_manager_mut.lock().unwrap();
+                let mut finished_manager: Vec<String> = Vec::new();
+
+                for (key, manager) in process_manager.iter_mut() {
+                    manager.cycle(&sender);
+                    if manager.has_finished() {
+                        finished_manager.push(key.clone());
+                    }
+                }
+                for key in finished_manager {
+                    process_manager.remove(&key);
+                }
+                if process_manager.len() == 0 {
+                    break;
+                }
+                drop(process_manager);
+                thread::sleep(time::Duration::from_millis(500));
+            }
+            sender.send(Inter::NoMoreChildrenToWait).unwrap();
+            log::debug!("waiter thread finished !");
+        }));
+    }
+
+    pub fn done_wait_children(&mut self) {
+        if let Some(thread) = self.thread.take() {
+            thread.join().expect("cannot join waiting thread");
+        } else {
+            log::error!("waiter: no thread to join as being asked !");
         }
     }
 }

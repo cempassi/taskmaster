@@ -14,19 +14,14 @@ mod relaunch;
 mod signal;
 mod state;
 mod task;
-mod waiter;
 mod watcher;
 
 use crate::shared::message::Message;
 
-use self::{
-    communication::Com, inter::Inter, listener::Listener, state::State, waiter::Waiter,
-    watcher::Watcher,
-};
+use self::{communication::Com, inter::Inter, listener::Listener, state::State, watcher::Watcher};
 
 struct Server {
     state: State,
-    waiter: Waiter,
     event: Sender<Inter>,
 }
 
@@ -37,7 +32,6 @@ pub fn start(config: &str) -> Result<(), error::Taskmaster> {
     let mut listener = Listener::new();
     let mut server = Server {
         state: State::new(sender.clone(), response.clone()),
-        waiter: Waiter::new(sender.clone()),
         event: sender.clone(),
     };
 
@@ -53,9 +47,9 @@ pub fn start(config: &str) -> Result<(), error::Taskmaster> {
                     server.ev_child_has_exited(&namespace, pid, status)
                 }
                 Inter::ChildrenToWait(children_to_wait) => {
-                    server.waiter.wait_children(children_to_wait)
+                    server.state.add_children_to_wait(children_to_wait)
                 }
-                Inter::NoMoreChildrenToWait => server.waiter.done_wait_children(),
+                Inter::NoMoreChildrenToWait => server.state.done_wait_children(),
                 Inter::FromClient(msg) => {
                     server.handle_client_message(msg);
                     response.send(Com::End).unwrap();
@@ -77,12 +71,12 @@ impl Server {
         match message {
             Message::Reload => self.event.send(Inter::Reload).unwrap(),
             Message::Start(taskname) => self.state.start(&taskname),
-            Message::Stop(taskname) => self.waiter.stop(&taskname),
+            Message::Stop(taskname) => self.state.stop(&taskname),
             Message::List => self.state.list(),
             Message::Status(taskname) => self.state.status(&taskname),
             Message::Restart(taskname) => {
                 // self.state.stop(&taskname);
-                self.waiter.stop(&taskname);
+                self.state.stop(&taskname);
                 self.state.start(&taskname);
             }
             Message::Quit => self
