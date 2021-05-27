@@ -6,7 +6,6 @@ mod default;
 pub mod error;
 mod inter;
 mod listener;
-mod manager;
 mod monitor;
 mod nix_utils;
 mod relaunch;
