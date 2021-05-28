@@ -1,7 +1,11 @@
 use std::{
     collections::HashMap,
     convert::TryFrom,
-    sync::{mpsc::Sender, Arc, Mutex},
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        mpsc::Sender,
+        Arc, Mutex,
+    },
     thread::{self, JoinHandle},
     time,
 };
@@ -20,6 +24,7 @@ pub struct State {
     sender: Sender<Inter>,
     response: Sender<Com>,
     thread: Option<JoinHandle<()>>,
+    waiter_running: Arc<AtomicBool>,
 }
 
 impl State {
@@ -29,6 +34,7 @@ impl State {
             sender,
             response,
             thread: None,
+            waiter_running: Arc::new(AtomicBool::new(false)),
         }
     }
 
@@ -68,6 +74,10 @@ impl State {
             mon.start();
         } else {
             log::error!("task {} doesn't exist", name);
+            return;
+        }
+        if !self.waiter_running.load(Ordering::SeqCst) {
+            self.spawn_waiting_thread();
         }
     }
 
@@ -112,8 +122,10 @@ impl State {
 
     fn spawn_waiting_thread(&mut self) {
         let process_manager_mut = self.monitors.clone();
+        let running_state = self.waiter_running.clone();
         let sender = self.sender.clone();
 
+        running_state.store(true, Ordering::SeqCst);
         self.thread = Some(thread::spawn(move || {
             log::debug!("waiter thread spawned !");
             loop {
@@ -136,6 +148,7 @@ impl State {
                 thread::sleep(time::Duration::from_millis(500));
             }
             log::debug!("waiter thread finished !");
+            running_state.store(false, Ordering::SeqCst);
         }));
     }
 
