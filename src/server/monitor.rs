@@ -279,6 +279,13 @@ impl Monitor {
     }
 
     pub fn cycle(&mut self, sender: &Sender<Inter>) {
+        log::debug!(
+            "[{}] doing cycle: {} running, {} stopping ",
+            self.id,
+            self.running.len(),
+            self.stopping.len()
+        );
+
         if !self.running.is_empty() {
             self.cycle_running().unwrap();
         }
@@ -297,12 +304,7 @@ impl Monitor {
         while i != self.running.len() {
             if let Some(st) = self.running[i].try_wait()? {
                 let e = self.running.remove(i);
-                self.finished.push(FinishedChild::new(
-                    e.child,
-                    st,
-                    e.started_at.elapsed(),
-                    e.startup_time,
-                ));
+                self.add_finished_child(e.child, st, e.started_at.elapsed(), e.startup_time);
             } else {
                 i += 1;
             }
@@ -323,12 +325,7 @@ impl Monitor {
 
             if let Some(st) = chld.try_wait()? {
                 let e = self.stopping.remove(i);
-                self.finished.push(FinishedChild::new(
-                    e.child,
-                    st,
-                    e.started_at.elapsed(),
-                    e.startup_time,
-                ));
+                self.add_finished_child(e.child, st, e.started_at.elapsed(), e.startup_time);
             } else if during > timeout {
                 chld.kill()?;
                 let e = self.stopping.remove(i);
@@ -341,17 +338,39 @@ impl Monitor {
         while !killed.is_empty() {
             let mut chld = killed.remove(0);
             let st = chld.child.wait()?;
-            self.finished.push(FinishedChild::new(
-                chld.child,
-                st,
-                chld.started_at.elapsed(),
-                chld.startup_time,
-            ));
+            self.add_finished_child(chld.child, st, chld.started_at.elapsed(), chld.startup_time);
         }
         Ok(())
     }
 
+    fn add_finished_child(
+        &mut self,
+        child: Child,
+        status: ExitStatus,
+        execution_time: time::Duration,
+        startup_time: time::Duration,
+    ) {
+        log::debug!(
+            "[{}] child-{} exited with {} after {}s",
+            self.id,
+            child.id(),
+            status,
+            execution_time.as_secs()
+        );
+        self.finished.push(FinishedChild::new(
+            child,
+            status,
+            execution_time,
+            startup_time,
+        ))
+    }
+
     fn cycle_finished(&mut self, _sender: &Sender<Inter>) {
+        log::debug!(
+            "[{}] end of cycle: {} finished",
+            self.id,
+            self.finished.len()
+        );
         while !self.finished.is_empty() {
             let e = self.finished.remove(0);
             match self.check_finished_child(&e) {
