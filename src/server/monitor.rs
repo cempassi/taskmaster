@@ -386,3 +386,21 @@ fn startable_state(state: Status) -> bool {
         || state == Status::Failed
         || state == Status::Stopped
 }
+
+#[cfg(test)]
+mod monitor_suite {
+    use super::{startable_state, Status};
+
+    #[test]
+    fn test_startable_state() {
+        assert_eq!(startable_state(Status::Active), false);
+        assert_eq!(startable_state(Status::Reloading), false);
+        assert_eq!(startable_state(Status::Failing), false);
+        assert_eq!(startable_state(Status::Stopping), false);
+
+        assert_eq!(startable_state(Status::Finished), true);
+        assert_eq!(startable_state(Status::Inactive), true);
+        assert_eq!(startable_state(Status::Failed), true);
+        assert_eq!(startable_state(Status::Stopped), true);
+    }
+}
