@@ -271,7 +271,7 @@ impl Monitor {
     }
 
     pub fn is_running(&self) -> bool {
-        running_state(self.state)
+        !self.running.is_empty() || !self.stopping.is_empty()
     }
 
     pub fn has_finished(&self) -> bool {
