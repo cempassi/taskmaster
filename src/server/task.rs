@@ -135,7 +135,7 @@ pub struct Task {
     stdout: PathBuf,
     stderr: PathBuf,
     retry: u32,
-    successdelay: u32,
+    pub successdelay: u32,
     pub exitcodes: Vec<i32>,
     restart: Relaunch,
     env: BTreeMap<String, String>,
@@ -226,7 +226,15 @@ impl fmt::Display for Task {
 
 impl Task {
     pub fn run(&self) -> Vec<Child> {
+        let command = self.get_command();
         let mut jobs = Vec::new();
+        for _ in 0..self.numprocess {
+            jobs.push(command.spawn().expect("Couldn't run command!"));
+        }
+        jobs
+    }
+
+    pub fn get_command(&self) -> Command {
         let mut command = Command::new(&self.args[0]);
         let stdout = File::create(self.stdout.as_path()).unwrap();
         let stderr = File::create(self.stderr.as_path()).unwrap();
@@ -237,10 +245,7 @@ impl Task {
         command.current_dir(self.workingdir.as_path());
         command.stdout(stdout);
         command.stderr(stderr);
-        for _ in 0..self.numprocess {
-            jobs.push(command.spawn().expect("Couldn't run command!"));
-        }
-        jobs
+        command
     }
 
     fn setup_command(&self, command: &mut Command) {
