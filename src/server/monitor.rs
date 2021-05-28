@@ -237,6 +237,7 @@ impl Monitor {
     }
 
     pub fn stop(&mut self) {
+        self.change_state(Status::Stopping);
         while !self.running.is_empty() {
             let chld = self.running.remove(0);
             let stopping_child = chld.stop().unwrap();
@@ -247,20 +248,6 @@ impl Monitor {
 
     pub fn get_task(&self) -> &Task {
         &self.task
-    }
-
-    pub fn ev_child_has_exited(&mut self, pid: u32, status: ExitStatus) -> bool {
-        if self.children_pid.iter().any(|&chld_pid| chld_pid == pid) {
-            self.children_pid.retain(|&chld_pid| chld_pid != pid);
-            self.handle_finished_child(status);
-            if self.children_pid.is_empty() {
-                self.update_finished_task_status();
-            }
-            true
-        } else {
-            log::error!("[{}] pid {} is not registred to this monitor", self.id, pid);
-            false
-        }
     }
 
     fn handle_finished_child(&mut self, status: ExitStatus) {
