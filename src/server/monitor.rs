@@ -270,6 +270,10 @@ impl Monitor {
         &self.task
     }
 
+    pub fn is_running(&self) -> bool {
+        running_state(self.state)
+    }
+
     pub fn has_finished(&self) -> bool {
         self.running.is_empty() && self.stopping.is_empty()
     }
@@ -407,6 +411,13 @@ fn startable_state(state: Status) -> bool {
         || state == Status::Stopped
 }
 
+fn running_state(state: Status) -> bool {
+    state == Status::Active
+        || state == Status::Reloading
+        || state == Status::Failing
+        || state == Status::Stopping
+}
+
 fn finished_state(state: Status) -> Status {
     match state {
         Status::Stopping | Status::Stopped => Status::Stopped,
@@ -417,7 +428,7 @@ fn finished_state(state: Status) -> Status {
 
 #[cfg(test)]
 mod monitor_suite {
-    use super::{finished_state, startable_state, Status};
+    use super::{finished_state, running_state, startable_state, Status};
 
     #[test]
     fn test_startable_state() {
@@ -430,6 +441,19 @@ mod monitor_suite {
         assert_eq!(startable_state(Status::Inactive), true);
         assert_eq!(startable_state(Status::Failed), true);
         assert_eq!(startable_state(Status::Stopped), true);
+    }
+
+    #[test]
+    fn test_running_state() {
+        assert_eq!(running_state(Status::Active), true);
+        assert_eq!(running_state(Status::Reloading), true);
+        assert_eq!(running_state(Status::Failing), true);
+        assert_eq!(running_state(Status::Stopping), false);
+
+        assert_eq!(running_state(Status::Finished), false);
+        assert_eq!(running_state(Status::Inactive), false);
+        assert_eq!(running_state(Status::Failed), false);
+        assert_eq!(running_state(Status::Stopped), false);
     }
 
     #[test]
