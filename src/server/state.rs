@@ -76,9 +76,10 @@ impl State {
         } else {
             log::error!("task {} doesn't exist", name);
         }
+        self.start_waiting_thread_if_needed();
     }
 
-    fn start_waiting_thread(&mut self) {
+    fn start_waiting_thread_if_needed(&mut self) {
         if !self.waiter_running.load(Ordering::SeqCst) {
             self.spawn_waiting_thread();
         }
