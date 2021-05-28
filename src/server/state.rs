@@ -1,7 +1,6 @@
 use std::{
     collections::HashMap,
     convert::TryFrom,
-    process::ExitStatus,
     sync::{mpsc::Sender, Arc, Mutex},
     thread::{self, JoinHandle},
     time,
@@ -12,7 +11,6 @@ use super::{
     inter::Inter,
     monitor::Monitor,
     task::{ConfigFile, Task},
-    wait_children::WaitChildren,
     watcher::Watcher,
 };
 
@@ -102,31 +100,6 @@ impl State {
             .unwrap();
     }
 
-    pub fn ev_child_has_exited(&mut self, namespace: &str, pid: u32, status: ExitStatus) {
-        if let Some(monitor) = self.monitors.lock().unwrap().get_mut(namespace) {
-            monitor.ev_child_has_exited(pid, status);
-        } else {
-            log::error!("no task named {}", namespace);
-        }
-    }
-
-    pub fn add_children_to_wait(&mut self, children_to_wait: WaitChildren) {
-        // let namespace = children_to_wait.namespace.clone();
-        // let mut process_manager = self.monitors.lock().unwrap();
-
-        // if let Some(manager) = process_manager.get_mut(&namespace) {
-        //     manager.add_children_to_wait(children_to_wait);
-        // } else {
-        //     let manager = ManageChildren::new(children_to_wait);
-        //     process_manager.insert(namespace.clone(), manager);
-        //     if process_manager.len() == 1 {
-        //         drop(process_manager);
-        //         self.spawn_waiting_thread()
-        //     }
-        // }
-        unimplemented!();
-    }
-
     pub fn stop(&mut self, namespace: &str) {
         let mut process_manager = self.monitors.lock().unwrap();
 
@@ -162,7 +135,6 @@ impl State {
                 drop(process_manager);
                 thread::sleep(time::Duration::from_millis(500));
             }
-            sender.send(Inter::NoMoreChildrenToWait).unwrap();
             log::debug!("waiter thread finished !");
         }));
     }
