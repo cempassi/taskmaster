@@ -12,7 +12,7 @@ use std::{
     time,
 };
 
-#[derive(Copy, Clone, Serialize, PartialEq)]
+#[derive(Copy, Clone, Serialize, PartialEq, Debug)]
 pub enum Status {
     Inactive,
     Active,
@@ -79,6 +79,8 @@ impl RunningChild {
         kill(Pid::from_raw(pid), self.stopsignal)?;
         Ok(StoppingChild::new(
             self.child,
+            self.started_at,
+            self.startup_time,
             time::Instant::now(),
             self.stopdelay,
         ))
@@ -88,14 +90,24 @@ impl RunningChild {
 #[derive(Debug)]
 struct StoppingChild {
     child: Child,
+    started_at: time::Instant,
+    startup_time: time::Duration,
     stopped_at: time::Instant,
     timeout: time::Duration,
 }
 
 impl StoppingChild {
-    fn new(child: Child, stopped_at: time::Instant, timeout: time::Duration) -> StoppingChild {
+    fn new(
+        child: Child,
+        started_at: time::Instant,
+        startup_time: time::Duration,
+        stopped_at: time::Instant,
+        timeout: time::Duration,
+    ) -> StoppingChild {
         StoppingChild {
             child,
+            started_at,
+            startup_time,
             stopped_at,
             timeout,
         }
@@ -114,11 +126,23 @@ impl StoppingChild {
 struct FinishedChild {
     child: Child,
     status: ExitStatus,
+    execution_time: time::Duration,
+    startup_time: time::Duration,
 }
 
 impl FinishedChild {
-    fn new(child: Child, status: ExitStatus) -> FinishedChild {
-        FinishedChild { child, status }
+    fn new(
+        child: Child,
+        status: ExitStatus,
+        execution_time: time::Duration,
+        startup_time: time::Duration,
+    ) -> FinishedChild {
+        FinishedChild {
+            child,
+            status,
+            execution_time,
+            startup_time,
+        }
     }
 }
 
@@ -126,9 +150,6 @@ impl FinishedChild {
 pub struct Monitor {
     id: String,
     task: Task,
-
-    #[serde(skip)]
-    children_pid: Vec<u32>,
 
     #[serde(skip)]
     state: Status,
@@ -161,7 +182,6 @@ impl Monitor {
         Monitor {
             id,
             task,
-            children_pid: Vec::new(),
             state: Status::Inactive,
             sender,
             running: Vec::new(),
@@ -266,14 +286,6 @@ impl Monitor {
         }
     }
 
-    fn update_finished_task_status(&mut self) {
-        if self.state == Status::Failing {
-            self.state = Status::Failed;
-        } else {
-            self.state = Status::Finished;
-        }
-    }
-
     pub fn has_finished(&self) -> bool {
         self.running.is_empty() && self.stopping.is_empty()
     }
@@ -297,7 +309,12 @@ impl Monitor {
         while i != self.running.len() {
             if let Some(st) = self.running[i].try_wait()? {
                 let e = self.running.remove(i);
-                self.finished.push(FinishedChild::new(e.child, st));
+                self.finished.push(FinishedChild::new(
+                    e.child,
+                    st,
+                    e.started_at.elapsed(),
+                    e.startup_time,
+                ));
             } else {
                 i += 1;
             }
@@ -308,7 +325,7 @@ impl Monitor {
 
     // cycle_stopping check for signaled children if they've stop
     fn cycle_stopping(&mut self) -> Result<(), std::io::Error> {
-        let mut killed: Vec<Child> = Vec::new();
+        let mut killed: Vec<StoppingChild> = Vec::new();
         let mut i = 0;
 
         while i != self.stopping.len() {
@@ -318,11 +335,16 @@ impl Monitor {
 
             if let Some(st) = chld.try_wait()? {
                 let e = self.stopping.remove(i);
-                self.finished.push(FinishedChild::new(e.child, st));
+                self.finished.push(FinishedChild::new(
+                    e.child,
+                    st,
+                    e.started_at.elapsed(),
+                    e.startup_time,
+                ));
             } else if during > timeout {
                 chld.kill()?;
                 let e = self.stopping.remove(i);
-                killed.push(e.child);
+                killed.push(e);
             } else {
                 i += 1;
             }
@@ -330,18 +352,45 @@ impl Monitor {
 
         while !killed.is_empty() {
             let mut chld = killed.remove(0);
-            let st = chld.wait()?;
-            self.finished.push(FinishedChild::new(chld, st));
+            let st = chld.child.wait()?;
+            self.finished.push(FinishedChild::new(
+                chld.child,
+                st,
+                chld.started_at.elapsed(),
+                chld.startup_time,
+            ));
         }
         Ok(())
     }
 
     fn cycle_finished(&mut self, _sender: &Sender<Inter>) {
-        // while !self.finished.is_empty() {
-        //     let e = self.finished.remove(0);
-        //     sender.send(e.into()).unwrap();
-        // }
-        unimplemented!();
+        while !self.finished.is_empty() {
+            let e = self.finished.remove(0);
+            match self.check_finished_child(&e) {
+                Status::Failed => self.change_state(Status::Failing),
+                Status::Finished => {}
+                _ => panic!("unexpected status for finished child !"),
+            }
+        }
+        if self.running.is_empty() {
+            self.change_state(finished_state(self.state));
+        }
+    }
+
+    fn check_finished_child(&self, child: &FinishedChild) -> Status {
+        child.status.code().map_or(Status::Failed, |code| {
+            if self.unexpected_exit_code(code) {
+                Status::Failed
+            } else if child.execution_time > child.startup_time {
+                Status::Finished
+            } else {
+                Status::Failed
+            }
+        })
+    }
+
+    fn unexpected_exit_code(&self, code: i32) -> bool {
+        !self.task.exitcodes.iter().any(|&wanted| wanted == code)
     }
 }
 
@@ -362,9 +411,17 @@ fn startable_state(state: Status) -> bool {
         || state == Status::Stopped
 }
 
+fn finished_state(state: Status) -> Status {
+    match state {
+        Status::Stopping | Status::Stopped => Status::Stopped,
+        Status::Failing | Status::Failed => Status::Failed,
+        _ => Status::Finished,
+    }
+}
+
 #[cfg(test)]
 mod monitor_suite {
-    use super::{startable_state, Status};
+    use super::{finished_state, startable_state, Status};
 
     #[test]
     fn test_startable_state() {
@@ -377,5 +434,19 @@ mod monitor_suite {
         assert_eq!(startable_state(Status::Inactive), true);
         assert_eq!(startable_state(Status::Failed), true);
         assert_eq!(startable_state(Status::Stopped), true);
+    }
+
+    #[test]
+    fn test_finished_state() {
+        assert_eq!(finished_state(Status::Active), Status::Finished);
+        assert_eq!(finished_state(Status::Reloading), Status::Finished);
+        assert_eq!(finished_state(Status::Finished), Status::Finished);
+        assert_eq!(finished_state(Status::Inactive), Status::Finished);
+
+        assert_eq!(finished_state(Status::Failing), Status::Failed);
+        assert_eq!(finished_state(Status::Failed), Status::Failed);
+
+        assert_eq!(finished_state(Status::Stopping), Status::Stopped);
+        assert_eq!(finished_state(Status::Stopped), Status::Stopped);
     }
 }
