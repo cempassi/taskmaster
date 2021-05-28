@@ -62,10 +62,11 @@ impl State {
     }
 
     fn add_task(&mut self, name: &str, task: Task) {
-        self.monitors.lock().unwrap().insert(
-            name.to_string(),
-            Monitor::new(name.to_string(), task, self.sender.clone()),
-        );
+        let mon = Monitor::new(name.to_string(), task, self.sender.clone());
+        if mon.is_running() {
+            self.start_waiting_thread();
+        }
+        self.monitors.lock().unwrap().insert(name.to_string(), mon);
     }
 
     pub fn start(&mut self, name: &str) {
@@ -74,8 +75,10 @@ impl State {
             mon.start();
         } else {
             log::error!("task {} doesn't exist", name);
-            return;
         }
+    }
+
+    fn start_waiting_thread(&mut self) {
         if !self.waiter_running.load(Ordering::SeqCst) {
             self.spawn_waiting_thread();
         }
@@ -130,18 +133,20 @@ impl State {
             log::debug!("waiter thread spawned !");
             loop {
                 let mut process_manager = process_manager_mut.lock().unwrap();
-                let mut working_manager = process_manager
+                let working_manager = process_manager
                     .values_mut()
                     .filter(|manager| manager.is_running());
+                let mut working_manager_count = 0;
                 let mut finished_manager_count = 0;
 
-                for manager in &mut working_manager {
+                working_manager.for_each(|manager| {
+                    working_manager_count += 1;
                     manager.cycle(&sender);
                     if manager.has_finished() {
                         finished_manager_count += 1;
                     }
-                }
-                if working_manager.count() == finished_manager_count {
+                });
+                if working_manager_count == finished_manager_count {
                     break;
                 }
                 drop(process_manager);
