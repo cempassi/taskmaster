@@ -226,7 +226,7 @@ impl fmt::Display for Task {
 
 impl Task {
     pub fn run(&self) -> Vec<Child> {
-        let command = self.get_command();
+        let mut command = self.get_command();
         let mut jobs = Vec::new();
         for _ in 0..self.numprocess {
             jobs.push(command.spawn().expect("Couldn't run command!"));
