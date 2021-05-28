@@ -130,18 +130,18 @@ impl State {
             log::debug!("waiter thread spawned !");
             loop {
                 let mut process_manager = process_manager_mut.lock().unwrap();
-                let mut finished_manager: Vec<String> = Vec::new();
+                let mut working_manager = process_manager
+                    .values_mut()
+                    .filter(|manager| manager.is_running());
+                let mut finished_manager_count = 0;
 
-                for (key, manager) in process_manager.iter_mut() {
+                for manager in &mut working_manager {
                     manager.cycle(&sender);
                     if manager.has_finished() {
-                        finished_manager.push(key.clone());
+                        finished_manager_count += 1;
                     }
                 }
-                for key in finished_manager {
-                    process_manager.remove(&key);
-                }
-                if process_manager.len() == 0 {
+                if working_manager.count() == finished_manager_count {
                     break;
                 }
                 drop(process_manager);
