@@ -203,10 +203,7 @@ impl Monitor {
 
     pub fn start(&mut self) {
         let current_status = self.status();
-        if current_status == Status::Inactive
-            || current_status == Status::Finished
-            || current_status == Status::Failed
-        {
+        if startable_state(current_status) {
             self.start_raw();
         } else {
             log::warn!("[{}] already started", self.id);
@@ -381,4 +378,11 @@ impl Debug for Monitor {
             Err(fmt::Error)
         }
     }
+}
+
+fn startable_state(state: Status) -> bool {
+    state == Status::Inactive
+        || state == Status::Finished
+        || state == Status::Failed
+        || state == Status::Stopped
 }
