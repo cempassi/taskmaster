@@ -270,22 +270,6 @@ impl Monitor {
         &self.task
     }
 
-    fn handle_finished_child(&mut self, status: ExitStatus) {
-        if let Some(code) = status.code() {
-            if !self.task.exitcodes.iter().any(|&wanted| wanted == code) {
-                log::debug!(
-                    "[{}] child exited with unexpeced status code {}",
-                    self.id,
-                    code
-                );
-                self.state = Status::Failing;
-            }
-        } else {
-            log::warn!("[{}] unexpected exit status {:?}", self.id, status);
-            self.state = Status::Failing;
-        }
-    }
-
     pub fn has_finished(&self) -> bool {
         self.running.is_empty() && self.stopping.is_empty()
     }
@@ -378,15 +362,27 @@ impl Monitor {
     }
 
     fn check_finished_child(&self, child: &FinishedChild) -> Status {
-        child.status.code().map_or(Status::Failed, |code| {
-            if self.unexpected_exit_code(code) {
+        child.status.code().map_or_else(
+            || {
+                log::debug!("[{}] unexpected exit status {}", self.id, child.status);
                 Status::Failed
-            } else if child.execution_time > child.startup_time {
-                Status::Finished
-            } else {
-                Status::Failed
-            }
-        })
+            },
+            |code| {
+                if self.unexpected_exit_code(code) {
+                    log::debug!(
+                        "[{}] child exited with unexpeced status code {}",
+                        self.id,
+                        code
+                    );
+                    Status::Failed
+                } else if child.execution_time < child.startup_time {
+                    log::debug!("[{}] child finished too early", self.id);
+                    Status::Failed
+                } else {
+                    Status::Finished
+                }
+            },
+        )
     }
 
     fn unexpected_exit_code(&self, code: i32) -> bool {
