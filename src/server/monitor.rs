@@ -78,7 +78,6 @@ impl RunningChild {
 
         kill(Pid::from_raw(pid), self.stopsignal)?;
         Ok(StoppingChild::new(
-            self.namespace,
             self.child,
             time::Instant::now(),
             self.stopdelay,
@@ -86,41 +85,18 @@ impl RunningChild {
     }
 }
 
-impl From<WaitChildren> for Vec<RunningChild> {
-    fn from(data: WaitChildren) -> Vec<RunningChild> {
-        let mut res: Vec<RunningChild> = Vec::new();
-
-        for child in data.children {
-            res.push(RunningChild {
-                child,
-                stopdelay: data.stopdelay,
-                stopsignal: data.stopsignal,
-            })
-        }
-
-        res
-    }
-}
-
 #[derive(Debug)]
 struct StoppingChild {
-    namespace: String,
     child: Child,
-    signaled_at: time::Instant,
+    stopped_at: time::Instant,
     timeout: time::Duration,
 }
 
 impl StoppingChild {
-    fn new(
-        namespace: String,
-        child: Child,
-        instant: time::Instant,
-        timeout: time::Duration,
-    ) -> StoppingChild {
+    fn new(child: Child, stopped_at: time::Instant, timeout: time::Duration) -> StoppingChild {
         StoppingChild {
-            namespace,
             child,
-            signaled_at: instant,
+            stopped_at,
             timeout,
         }
     }
@@ -136,24 +112,13 @@ impl StoppingChild {
 
 #[derive(Debug)]
 struct FinishedChild {
-    namespace: String,
     child: Child,
     status: ExitStatus,
 }
 
 impl FinishedChild {
-    fn new(namespace: String, child: Child, status: ExitStatus) -> FinishedChild {
-        FinishedChild {
-            namespace,
-            child,
-            status,
-        }
-    }
-}
-
-impl From<FinishedChild> for super::inter::Inter {
-    fn from(finished: FinishedChild) -> Self {
-        Self::ChildHasExited(finished.namespace, finished.child.id(), finished.status)
+    fn new(child: Child, status: ExitStatus) -> FinishedChild {
+        FinishedChild { child, status }
     }
 }
 
@@ -236,7 +201,7 @@ impl Monitor {
     }
 
     fn spaw_children(&self) -> Vec<RunningChild> {
-        let command = self.task.get_command();
+        let mut command = self.task.get_command();
         let num_process = self.task.numprocess;
         let mut running_children = Vec::new();
 
@@ -345,8 +310,7 @@ impl Monitor {
         while i != self.running.len() {
             if let Some(st) = self.running[i].try_wait()? {
                 let e = self.running.remove(i);
-                self.finished
-                    .push(FinishedChild::new(e.namespace, e.child, st));
+                self.finished.push(FinishedChild::new(e.child, st));
             } else {
                 i += 1;
             }
@@ -357,22 +321,21 @@ impl Monitor {
 
     // cycle_stopping check for signaled children if they've stop
     fn cycle_stopping(&mut self) -> Result<(), std::io::Error> {
-        let mut killed: Vec<(String, Child)> = Vec::new();
+        let mut killed: Vec<Child> = Vec::new();
         let mut i = 0;
 
         while i != self.stopping.len() {
             let chld = &mut self.stopping[i];
             let timeout = chld.timeout;
-            let during = chld.signaled_at.elapsed();
+            let during = chld.stopped_at.elapsed();
 
             if let Some(st) = chld.try_wait()? {
                 let e = self.stopping.remove(i);
-                self.finished
-                    .push(FinishedChild::new(e.namespace, e.child, st));
+                self.finished.push(FinishedChild::new(e.child, st));
             } else if during > timeout {
                 chld.kill()?;
                 let e = self.stopping.remove(i);
-                killed.push((e.namespace, e.child));
+                killed.push(e.child);
             } else {
                 i += 1;
             }
@@ -380,21 +343,18 @@ impl Monitor {
 
         while !killed.is_empty() {
             let mut chld = killed.remove(0);
-            let st = chld.1.wait()?;
-            self.finished.push(FinishedChild::new(chld.0, chld.1, st));
+            let st = chld.wait()?;
+            self.finished.push(FinishedChild::new(chld, st));
         }
         Ok(())
     }
 
-    fn cycle_finished(&mut self, sender: &Sender<Inter>) {
-        while !self.finished.is_empty() {
-            let e = self.finished.remove(0);
-            sender.send(e.into()).unwrap();
-        }
-    }
-
-    pub fn add_children_to_wait(&mut self, to_wait: WaitChildren) {
-        self.running.append(&mut to_wait.into());
+    fn cycle_finished(&mut self, _sender: &Sender<Inter>) {
+        // while !self.finished.is_empty() {
+        //     let e = self.finished.remove(0);
+        //     sender.send(e.into()).unwrap();
+        // }
+        unimplemented!();
     }
 }
 
