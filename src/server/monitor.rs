@@ -42,14 +42,32 @@ impl Display for Status {
 
 #[derive(Debug)]
 struct RunningChild {
-    namespace: String,
     child: Child,
 
-    stopdelay: time::Duration,
+    started_at: time::Instant,
+    startup_time: time::Duration,
+
     stopsignal: Signal,
+    stopdelay: time::Duration,
 }
 
 impl RunningChild {
+    fn new(
+        child: Child,
+        started_at: time::Instant,
+        startup_time: time::Duration,
+        stopsignal: Signal,
+        stopdelay: time::Duration,
+    ) -> Self {
+        Self {
+            child,
+            started_at,
+            startup_time,
+            stopsignal,
+            stopdelay,
+        }
+    }
+
     fn try_wait(&mut self) -> Result<Option<ExitStatus>, std::io::Error> {
         self.child.try_wait()
     }
@@ -74,7 +92,6 @@ impl From<WaitChildren> for Vec<RunningChild> {
 
         for child in data.children {
             res.push(RunningChild {
-                namespace: data.namespace.clone(),
                 child,
                 stopdelay: data.stopdelay,
                 stopsignal: data.stopsignal,
@@ -212,18 +229,29 @@ impl Monitor {
 
     fn start_raw(&mut self) {
         log::debug!("[{}] starting ...", self.id);
-        let mut children = self.task.run();
+        let mut running_children = self.spaw_children();
 
-        self.children_pid = children.iter_mut().map(|chld| chld.id()).collect();
-        self.sender
-            .send(Inter::ChildrenToWait(WaitChildren::new(
-                self.id.clone(),
-                children,
-                time::Duration::from_secs(self.task.stopdelay.into()),
-                self.task.stopsignal,
-            )))
-            .unwrap();
+        self.running.append(&mut running_children);
         self.change_state(Status::Active);
+    }
+
+    fn spaw_children(&self) -> Vec<RunningChild> {
+        let command = self.task.get_command();
+        let num_process = self.task.numprocess;
+        let mut running_children = Vec::new();
+
+        for _ in 0..num_process {
+            let child = command.spawn().expect("Cannot start child");
+            let running_child = RunningChild::new(
+                child,
+                time::Instant::now(),
+                time::Duration::from_secs(self.task.successdelay.into()),
+                self.task.stopsignal,
+                time::Duration::from_secs(self.task.stopdelay.into()),
+            );
+            running_children.push(running_child);
+        }
+        running_children
     }
 
     pub fn status(&self) -> Status {
