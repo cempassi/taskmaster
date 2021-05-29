@@ -373,25 +373,29 @@ impl Monitor {
         );
         while !self.finished.is_empty() {
             let e = self.finished.remove(0);
-            match self.check_finished_child(&e) {
+            let status = self.check_finished_child(&e);
+            match status {
                 Status::Failed => {
-                    if self.task.restart == Relaunch::OnError {
-                        self.restart_task();
-                    } else if self.state != Status::Stopping {
+                    if self.state != Status::Stopping {
                         self.change_state(Status::Failing)
                     }
                 }
-                Status::Finished => {
-                    if self.task.restart == Relaunch::Always {
-                        self.restart_task();
-                    }
-                }
+                Status::Finished => {}
                 _ => panic!("unexpected status for finished child !"),
+            }
+            if self.should_process_restarted(status) {
+                self.restart_task()
             }
         }
         if self.running.is_empty() {
             self.change_state(finished_state(self.state));
         }
+    }
+
+    fn should_process_restarted(&self, status: Status) -> bool {
+        (self.retry_count < self.task.retry)
+            && ((status == Status::Failed && self.task.restart == Relaunch::OnError)
+                || (status == Status::Finished && self.task.restart == Relaunch::Always))
     }
 
     fn check_finished_child(&self, child: &FinishedChild) -> Status {
