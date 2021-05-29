@@ -1,5 +1,6 @@
 use std::time;
 
+#[derive(Clone, Copy, Debug)]
 pub struct Config {
     pub instant: Option<time::Instant>,
 }
