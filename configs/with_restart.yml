@@ -1,4 +1,4 @@
-success:
+sucess:
   cmd: 'true'
   restart: always
   retry: 2
