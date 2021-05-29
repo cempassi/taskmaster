@@ -9,7 +9,7 @@ mod shared;
 
 use log::{LevelFilter, SetLoggerError};
 use server::error;
-use shared::logger::simple::LOGGER;
+use shared::logger::Simple;
 
 type Result<T> = std::result::Result<T, error::Taskmaster>;
 
@@ -17,8 +17,7 @@ type Result<T> = std::result::Result<T, error::Taskmaster>;
 ///
 /// Will return `Err` when failing to initialise `LOGGER`
 unsafe fn init() -> std::result::Result<(), SetLoggerError> {
-    LOGGER.set_instant(std::time::Instant::now());
-    log::set_logger(&LOGGER).map(|()| log::set_max_level(LevelFilter::Debug))
+    Simple::init(LevelFilter::Debug)
 }
 
 fn main() -> Result<()> {

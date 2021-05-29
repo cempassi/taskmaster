@@ -1,17 +1,20 @@
-use log::{Level, Metadata, Record};
+use log::{set_boxed_logger, LevelFilter, Metadata, Record, SetLoggerError};
 use std::time::Instant;
 
-pub static mut LOGGER: Simple = Simple {
-    level: Level::Debug,
-    now: None,
-};
-
 pub struct Simple {
-    pub level: Level,
+    pub level: LevelFilter,
     now: Option<Instant>,
 }
 
 impl Simple {
+    pub fn init(level: LevelFilter) -> Result<(), SetLoggerError> {
+        set_boxed_logger(Simple::new(level))
+    }
+
+    pub fn new(level: LevelFilter) -> Box<Self> {
+        Box::new(Self { level, now: None })
+    }
+
     pub fn set_instant(&mut self, instant: Instant) {
         self.now = Some(instant);
     }
