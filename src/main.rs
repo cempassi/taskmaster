@@ -9,7 +9,7 @@ mod shared;
 
 use log::{LevelFilter, SetLoggerError};
 use server::error;
-use shared::logger::{Config, Simple};
+use shared::logger::{self, Config};
 use std::time;
 
 type Result<T> = std::result::Result<T, error::Taskmaster>;
@@ -17,20 +17,19 @@ type Result<T> = std::result::Result<T, error::Taskmaster>;
 /// # Errors
 ///
 /// Will return `Err` when failing to initialise `LOGGER`
-unsafe fn init() -> std::result::Result<(), SetLoggerError> {
-    Simple::init(LevelFilter::Debug, Config::new(Some(time::Instant::now())))
+fn init() -> std::result::Result<(), SetLoggerError> {
+    logger::simple::Logger::init(LevelFilter::Debug, Config::new(Some(time::Instant::now())))
 }
 
 fn main() -> Result<()> {
-    unsafe {
-        init().unwrap();
-    }
     let cli = cli::generate();
+    init().unwrap();
 
     // LOGGER.
 
     if let Some(matches) = cli.subcommand_matches("server") {
         let config = matches.value_of("config").unwrap();
+        if let Some(file) = matches.value_of("log-file") {};
 
         log::info!("starting server");
         server::start(config)?;
