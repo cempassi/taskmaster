@@ -29,7 +29,7 @@ impl log::Log for Simple {
                 record.level(),
                 self.now.map_or(0, |time| time.elapsed().as_secs()),
                 record.args()
-            )
+            );
         }
     }
 

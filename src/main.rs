@@ -9,7 +9,7 @@ mod shared;
 
 use log::{LevelFilter, SetLoggerError};
 use server::error;
-use shared::logger::LOGGER;
+use shared::logger::simple::LOGGER;
 
 type Result<T> = std::result::Result<T, error::Taskmaster>;
 
@@ -26,6 +26,8 @@ fn main() -> Result<()> {
         init().unwrap();
     }
     let cli = cli::generate();
+
+    // LOGGER.
 
     if let Some(matches) = cli.subcommand_matches("server") {
         let config = matches.value_of("config").unwrap();
