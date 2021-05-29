@@ -17,7 +17,6 @@ pub fn generate() -> ArgMatches<'static> {
         )
         .subcommand(SubCommand::with_name("client").about("Launch client"))
         .args(&[Arg::with_name("log-file")
-            .default_value("/dev/stderr")
             .help("set output logging file")
             .long("log-file")
             .value_name("FILE")
