@@ -248,9 +248,12 @@ impl Monitor {
             log::debug!("[{}] reloading ...", self.id);
             self.change_state(Status::Reloading);
             self.task = task;
+
+            // FIXME!: check if we need to reduce the number of running children
             if self.task.autostart {
                 self.start();
             } else {
+                // FIXME!: What if the monitor was started ?
                 self.change_state(Status::Inactive);
             }
         }
