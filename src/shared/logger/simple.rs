@@ -1,22 +1,20 @@
-use log::{set_boxed_logger, LevelFilter, Metadata, Record, SetLoggerError};
-use std::time::Instant;
+use super::{config::Config, writer::write_log};
+use log::{set_boxed_logger, set_max_level, LevelFilter, Metadata, Record, SetLoggerError};
+use std::io::stdout;
 
 pub struct Simple {
     pub level: LevelFilter,
-    now: Option<Instant>,
+    config: Config,
 }
 
 impl Simple {
-    pub fn init(level: LevelFilter) -> Result<(), SetLoggerError> {
-        set_boxed_logger(Simple::new(level))
+    pub fn init(level: LevelFilter, config: Config) -> Result<(), SetLoggerError> {
+        set_max_level(level);
+        set_boxed_logger(Simple::new(level, config))
     }
 
-    pub fn new(level: LevelFilter) -> Box<Self> {
-        Box::new(Self { level, now: None })
-    }
-
-    pub fn set_instant(&mut self, instant: Instant) {
-        self.now = Some(instant);
+    pub fn new(level: LevelFilter, config: Config) -> Box<Self> {
+        Box::new(Self { level, config })
     }
 }
 
@@ -27,12 +25,8 @@ impl log::Log for Simple {
 
     fn log(&self, record: &Record) {
         if self.enabled(record.metadata()) {
-            println!(
-                "{:>5}[{:04}] {}",
-                record.level(),
-                self.now.map_or(0, |time| time.elapsed().as_secs()),
-                record.args()
-            );
+            let mut std = stdout();
+            let _ = write_log(&self.config, record, &mut std);
         }
     }
 
