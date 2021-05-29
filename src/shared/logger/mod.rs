@@ -1,6 +1,7 @@
 pub mod config;
+pub mod file;
 pub mod simple;
 mod writer;
 
 pub use config::Config;
-pub use simple::Simple;
+use writer::write_log;
