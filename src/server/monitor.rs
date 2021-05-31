@@ -1,4 +1,4 @@
-use super::{inter::Inter, task::Task, waiter::WaitChildren};
+use super::{inter::Inter, manager::WaitChildren, task::Task};
 use serde::Serialize;
 use std::{
     fmt::{self, Debug, Display, Formatter},
