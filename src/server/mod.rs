@@ -1,5 +1,4 @@
 use std::convert::TryFrom;
-use std::process::ExitStatus;
 use std::sync::mpsc::{channel, Sender};
 
 mod communication;
@@ -7,7 +6,6 @@ mod default;
 pub mod error;
 mod inter;
 mod listener;
-mod manager;
 mod monitor;
 mod nix_utils;
 mod relaunch;
@@ -43,13 +41,6 @@ pub fn start(config: &str) -> Result<(), error::Taskmaster> {
         if let Ok(message) = event.recv() {
             log::info!("received internal message: {:?}", message);
             match message {
-                Inter::ChildHasExited(namespace, pid, status) => {
-                    server.ev_child_has_exited(&namespace, pid, status)
-                }
-                Inter::ChildrenToWait(children_to_wait) => {
-                    server.state.add_children_to_wait(children_to_wait)
-                }
-                Inter::NoMoreChildrenToWait => server.state.done_wait_children(),
                 Inter::FromClient(msg) => {
                     server.handle_client_message(msg);
                     response.send(Com::End).unwrap();
@@ -83,9 +74,5 @@ impl Server {
                 .send(Inter::Quit)
                 .expect("cannot send quit message"),
         };
-    }
-
-    fn ev_child_has_exited(&mut self, namespace: &str, pid: u32, status: ExitStatus) {
-        self.state.ev_child_has_exited(namespace, pid, status);
     }
 }
