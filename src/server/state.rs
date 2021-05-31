@@ -83,13 +83,6 @@ impl State {
         if !self.waiter_running.load(Ordering::SeqCst) {
             self.spawn_waiting_thread();
         }
-        self.start_waiting_thread_if_needed();
-    }
-
-    fn start_waiting_thread_if_needed(&mut self) {
-        if !self.waiter_running.load(Ordering::SeqCst) {
-            self.spawn_waiting_thread();
-        }
     }
 
     pub fn list(&mut self) {
