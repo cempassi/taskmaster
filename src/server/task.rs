@@ -7,13 +7,16 @@ use nix::{
     unistd::{Gid, Uid},
 };
 use serde::{self, Deserialize, Deserializer, Serialize, Serializer};
-use std::collections::BTreeMap;
-use std::convert::TryFrom;
-use std::fmt;
-use std::fs::{self, File};
-use std::os::unix::process::CommandExt;
-use std::path::PathBuf;
-use std::process::{Child, Command};
+use std::{
+    collections::BTreeMap,
+    convert::TryFrom,
+    fmt,
+    fs::{self, File},
+    os::unix::process::CommandExt,
+    path::PathBuf,
+    process::{Child, Command},
+    time,
+};
 
 pub type ConfigFile = BTreeMap<String, Task>;
 
@@ -285,5 +288,52 @@ impl Task {
         status.code().map_or(false, |exitcode| {
             self.exitcodes.iter().any(|&code| code != exitcode)
         })
+    }
+}
+
+fn get_current_timestamp() -> time::Duration {
+    time::SystemTime::now()
+        .duration_since(time::UNIX_EPOCH)
+        .expect("Cannot get time from epoch")
+}
+
+fn format_filename(format: String, id: i32, timestamp: time::Duration) -> String {
+    let replaced_id = format.replace("{.Id}", &id.to_string());
+    replaced_id.replace("{.Time}", &timestamp.as_secs().to_string())
+}
+
+#[cfg(test)]
+mod test_task {
+    use super::{format_filename, get_current_timestamp};
+    use std::time;
+
+    #[test]
+    fn test_get_current_timestamp() {
+        let timestamp = get_current_timestamp();
+        assert!(timestamp > time::Duration::from_secs(0));
+        assert!(timestamp > time::Duration::from_secs(1_609_459_200)); // timestamp since 2021-01-01 00:00:00
+    }
+
+    #[test]
+    fn test_format_filename() {
+        let timestamp = time::Duration::from_secs(4242);
+        let id = 69;
+
+        assert_eq!(
+            format_filename(String::from("test-{.Id}"), id, timestamp),
+            "test-69"
+        );
+        assert_eq!(
+            format_filename(String::from("test-{.Time}"), id, timestamp),
+            "test-4242"
+        );
+        assert_eq!(
+            format_filename(String::from("test-{.Id}-{.Time}"), id, timestamp),
+            "test-69-4242"
+        );
+        assert_eq!(
+            format_filename(String::from("test-{.Id}-{.Time}-{.Id}"), id, timestamp),
+            "test-69-4242-69"
+        );
     }
 }
