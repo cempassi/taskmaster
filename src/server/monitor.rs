@@ -247,14 +247,18 @@ impl Monitor {
     pub fn reload(&mut self, task: Task) {
         if self.task != task {
             log::debug!("[{}] reloading ...", self.id);
+
+            let need_to_start = task.autostart || !self.running.is_empty();
+
             self.change_state(Status::Reloading);
+            if !self.running.is_empty() {
+                self.stop();
+            }
             self.task = task;
 
-            // FIXME!: check if we need to reduce the number of running children
-            if self.task.autostart {
+            if need_to_start {
                 self.start();
             } else {
-                // FIXME!: What if the monitor was started ?
                 self.change_state(Status::Inactive);
             }
         }
