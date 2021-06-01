@@ -76,10 +76,10 @@ struct TaskPartial {
     pub stopdelay: u32,
 
     #[serde(default = "default::stdout")]
-    pub stdout: PathBuf,
+    pub stdout: String,
 
     #[serde(default = "default::stderr")]
-    pub stderr: PathBuf,
+    pub stderr: String,
 
     #[serde(default = "default::retry")]
     pub retry: u32,
@@ -135,8 +135,8 @@ pub struct Task {
     workingdir: PathBuf,
     pub stopsignal: Signal,
     pub stopdelay: u32,
-    stdout: PathBuf,
-    stderr: PathBuf,
+    stdout: String,
+    stderr: String,
     pub retry: u32,
     pub successdelay: u32,
     pub exitcodes: Vec<i32>,
@@ -229,18 +229,21 @@ impl fmt::Display for Task {
 
 impl Task {
     pub fn run(&self) -> Vec<Child> {
-        let mut command = self.get_command();
+        let timestamp = get_current_timestamp();
         let mut jobs = Vec::new();
-        for _ in 0..self.numprocess {
+        for id in 0..self.numprocess {
+            let mut command = self.get_command(id, timestamp);
             jobs.push(command.spawn().expect("Couldn't run command!"));
         }
         jobs
     }
 
-    pub fn get_command(&self) -> Command {
+    pub fn get_command(&self, id: u32, timestamp: time::Duration) -> Command {
         let mut command = Command::new(&self.args[0]);
-        let stdout = File::create(self.stdout.as_path()).unwrap();
-        let stderr = File::create(self.stderr.as_path()).unwrap();
+        let stdout_filename = format_filename(&self.stdout, id, timestamp);
+        let stderr_filename = format_filename(&self.stderr, id, timestamp);
+        let stdout = File::create(stdout_filename).unwrap();
+        let stderr = File::create(stderr_filename).unwrap();
         self.setup_command(&mut command);
         if self.args.len() > 1 {
             command.args(&self.args[1..]);
@@ -291,13 +294,13 @@ impl Task {
     }
 }
 
-fn get_current_timestamp() -> time::Duration {
+pub fn get_current_timestamp() -> time::Duration {
     time::SystemTime::now()
         .duration_since(time::UNIX_EPOCH)
         .expect("Cannot get time from epoch")
 }
 
-fn format_filename(format: String, id: i32, timestamp: time::Duration) -> String {
+fn format_filename(format: &str, id: u32, timestamp: time::Duration) -> String {
     let replaced_id = format.replace("{.Id}", &id.to_string());
     replaced_id.replace("{.Time}", &timestamp.as_secs().to_string())
 }
@@ -320,19 +323,19 @@ mod test_task {
         let id = 69;
 
         assert_eq!(
-            format_filename(String::from("test-{.Id}"), id, timestamp),
+            format_filename(&String::from("test-{.Id}"), id, timestamp),
             "test-69"
         );
         assert_eq!(
-            format_filename(String::from("test-{.Time}"), id, timestamp),
+            format_filename(&String::from("test-{.Time}"), id, timestamp),
             "test-4242"
         );
         assert_eq!(
-            format_filename(String::from("test-{.Id}-{.Time}"), id, timestamp),
+            format_filename(&String::from("test-{.Id}-{.Time}"), id, timestamp),
             "test-69-4242"
         );
         assert_eq!(
-            format_filename(String::from("test-{.Id}-{.Time}-{.Id}"), id, timestamp),
+            format_filename(&String::from("test-{.Id}-{.Time}-{.Id}"), id, timestamp),
             "test-69-4242-69"
         );
     }
