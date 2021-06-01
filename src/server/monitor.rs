@@ -235,7 +235,8 @@ impl Monitor {
         let mut running_children = Vec::new();
 
         for _ in 0..num_process {
-            let mut command = self.task.get_command(self.spawned_children, timestamp);
+            let id = self.increase_spawned_children_counter();
+            let mut command = self.task.get_command(id, timestamp);
             self.spawned_children += 1;
 
             let running_child = spawn_child(
@@ -447,8 +448,8 @@ impl Monitor {
         let timestamp = get_current_timestamp();
 
         if self.retry_count < self.task.retry {
-            let mut command = self.task.get_command(self.spawned_children, timestamp);
-            self.spawned_children += 1;
+            let id = self.increase_spawned_children_counter();
+            let mut command = self.task.get_command(id, timestamp);
             self.retry_count += 1;
 
             let running_child = spawn_child(
@@ -462,6 +463,13 @@ impl Monitor {
         } else {
             log::warn!("[{}] max retries limit", self.id);
         }
+    }
+
+    fn increase_spawned_children_counter(&mut self) -> u32 {
+        let current_value = self.spawned_children;
+
+        self.spawned_children += 1;
+        current_value
     }
 }
 
