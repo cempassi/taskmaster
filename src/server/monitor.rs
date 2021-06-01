@@ -237,7 +237,6 @@ impl Monitor {
         for _ in 0..num_process {
             let id = self.increase_spawned_children_counter();
             let mut command = self.task.get_command(id, timestamp);
-            self.spawned_children += 1;
 
             let running_child = spawn_child(
                 &mut command,
