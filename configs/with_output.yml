@@ -1,0 +1,19 @@
+stderr:
+  cmd: ls --foo
+  stderr: /tmp/ls.err
+
+stdout:
+  cmd: ls
+  stdout: /tmp/ls.out
+
+multi-stdout:
+  cmd: ls
+  numprocess: 4
+  retry: 4
+  restart: always
+  stdout: /tmp/ls-multi-{.Id}-{.Time}.out
+
+multi-stderr:
+  cmd: ls --foo
+  numprocess: 4
+  stderr: /tmp/ls-multi-{.Id}-{.Time}.err
