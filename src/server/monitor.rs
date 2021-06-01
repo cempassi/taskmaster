@@ -1,4 +1,8 @@
-use super::{inter::Inter, relaunch::Relaunch, task::Task};
+use super::{
+    inter::Inter,
+    relaunch::Relaunch,
+    task::{get_current_timestamp, Task},
+};
 use nix::{
     self,
     sys::signal::{kill, Signal},
@@ -151,6 +155,7 @@ pub struct Monitor {
     id: String,
     task: Task,
     retry_count: u32,
+    spawned_children: u32,
 
     #[serde(skip)]
     state: Status,
@@ -184,6 +189,7 @@ impl Monitor {
             id,
             task,
             retry_count: 0,
+            spawned_children: 0,
             state: Status::Inactive,
             sender,
             running: Vec::new(),
@@ -223,12 +229,15 @@ impl Monitor {
         self.change_state(Status::Active);
     }
 
-    fn spawn_children(&self) -> Vec<RunningChild> {
-        let mut command = self.task.get_command();
+    fn spawn_children(&mut self) -> Vec<RunningChild> {
+        let timestamp = get_current_timestamp();
         let num_process = self.task.numprocess;
         let mut running_children = Vec::new();
 
         for _ in 0..num_process {
+            let mut command = self.task.get_command(self.spawned_children, timestamp);
+            self.spawned_children += 1;
+
             let running_child = spawn_child(
                 &mut command,
                 time::Duration::from_secs(self.task.successdelay.into()),
@@ -435,9 +444,11 @@ impl Monitor {
     }
 
     fn restart_task(&mut self) {
-        let mut command = self.task.get_command();
+        let timestamp = get_current_timestamp();
 
         if self.retry_count < self.task.retry {
+            let mut command = self.task.get_command(self.spawned_children, timestamp);
+            self.spawned_children += 1;
             self.retry_count += 1;
 
             let running_child = spawn_child(
