@@ -524,7 +524,7 @@ mod monitor_suite {
         assert_eq!(running_state(Status::Active), true);
         assert_eq!(running_state(Status::Reloading), true);
         assert_eq!(running_state(Status::Failing), true);
-        assert_eq!(running_state(Status::Stopping), false);
+        assert_eq!(running_state(Status::Stopping), true);
 
         assert_eq!(running_state(Status::Finished), false);
         assert_eq!(running_state(Status::Inactive), false);
