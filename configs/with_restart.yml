@@ -1,0 +1,14 @@
+sucess:
+  cmd: 'true'
+  restart: always
+  retry: 2
+
+never:
+  cmd: echo foo
+  restart: never
+  retry: 2
+
+onerror:
+  cmd: 'false'
+  restart: on-error
+  retry: 2

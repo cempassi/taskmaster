@@ -1,4 +1,4 @@
-use super::{inter::Inter, task::Task};
+use super::{inter::Inter, relaunch::Relaunch, task::Task};
 use nix::{
     self,
     sys::signal::{kill, Signal},
@@ -7,7 +7,7 @@ use nix::{
 use serde::Serialize;
 use std::{
     fmt::{self, Debug, Display, Formatter},
-    process::{Child, ExitStatus},
+    process::{Child, Command, ExitStatus},
     sync::mpsc::Sender,
     time,
 };
@@ -150,6 +150,7 @@ impl FinishedChild {
 pub struct Monitor {
     id: String,
     task: Task,
+    retry_count: u32,
 
     #[serde(skip)]
     state: Status,
@@ -182,6 +183,7 @@ impl Monitor {
         Monitor {
             id,
             task,
+            retry_count: 0,
             state: Status::Inactive,
             sender,
             running: Vec::new(),
@@ -214,22 +216,21 @@ impl Monitor {
 
     fn start_raw(&mut self) {
         log::debug!("[{}] starting ...", self.id);
-        let mut running_children = self.spaw_children();
+        self.retry_count = 0;
+        let mut running_children = self.spawn_children();
 
         self.running.append(&mut running_children);
         self.change_state(Status::Active);
     }
 
-    fn spaw_children(&self) -> Vec<RunningChild> {
+    fn spawn_children(&self) -> Vec<RunningChild> {
         let mut command = self.task.get_command();
         let num_process = self.task.numprocess;
         let mut running_children = Vec::new();
 
         for _ in 0..num_process {
-            let child = command.spawn().expect("Cannot start child");
-            let running_child = RunningChild::new(
-                child,
-                time::Instant::now(),
+            let running_child = spawn_child(
+                &mut command,
                 time::Duration::from_secs(self.task.successdelay.into()),
                 self.task.stopsignal,
                 time::Duration::from_secs(self.task.stopdelay.into()),
@@ -248,9 +249,12 @@ impl Monitor {
             log::debug!("[{}] reloading ...", self.id);
             self.change_state(Status::Reloading);
             self.task = task;
+
+            // FIXME!: check if we need to reduce the number of running children
             if self.task.autostart {
                 self.start();
             } else {
+                // FIXME!: What if the monitor was started ?
                 self.change_state(Status::Inactive);
             }
         }
@@ -373,15 +377,29 @@ impl Monitor {
         );
         while !self.finished.is_empty() {
             let e = self.finished.remove(0);
-            match self.check_finished_child(&e) {
-                Status::Failed => self.change_state(Status::Failing),
+            let status = self.check_finished_child(&e);
+            match status {
+                Status::Failed => {
+                    if self.state != Status::Stopping {
+                        self.change_state(Status::Failing)
+                    }
+                }
                 Status::Finished => {}
                 _ => panic!("unexpected status for finished child !"),
+            }
+            if self.should_process_restarted(status) {
+                self.restart_task()
             }
         }
         if self.running.is_empty() {
             self.change_state(finished_state(self.state));
         }
+    }
+
+    fn should_process_restarted(&self, status: Status) -> bool {
+        (self.retry_count < self.task.retry)
+            && ((status == Status::Failed && self.task.restart == Relaunch::OnError)
+                || (status == Status::Finished && self.task.restart == Relaunch::Always))
     }
 
     fn check_finished_child(&self, child: &FinishedChild) -> Status {
@@ -410,6 +428,25 @@ impl Monitor {
 
     fn unexpected_exit_code(&self, code: i32) -> bool {
         !self.task.exitcodes.iter().any(|&wanted| wanted == code)
+    }
+
+    fn restart_task(&mut self) {
+        let mut command = self.task.get_command();
+
+        if self.retry_count < self.task.retry {
+            self.retry_count += 1;
+
+            let running_child = spawn_child(
+                &mut command,
+                time::Duration::from_secs(self.task.successdelay.into()),
+                self.task.stopsignal,
+                time::Duration::from_secs(self.task.stopdelay.into()),
+            );
+            log::info!("[{}] retry process", self.id);
+            self.running.push(running_child);
+        } else {
+            log::warn!("[{}] max retries limit", self.id);
+        }
     }
 }
 
@@ -443,6 +480,22 @@ fn finished_state(state: Status) -> Status {
         Status::Failing | Status::Failed => Status::Failed,
         _ => Status::Finished,
     }
+}
+
+fn spawn_child(
+    command: &mut Command,
+    startup_time: time::Duration,
+    stopsignal: Signal,
+    stopdelay: time::Duration,
+) -> RunningChild {
+    let child = command.spawn().expect("Cannot start child");
+    RunningChild::new(
+        child,
+        time::Instant::now(),
+        startup_time,
+        stopsignal,
+        stopdelay,
+    )
 }
 
 #[cfg(test)]
