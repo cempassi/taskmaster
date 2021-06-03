@@ -259,6 +259,7 @@ impl Monitor {
             if need_to_start {
                 self.start();
             } else {
+                // FIXME!: What if the monitor was started ?
                 self.change_state(Status::Inactive);
             }
         }

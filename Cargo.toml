@@ -15,5 +15,5 @@ clap = "~2.27.0"
 termion = "1"
 regex = "1"
 signal-hook = "0.3.8"
-log = "0.4.14"
+log = { version = "0.4.14", features = ["std"] }
 nix = "0.20.0"

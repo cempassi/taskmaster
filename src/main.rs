@@ -9,27 +9,31 @@ mod shared;
 
 use log::{LevelFilter, SetLoggerError};
 use server::error;
-use shared::logger::LOGGER;
+use shared::logger::{self, Config};
+use std::{fs::File, time};
 
 type Result<T> = std::result::Result<T, error::Taskmaster>;
 
 /// # Errors
 ///
 /// Will return `Err` when failing to initialise `LOGGER`
-unsafe fn init() -> std::result::Result<(), SetLoggerError> {
-    LOGGER.set_instant(std::time::Instant::now());
-    log::set_logger(&LOGGER).map(|()| log::set_max_level(LevelFilter::Debug))
+fn init(cli: &clap::ArgMatches<'static>) -> std::result::Result<(), SetLoggerError> {
+    let config = Config::new(Some(time::Instant::now()));
+
+    cli.value_of("log-file").map_or_else(
+        || logger::simple::Logger::init(LevelFilter::Debug, config),
+        |file| logger::file::Logger::init(LevelFilter::Debug, config, File::create(file).unwrap()),
+    )
 }
 
 fn main() -> Result<()> {
-    unsafe {
-        init().unwrap();
-    }
     let cli = cli::generate();
+    init(&cli).unwrap();
+
+    // LOGGER.
 
     if let Some(matches) = cli.subcommand_matches("server") {
         let config = matches.value_of("config").unwrap();
-
         log::info!("starting server");
         server::start(config)?;
     } else if cli.subcommand_matches("client").is_some() {
