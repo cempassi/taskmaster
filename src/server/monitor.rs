@@ -275,6 +275,7 @@ impl Monitor {
     }
 
     pub fn stop(&mut self) {
+        log::info!("[] stopping ...", self.id);
         self.change_state(Status::Stopping);
         while !self.running.is_empty() {
             let chld = self.running.remove(0);
