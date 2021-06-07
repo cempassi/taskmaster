@@ -28,6 +28,7 @@ fn process_line(history: &History, line: &str) -> Result<()> {
 
     match *vec.get(0).unwrap() {
         "list" => send_message(&Message::List),
+        "reload" => send_message(&Message::Reload),
         "history" => history.print(),
         "help" => print_help(),
         "stop-server" => {
@@ -82,7 +83,9 @@ fn print_help() {
         start: start the task <task>
         stop: stop the task <task>
         restart: restart the task <task>
+        reload: reload configuration file
         list: list all available tasks
+        info: get info on <task>
         history: display previous valid commands
         help: show this help menu
         status: show status of <command>
