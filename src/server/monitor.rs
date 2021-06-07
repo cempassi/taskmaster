@@ -275,7 +275,7 @@ impl Monitor {
     }
 
     pub fn stop(&mut self) {
-        log::info!("[] stopping ...", self.id);
+        log::info!("[{}] stopping ...", self.id);
         self.change_state(Status::Stopping);
         while !self.running.is_empty() {
             let chld = self.running.remove(0);
@@ -425,7 +425,7 @@ impl Monitor {
             },
             |code| {
                 if self.unexpected_exit_code(code) {
-                    log::debug!(
+                    log::warn!(
                         "[{}] child exited with unexpeced status code {}",
                         self.id,
                         code
