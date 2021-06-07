@@ -406,7 +406,8 @@ impl Monitor {
                 self.restart_task()
             }
         }
-        if self.running.is_empty() {
+        if self.running.is_empty() && self.stopping.is_empty() {
+            log::info!("[{}] finished", self.id);
             self.change_state(finished_state(self.state));
         }
     }
@@ -420,7 +421,7 @@ impl Monitor {
     fn check_finished_child(&self, child: &FinishedChild) -> Status {
         child.status.code().map_or_else(
             || {
-                log::debug!("[{}] unexpected exit status {}", self.id, child.status);
+                log::warn!("[{}] unexpected exit status {}", self.id, child.status);
                 Status::Failed
             },
             |code| {
@@ -432,7 +433,7 @@ impl Monitor {
                     );
                     Status::Failed
                 } else if child.execution_time < child.startup_time {
-                    log::debug!("[{}] child finished too early", self.id);
+                    log::warn!("[{}] child finished too early", self.id);
                     Status::Failed
                 } else {
                     Status::Finished
