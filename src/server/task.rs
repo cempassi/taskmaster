@@ -7,13 +7,16 @@ use nix::{
     unistd::{Gid, Uid},
 };
 use serde::{self, Deserialize, Deserializer, Serialize, Serializer};
-use std::collections::BTreeMap;
-use std::convert::TryFrom;
-use std::fmt;
-use std::fs::{self, File};
-use std::os::unix::process::CommandExt;
-use std::path::PathBuf;
-use std::process::{Child, Command};
+use std::{
+    collections::BTreeMap,
+    convert::TryFrom,
+    fmt,
+    fs::{self, File},
+    os::unix::process::CommandExt,
+    path::PathBuf,
+    process::{Child, Command},
+    time,
+};
 
 pub type ConfigFile = BTreeMap<String, Task>;
 
@@ -73,10 +76,10 @@ struct TaskPartial {
     pub stopdelay: u32,
 
     #[serde(default = "default::stdout")]
-    pub stdout: PathBuf,
+    pub stdout: String,
 
     #[serde(default = "default::stderr")]
-    pub stderr: PathBuf,
+    pub stderr: String,
 
     #[serde(default = "default::retry")]
     pub retry: u32,
@@ -132,8 +135,8 @@ pub struct Task {
     workingdir: PathBuf,
     pub stopsignal: Signal,
     pub stopdelay: u32,
-    stdout: PathBuf,
-    stderr: PathBuf,
+    stdout: String,
+    stderr: String,
     pub retry: u32,
     pub successdelay: u32,
     pub exitcodes: Vec<i32>,
@@ -226,18 +229,21 @@ impl fmt::Display for Task {
 
 impl Task {
     pub fn run(&self) -> Vec<Child> {
-        let mut command = self.get_command();
+        let timestamp = get_current_timestamp();
         let mut jobs = Vec::new();
-        for _ in 0..self.numprocess {
+        for id in 0..self.numprocess {
+            let mut command = self.get_command(id, timestamp);
             jobs.push(command.spawn().expect("Couldn't run command!"));
         }
         jobs
     }
 
-    pub fn get_command(&self) -> Command {
+    pub fn get_command(&self, id: u32, timestamp: time::Duration) -> Command {
         let mut command = Command::new(&self.args[0]);
-        let stdout = File::create(self.stdout.as_path()).unwrap();
-        let stderr = File::create(self.stderr.as_path()).unwrap();
+        let stdout_filename = format_filename(&self.stdout, id, timestamp);
+        let stderr_filename = format_filename(&self.stderr, id, timestamp);
+        let stdout = File::create(stdout_filename).unwrap();
+        let stderr = File::create(stderr_filename).unwrap();
         self.setup_command(&mut command);
         if self.args.len() > 1 {
             command.args(&self.args[1..]);
@@ -285,5 +291,52 @@ impl Task {
         status.code().map_or(false, |exitcode| {
             self.exitcodes.iter().any(|&code| code != exitcode)
         })
+    }
+}
+
+pub fn get_current_timestamp() -> time::Duration {
+    time::SystemTime::now()
+        .duration_since(time::UNIX_EPOCH)
+        .expect("Cannot get time from epoch")
+}
+
+fn format_filename(format: &str, id: u32, timestamp: time::Duration) -> String {
+    let replaced_id = format.replace("{.Id}", &id.to_string());
+    replaced_id.replace("{.Time}", &timestamp.as_secs().to_string())
+}
+
+#[cfg(test)]
+mod test_task {
+    use super::{format_filename, get_current_timestamp};
+    use std::time;
+
+    #[test]
+    fn test_get_current_timestamp() {
+        let timestamp = get_current_timestamp();
+        assert!(timestamp > time::Duration::from_secs(0));
+        assert!(timestamp > time::Duration::from_secs(1_609_459_200)); // timestamp since 2021-01-01 00:00:00
+    }
+
+    #[test]
+    fn test_format_filename() {
+        let timestamp = time::Duration::from_secs(4242);
+        let id = 69;
+
+        assert_eq!(
+            format_filename(&String::from("test-{.Id}"), id, timestamp),
+            "test-69"
+        );
+        assert_eq!(
+            format_filename(&String::from("test-{.Time}"), id, timestamp),
+            "test-4242"
+        );
+        assert_eq!(
+            format_filename(&String::from("test-{.Id}-{.Time}"), id, timestamp),
+            "test-69-4242"
+        );
+        assert_eq!(
+            format_filename(&String::from("test-{.Id}-{.Time}-{.Id}"), id, timestamp),
+            "test-69-4242-69"
+        );
     }
 }

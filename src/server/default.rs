@@ -42,12 +42,12 @@ pub fn stop_delay() -> u32 {
     2
 }
 
-pub fn stdout() -> PathBuf {
-    PathBuf::from("/dev/null")
+pub fn stdout() -> String {
+    String::from("/dev/null")
 }
 
-pub fn stderr() -> PathBuf {
-    PathBuf::from("/dev/null")
+pub fn stderr() -> String {
+    String::from("/dev/null")
 }
 
 pub fn env() -> BTreeMap<String, String> {
