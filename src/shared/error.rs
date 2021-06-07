@@ -10,6 +10,7 @@ pub enum Taskmaster {
     Cli,
     InvalidConf,
     InvalidCmd,
+    ForkFailed
 }
 
 impl Taskmaster {
@@ -23,6 +24,7 @@ impl Taskmaster {
             Taskmaster::Cli => "Error in the cli",
             Taskmaster::InvalidConf => "Config file path is invald",
             Taskmaster::InvalidCmd => "Invalid Command",
+            Taskmaster::ForkFailed => "Fork Failed"
         }
     }
 }
@@ -45,6 +47,7 @@ impl error::Error for Taskmaster {
             Taskmaster::ParseYaml(ref e) => Some(e),
             Taskmaster::Signal
             | Taskmaster::Cli
+            | Taskmaster::ForkFailed
             | Taskmaster::InvalidConf
             | Taskmaster::InvalidCmd => None,
         }

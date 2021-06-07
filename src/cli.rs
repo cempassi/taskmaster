@@ -17,6 +17,7 @@ pub fn generate() -> ArgMatches<'static> {
             (about: "Launch server daemon")
             (@arg config: <FILE> +takes_value {file_exist} "config file to use")
             (@arg format: -f --format possible_value[human yaml json] default_value[human] "set the message format")
+            (@arg detached: -d --detached "detached server")
         )
         (@subcommand client =>
             (about: "Launch client")
