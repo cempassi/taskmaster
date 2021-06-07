@@ -62,6 +62,7 @@ impl Server {
         match message {
             Message::Reload => self.event.send(Inter::Reload).unwrap(),
             Message::Start(taskname) => self.state.start(&taskname),
+            Message::Info(taskname) => self.state.info(&taskname),
             Message::Stop(taskname) => self.state.stop(&taskname),
             Message::List => self.state.list(),
             Message::Status(taskname) => self.state.status(&taskname),

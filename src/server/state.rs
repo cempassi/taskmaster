@@ -85,17 +85,31 @@ impl State {
         }
     }
 
+    pub fn info(&mut self, name: &str) {
+        log::debug!("Get info on task {}", name);
+        if let Some(mon) = self.monitors.lock().unwrap().get_mut(name) {
+            self.response
+                .send(Com::Msg(format!("Info {}:\n", name)))
+                .unwrap();
+            self.response
+                .send(Com::Msg(format!("{}\n", mon.get_task())))
+                .unwrap();
+        } else {
+            log::error!("task {} doesn't exist", name);
+            self.response
+                .send(Com::Msg(format!("task {} doesn't exist\n", name)))
+                .unwrap();
+        }
+    }
+
     pub fn list(&mut self) {
         log::debug!("setting list");
         self.response
-            .send(Com::Msg("\nAvailable jobs:\n".to_string()))
+            .send(Com::Msg("Available jobs:\n".to_string()))
             .unwrap();
-        for mon in self.monitors.lock().unwrap().values() {
+        for mon in self.monitors.lock().unwrap().keys() {
             self.response
-                .send(Com::Msg(format!("{}", mon.get_task())))
-                .unwrap();
-            self.response
-                .send(Com::Msg("\n----------\n".to_string()))
+                .send(Com::Msg(format!("    - {}\n", mon)))
                 .unwrap();
         }
     }

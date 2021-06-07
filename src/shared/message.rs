@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 pub enum Message {
     Reload,
     Start(String),
+    Info(String),
     Stop(String),
     Status(String),
     Restart(String),

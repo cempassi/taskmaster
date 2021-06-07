@@ -41,6 +41,13 @@ fn process_line(history: &History, line: &str) -> Result<()> {
                 }
             }
         }
+        "info" => {
+            if vec.len() > 1 {
+                for taskname in vec.iter().skip(1) {
+                    send_message(&Message::Info((*taskname).to_string()));
+                }
+            }
+        }
         "stop" => {
             if vec.len() > 1 {
                 for taskname in vec.iter().skip(1) {
