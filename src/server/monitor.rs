@@ -221,7 +221,7 @@ impl Monitor {
     }
 
     fn start_raw(&mut self) {
-        log::debug!("[{}] starting ...", self.id);
+        log::info!("[{}] starting ...", self.id);
         self.retry_count = 0;
         let mut running_children = self.spawn_children();
 
@@ -255,7 +255,7 @@ impl Monitor {
 
     pub fn reload(&mut self, task: Task) {
         if self.task != task {
-            log::debug!("[{}] reloading ...", self.id);
+            log::info!("[{}] reloading ...", self.id);
 
             let need_to_start = task.autostart || !self.running.is_empty();
 
