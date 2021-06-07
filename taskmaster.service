@@ -1,0 +1,9 @@
+[Unit]
+Description=Taskmaster client daemon
+
+[Service]
+Type=simple
+ExecStart=/opt/taskmaster/bin/taskmaster server --config /opt/taskmaster/configs/example.yml
+
+[Install]
+WantedBy=multi-user.target
