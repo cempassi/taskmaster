@@ -221,7 +221,7 @@ impl Monitor {
     }
 
     fn start_raw(&mut self) {
-        log::debug!("[{}] starting ...", self.id);
+        log::info!("[{}] starting ...", self.id);
         self.retry_count = 0;
         let mut running_children = self.spawn_children();
 
@@ -255,7 +255,7 @@ impl Monitor {
 
     pub fn reload(&mut self, task: Task) {
         if self.task != task {
-            log::debug!("[{}] reloading ...", self.id);
+            log::info!("[{}] reloading ...", self.id);
 
             let need_to_start = task.autostart || !self.running.is_empty();
 
@@ -275,6 +275,7 @@ impl Monitor {
     }
 
     pub fn stop(&mut self) {
+        log::info!("[{}] stopping ...", self.id);
         self.change_state(Status::Stopping);
         while !self.running.is_empty() {
             let chld = self.running.remove(0);
@@ -405,7 +406,8 @@ impl Monitor {
                 self.restart_task()
             }
         }
-        if self.running.is_empty() {
+        if self.running.is_empty() && self.stopping.is_empty() {
+            log::info!("[{}] finished", self.id);
             self.change_state(finished_state(self.state));
         }
     }
@@ -419,19 +421,19 @@ impl Monitor {
     fn check_finished_child(&self, child: &FinishedChild) -> Status {
         child.status.code().map_or_else(
             || {
-                log::debug!("[{}] unexpected exit status {}", self.id, child.status);
+                log::warn!("[{}] unexpected exit status {}", self.id, child.status);
                 Status::Failed
             },
             |code| {
                 if self.unexpected_exit_code(code) {
-                    log::debug!(
+                    log::warn!(
                         "[{}] child exited with unexpeced status code {}",
                         self.id,
                         code
                     );
                     Status::Failed
                 } else if child.execution_time < child.startup_time {
-                    log::debug!("[{}] child finished too early", self.id);
+                    log::warn!("[{}] child finished too early", self.id);
                     Status::Failed
                 } else {
                     Status::Finished
