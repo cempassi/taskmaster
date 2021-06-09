@@ -12,6 +12,7 @@ use std::{
 
 use super::{
     communication::Com,
+    formatter::{Formatter, Human},
     inter::Inter,
     monitor::Monitor,
     task::{ConfigFile, Task},
@@ -88,30 +89,25 @@ impl State {
     pub fn info(&mut self, name: &str) {
         log::debug!("Get info on task {}", name);
         if let Some(mon) = self.monitors.lock().unwrap().get_mut(name) {
-            self.response
-                .send(Com::Msg(format!("Info {}:\n", name)))
-                .unwrap();
-            self.response
-                .send(Com::Msg(format!("{}\n", mon.get_task())))
-                .unwrap();
+            Human::send_task(&self.response, name, &mon.get_task()).unwrap();
         } else {
             log::error!("task {} doesn't exist", name);
-            self.response
-                .send(Com::Msg(format!("task {} doesn't exist\n", name)))
-                .unwrap();
+            Human::send_error(&self.response, format!("task {} doesn't exist\n", name)).unwrap();
         }
     }
 
     pub fn list(&mut self) {
         log::debug!("setting list");
-        self.response
-            .send(Com::Msg("Available jobs:\n".to_string()))
-            .unwrap();
-        for mon in self.monitors.lock().unwrap().keys() {
-            self.response
-                .send(Com::Msg(format!("    - {}\n", mon)))
-                .unwrap();
-        }
+        Human::send_tasks(
+            &self.response,
+            &mut self
+                .monitors
+                .lock()
+                .unwrap()
+                .iter()
+                .map(|(k, v)| (k.clone(), v.get_task().clone())),
+        )
+        .unwrap();
     }
 
     pub fn status(&self, taskname: &str) {
@@ -123,9 +119,7 @@ impl State {
             .get(taskname)
             .unwrap()
             .status();
-        self.response
-            .send(Com::Msg(format!("status of {}: {}", taskname, status)))
-            .unwrap();
+        Human::send_status(&self.response, taskname, status).unwrap();
     }
 
     pub fn stop(&mut self, namespace: &str) {
