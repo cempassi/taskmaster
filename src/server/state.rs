@@ -1,6 +1,7 @@
 use std::{
     collections::HashMap,
     convert::TryFrom,
+    marker,
     sync::{
         atomic::{AtomicBool, Ordering},
         mpsc::Sender,
@@ -29,18 +30,18 @@ where
     response: Sender<Com>,
     thread: Option<JoinHandle<()>>,
     waiter_running: Arc<AtomicBool>,
-    formatter: F,
+    _marker: marker::PhantomData<F>,
 }
 
 impl<F: Formatter> State<F> {
-    pub fn new(formatter: F, sender: Sender<Inter>, response: Sender<Com>) -> Self {
+    pub fn new(sender: Sender<Inter>, response: Sender<Com>) -> Self {
         Self {
             monitors: Arc::new(Mutex::new(HashMap::new())),
             sender,
             response,
             thread: None,
             waiter_running: Arc::new(AtomicBool::new(false)),
-            formatter,
+            _marker: marker::PhantomData,
         }
     }
 
@@ -94,30 +95,25 @@ impl<F: Formatter> State<F> {
     pub fn info(&mut self, name: &str) {
         log::debug!("Get info on task {}", name);
         if let Some(mon) = self.monitors.lock().unwrap().get_mut(name) {
-            self.formatter
-                .send_task(&self.response, name, &mon.get_task())
-                .unwrap();
+            F::send_task(&self.response, name, &mon.get_task()).unwrap();
         } else {
             log::error!("task {} doesn't exist", name);
-            self.formatter
-                .send_error(&self.response, format!("task {} doesn't exist\n", name))
-                .unwrap();
+            F::send_error(&self.response, format!("task {} doesn't exist\n", name)).unwrap();
         }
     }
 
     pub fn list(&mut self) {
         log::debug!("setting list");
-        self.formatter
-            .send_tasks(
-                &self.response,
-                &mut self
-                    .monitors
-                    .lock()
-                    .unwrap()
-                    .iter()
-                    .map(|(k, v)| (k.clone(), v.get_task().clone())),
-            )
-            .unwrap();
+        F::send_tasks(
+            &self.response,
+            &mut self
+                .monitors
+                .lock()
+                .unwrap()
+                .iter()
+                .map(|(k, v)| (k.clone(), v.get_task().clone())),
+        )
+        .unwrap();
     }
 
     pub fn status(&self, taskname: &str) {
@@ -129,9 +125,7 @@ impl<F: Formatter> State<F> {
             .get(taskname)
             .unwrap()
             .status();
-        self.formatter
-            .send_status(&self.response, taskname, status)
-            .unwrap();
+        F::send_status(&self.response, taskname, status).unwrap();
     }
 
     pub fn stop(&mut self, namespace: &str) {
