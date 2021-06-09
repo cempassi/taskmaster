@@ -26,6 +26,40 @@ impl FromStr for MessageFormat {
     }
 }
 
+#[derive(Serialize)]
+#[serde(tag = "type", rename_all = "lowercase")]
+enum Message {
+    Error { message: String },
+    Status { taskid: String, status: Status },
+    Tasks { tasks: HashMap<String, Task> },
+    Task { taskid: String, task: Task },
+}
+
+impl Message {
+    fn from_error(message: String) -> Self {
+        Self::Error { message }
+    }
+
+    fn from_status(name: String, status: Status) -> Self {
+        Self::Status {
+            taskid: name,
+            status,
+        }
+    }
+
+    fn from_tasks_iter(tasks: &mut impl Iterator<Item = (String, Task)>) -> Self {
+        Self::from_tasks(tasks.collect())
+    }
+
+    fn from_tasks(tasks: HashMap<String, Task>) -> Self {
+        Self::Tasks { tasks }
+    }
+
+    fn from_task(name: String, task: Task) -> Self {
+        Self::Task { taskid: name, task }
+    }
+}
+
 type SenderResult = Result<(), SendError<Com>>;
 
 pub trait Formatter {
@@ -63,40 +97,6 @@ impl Formatter for Human {
 
     fn send_error(sender: &Sender<Com>, message: String) -> SenderResult {
         sender.send(Com::Msg(message))
-    }
-}
-
-#[derive(Serialize)]
-#[serde(tag = "type", rename_all = "lowercase")]
-enum Message {
-    Error { message: String },
-    Status { taskid: String, status: Status },
-    Tasks { tasks: HashMap<String, Task> },
-    Task { taskid: String, task: Task },
-}
-
-impl Message {
-    fn from_error(message: String) -> Self {
-        Self::Error { message }
-    }
-
-    fn from_status(name: String, status: Status) -> Self {
-        Self::Status {
-            taskid: name,
-            status,
-        }
-    }
-
-    fn from_tasks_iter(tasks: &mut impl Iterator<Item = (String, Task)>) -> Self {
-        Self::from_tasks(tasks.collect())
-    }
-
-    fn from_tasks(tasks: HashMap<String, Task>) -> Self {
-        Self::Tasks { tasks }
-    }
-
-    fn from_task(name: String, task: Task) -> Self {
-        Self::Task { taskid: name, task }
     }
 }
 
