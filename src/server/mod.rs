@@ -4,6 +4,7 @@ use std::sync::mpsc::{channel, Sender};
 mod communication;
 mod default;
 pub mod error;
+mod formatter;
 mod inter;
 mod listener;
 mod monitor;
