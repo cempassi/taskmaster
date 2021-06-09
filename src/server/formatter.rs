@@ -1,5 +1,7 @@
 use super::{communication::Com, monitor::Status, task::Task};
+use serde::Serialize;
 use std::{
+    collections::HashMap,
     str::FromStr,
     sync::mpsc::{SendError, Sender},
 };
@@ -36,7 +38,7 @@ pub trait Formatter {
     fn send_error(sender: &Sender<Com>, message: String) -> SenderResult;
 }
 
-pub struct Human {}
+pub struct Human;
 
 impl Formatter for Human {
     fn send_tasks(
@@ -61,5 +63,50 @@ impl Formatter for Human {
 
     fn send_error(sender: &Sender<Com>, message: String) -> SenderResult {
         sender.send(Com::Msg(message))
+    }
+}
+
+#[derive(Serialize)]
+#[serde(tag = "type", rename_all = "lowercase")]
+enum Message {
+    Error { message: String },
+    Status { taskid: String, status: Status },
+    Tasks { tasks: HashMap<String, Task> },
+    Task { taskid: String, task: Task },
+}
+
+pub struct Json;
+
+impl Formatter for Json {
+    fn send_error(sender: &Sender<Com>, message: String) -> SenderResult {
+        let raw_msg = serde_json::to_string(&Message::Error { message }).unwrap();
+        sender.send(Com::Msg(raw_msg))
+    }
+
+    fn send_status(sender: &Sender<Com>, name: &str, status: Status) -> SenderResult {
+        let raw_msg = serde_json::to_string(&Message::Status {
+            taskid: name.to_string(),
+            status,
+        })
+        .unwrap();
+        sender.send(Com::Msg(raw_msg))
+    }
+
+    fn send_task(sender: &Sender<Com>, name: &str, task: &Task) -> SenderResult {
+        let raw_msg = serde_json::to_string(&Message::Task {
+            taskid: name.to_string(),
+            task: task.clone(),
+        })
+        .unwrap();
+        sender.send(Com::Msg(raw_msg))
+    }
+
+    fn send_tasks(
+        sender: &Sender<Com>,
+        tasks: &mut impl Iterator<Item = (String, Task)>,
+    ) -> SenderResult {
+        let tasks: HashMap<String, Task> = tasks.collect();
+        let raw_msg = serde_json::to_string(&Message::Tasks { tasks }).unwrap();
+        sender.send(Com::Msg(raw_msg))
     }
 }
