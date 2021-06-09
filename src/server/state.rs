@@ -98,7 +98,7 @@ impl<F: Formatter> State<F> {
             F::send_task(&self.response, name, &mon.get_task()).unwrap();
         } else {
             log::error!("task {} doesn't exist", name);
-            F::send_error(&self.response, format!("task {} doesn't exist\n", name)).unwrap();
+            F::send_error(&self.response, format!("task {} doesn't exist", name)).unwrap();
         }
     }
 
