@@ -27,16 +27,19 @@ fn main() -> Result<()> {
     let cli = cli::generate();
     init(&cli).unwrap();
 
-    if let Some(matches) = cli.subcommand_matches("server") {
-        let config = matches.value_of("config").unwrap();
-        log::info!("starting server");
-        server::start(config)?;
-    } else if cli.subcommand_matches("client").is_some() {
-        log::info!("starting client");
-        client::start();
-    } else {
-        log::error!("unknown subcommand");
-        return Err(error::Taskmaster::Cli);
+    match cli.subcommand() {
+        ("server", Some(matches)) => {
+            let config = matches.value_of("config").unwrap();
+            server::start(config)
+        }
+        ("client", Some(_matches)) => {
+            log::info!("starting client");
+            client::start();
+            Ok(())
+        }
+        _ => {
+            log::error!("unknown subcommand");
+            Err(error::Taskmaster::Cli)
+        }
     }
-    Ok(())
 }
