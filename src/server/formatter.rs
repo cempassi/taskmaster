@@ -2,6 +2,7 @@ use super::{communication::Com, monitor::Status, task::Task};
 use serde::Serialize;
 use std::{
     collections::HashMap,
+    fmt,
     str::FromStr,
     sync::mpsc::{SendError, Sender},
 };
@@ -22,6 +23,16 @@ impl FromStr for MessageFormat {
             "yaml" => Ok(MessageFormat::Yaml),
             "json" => Ok(MessageFormat::Json),
             _ => Err(format!("Unknown Message format {}", s)),
+        }
+    }
+}
+
+impl fmt::Display for MessageFormat {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            MessageFormat::Human => write!(f, "human"),
+            MessageFormat::Yaml => write!(f, "yaml"),
+            MessageFormat::Json => write!(f, "json"),
         }
     }
 }
@@ -62,20 +73,28 @@ impl Message {
 
 type SenderResult = Result<(), SendError<Com>>;
 
+pub enum Formatters {
+    Human(Human),
+    Json(Json),
+    Yaml(Yaml),
+}
+
 pub trait Formatter {
-    fn send_task(sender: &Sender<Com>, name: &str, task: &Task) -> SenderResult;
-    fn send_status(sender: &Sender<Com>, name: &str, status: Status) -> SenderResult;
+    fn send_task(&self, sender: &Sender<Com>, name: &str, task: &Task) -> SenderResult;
+    fn send_status(&self, sender: &Sender<Com>, name: &str, status: Status) -> SenderResult;
     fn send_tasks(
+        &self,
         sender: &Sender<Com>,
         tasks: &mut impl Iterator<Item = (String, Task)>,
     ) -> SenderResult;
-    fn send_error(sender: &Sender<Com>, message: String) -> SenderResult;
+    fn send_error(&self, sender: &Sender<Com>, message: String) -> SenderResult;
 }
 
 pub struct Human;
 
 impl Formatter for Human {
     fn send_tasks(
+        &self,
         sender: &Sender<Com>,
         tasks: &mut impl Iterator<Item = (String, Task)>,
     ) -> SenderResult {
@@ -86,16 +105,16 @@ impl Formatter for Human {
         Ok(())
     }
 
-    fn send_status(sender: &Sender<Com>, name: &str, status: Status) -> SenderResult {
+    fn send_status(&self, sender: &Sender<Com>, name: &str, status: Status) -> SenderResult {
         sender.send(Com::Msg(format!("status of {}: {}", name, status)))
     }
 
-    fn send_task(sender: &Sender<Com>, name: &str, task: &Task) -> SenderResult {
+    fn send_task(&self, sender: &Sender<Com>, name: &str, task: &Task) -> SenderResult {
         sender.send(Com::Msg(format!("Info {}:\n", name)))?;
         sender.send(Com::Msg(task.to_string()))
     }
 
-    fn send_error(sender: &Sender<Com>, message: String) -> SenderResult {
+    fn send_error(&self, sender: &Sender<Com>, message: String) -> SenderResult {
         sender.send(Com::Msg(message))
     }
 }
@@ -103,24 +122,25 @@ impl Formatter for Human {
 pub struct Json;
 
 impl Formatter for Json {
-    fn send_error(sender: &Sender<Com>, message: String) -> SenderResult {
+    fn send_error(&self, sender: &Sender<Com>, message: String) -> SenderResult {
         let raw_msg = serde_json::to_string(&Message::from_error(message)).unwrap();
         sender.send(Com::Msg(raw_msg))
     }
 
-    fn send_status(sender: &Sender<Com>, name: &str, status: Status) -> SenderResult {
+    fn send_status(&self, sender: &Sender<Com>, name: &str, status: Status) -> SenderResult {
         let raw_msg =
             serde_json::to_string(&Message::from_status(name.to_string(), status)).unwrap();
         sender.send(Com::Msg(raw_msg))
     }
 
-    fn send_task(sender: &Sender<Com>, name: &str, task: &Task) -> SenderResult {
+    fn send_task(&self, sender: &Sender<Com>, name: &str, task: &Task) -> SenderResult {
         let raw_msg =
             serde_json::to_string(&Message::from_task(name.to_string(), task.clone())).unwrap();
         sender.send(Com::Msg(raw_msg))
     }
 
     fn send_tasks(
+        &self,
         sender: &Sender<Com>,
         tasks: &mut impl Iterator<Item = (String, Task)>,
     ) -> SenderResult {
@@ -132,24 +152,25 @@ impl Formatter for Json {
 pub struct Yaml;
 
 impl Formatter for Yaml {
-    fn send_error(sender: &Sender<Com>, message: String) -> SenderResult {
+    fn send_error(&self, sender: &Sender<Com>, message: String) -> SenderResult {
         let raw_msg = serde_yaml::to_string(&Message::from_error(message)).unwrap();
         sender.send(Com::Msg(raw_msg))
     }
 
-    fn send_status(sender: &Sender<Com>, name: &str, status: Status) -> SenderResult {
+    fn send_status(&self, sender: &Sender<Com>, name: &str, status: Status) -> SenderResult {
         let raw_msg =
             serde_yaml::to_string(&Message::from_status(name.to_string(), status)).unwrap();
         sender.send(Com::Msg(raw_msg))
     }
 
-    fn send_task(sender: &Sender<Com>, name: &str, task: &Task) -> SenderResult {
+    fn send_task(&self, sender: &Sender<Com>, name: &str, task: &Task) -> SenderResult {
         let raw_msg =
             serde_yaml::to_string(&Message::from_task(name.to_string(), task.clone())).unwrap();
         sender.send(Com::Msg(raw_msg))
     }
 
     fn send_tasks(
+        &self,
         sender: &Sender<Com>,
         tasks: &mut impl Iterator<Item = (String, Task)>,
     ) -> SenderResult {
