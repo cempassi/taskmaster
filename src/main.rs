@@ -12,9 +12,9 @@ use server::error;
 use shared::logger::{self, Config};
 use std::{fs::File, time};
 
-type Result<T> = std::result::Result<T, error::Taskmaster>;
+type TaskmasterResult<T> = Result<T, error::Taskmaster>;
 
-fn init(cli: &clap::ArgMatches<'static>) -> std::result::Result<(), SetLoggerError> {
+fn init(cli: &clap::ArgMatches<'static>) -> Result<(), SetLoggerError> {
     let config = Config::new(Some(time::Instant::now()));
 
     cli.value_of("logfile").map_or_else(
@@ -23,7 +23,7 @@ fn init(cli: &clap::ArgMatches<'static>) -> std::result::Result<(), SetLoggerErr
     )
 }
 
-fn main() -> Result<()> {
+fn main() -> TaskmasterResult<()> {
     let cli = cli::generate();
     init(&cli).unwrap();
 
