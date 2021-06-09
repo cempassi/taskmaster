@@ -14,9 +14,6 @@ use std::{fs::File, time};
 
 type Result<T> = std::result::Result<T, error::Taskmaster>;
 
-/// # Errors
-///
-/// Will return `Err` when failing to initialise `LOGGER`
 fn init(cli: &clap::ArgMatches<'static>) -> std::result::Result<(), SetLoggerError> {
     let config = Config::new(Some(time::Instant::now()));
 
@@ -29,8 +26,6 @@ fn init(cli: &clap::ArgMatches<'static>) -> std::result::Result<(), SetLoggerErr
 fn main() -> Result<()> {
     let cli = cli::generate();
     init(&cli).unwrap();
-
-    // LOGGER.
 
     if let Some(matches) = cli.subcommand_matches("server") {
         let config = matches.value_of("config").unwrap();
