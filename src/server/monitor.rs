@@ -161,9 +161,6 @@ pub struct Monitor {
     state: Status,
 
     #[serde(skip)]
-    sender: Sender<Inter>,
-
-    #[serde(skip)]
     running: Vec<RunningChild>,
 
     #[serde(skip)]
@@ -184,14 +181,13 @@ pub struct Monitor {
 
 impl Monitor {
     // Only create Monitoring struct
-    pub fn new_only(id: String, task: Task, sender: Sender<Inter>) -> Self {
+    pub fn new_only(id: String, task: Task) -> Self {
         Monitor {
             id,
             task,
             retry_count: 0,
             spawned_children: 0,
             state: Status::Inactive,
-            sender,
             running: Vec::new(),
             stopping: Vec::new(),
             finished: Vec::new(),
@@ -199,8 +195,8 @@ impl Monitor {
     }
 
     // Create new Monitoring struct and start the task if required
-    pub fn new(id: String, task: Task, sender: Sender<Inter>) -> Self {
-        let mut mon = Monitor::new_only(id, task, sender);
+    pub fn new(id: String, task: Task) -> Self {
+        let mut mon = Monitor::new_only(id, task);
         if mon.task.autostart {
             mon.start();
         }
@@ -492,13 +488,6 @@ fn startable_state(state: Status) -> bool {
         || state == Status::Stopped
 }
 
-fn running_state(state: Status) -> bool {
-    state == Status::Active
-        || state == Status::Reloading
-        || state == Status::Failing
-        || state == Status::Stopping
-}
-
 fn finished_state(state: Status) -> Status {
     match state {
         Status::Stopping | Status::Stopped => Status::Stopped,
@@ -525,7 +514,7 @@ fn spawn_child(
 
 #[cfg(test)]
 mod monitor_suite {
-    use super::{finished_state, running_state, startable_state, Status};
+    use super::{finished_state, startable_state, Status};
 
     #[test]
     fn test_startable_state() {
@@ -538,19 +527,6 @@ mod monitor_suite {
         assert_eq!(startable_state(Status::Inactive), true);
         assert_eq!(startable_state(Status::Failed), true);
         assert_eq!(startable_state(Status::Stopped), true);
-    }
-
-    #[test]
-    fn test_running_state() {
-        assert_eq!(running_state(Status::Active), true);
-        assert_eq!(running_state(Status::Reloading), true);
-        assert_eq!(running_state(Status::Failing), true);
-        assert_eq!(running_state(Status::Stopping), true);
-
-        assert_eq!(running_state(Status::Finished), false);
-        assert_eq!(running_state(Status::Inactive), false);
-        assert_eq!(running_state(Status::Failed), false);
-        assert_eq!(running_state(Status::Stopped), false);
     }
 
     #[test]

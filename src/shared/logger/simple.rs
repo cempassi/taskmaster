@@ -26,7 +26,7 @@ impl Log for Logger {
     fn log(&self, record: &Record) {
         if self.enabled(record.metadata()) {
             let std = stdout();
-            let _ = write_log(&self.config, record, &mut std.lock());
+            drop(write_log(&self.config, record, &mut std.lock()));
         }
     }
 

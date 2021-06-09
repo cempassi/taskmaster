@@ -62,7 +62,7 @@ impl State {
     }
 
     fn add_task(&mut self, name: &str, task: Task) {
-        let mon = Monitor::new(name.to_string(), task, self.sender.clone());
+        let mon = Monitor::new(name.to_string(), task);
         if mon.is_running() {
             self.start_waiting_thread_if_needed();
         }
@@ -170,13 +170,5 @@ impl State {
             log::debug!("waiter thread finished !");
             running_state.store(false, Ordering::SeqCst);
         }));
-    }
-
-    pub fn done_wait_children(&mut self) {
-        if let Some(thread) = self.thread.take() {
-            thread.join().expect("cannot join waiting thread");
-        } else {
-            log::error!("waiter: no thread to join as being asked !");
-        }
     }
 }

@@ -33,11 +33,11 @@ impl Log for Logger {
     fn log(&self, record: &Record) {
         if self.enabled(record.metadata()) {
             let mut file = self.file.lock().unwrap();
-            let _ = write_log(&self.config, record, &mut *file);
+            drop(write_log(&self.config, record, &mut *file));
         }
     }
 
     fn flush(&self) {
-        let _ = self.file.lock().unwrap().flush();
+        drop(self.file.lock().unwrap().flush());
     }
 }
