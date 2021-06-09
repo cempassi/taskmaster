@@ -27,20 +27,20 @@ impl FromStr for MessageFormat {
 type SenderResult = Result<(), SendError<Com>>;
 
 pub trait Formatter {
-    fn send_task(sender: Sender<Com>, name: &str, task: &Task) -> SenderResult;
-    fn send_status(sender: Sender<Com>, name: &str, status: Status) -> SenderResult;
+    fn send_task(sender: &Sender<Com>, name: &str, task: &Task) -> SenderResult;
+    fn send_status(sender: &Sender<Com>, name: &str, status: Status) -> SenderResult;
     fn send_tasks(
-        sender: Sender<Com>,
+        sender: &Sender<Com>,
         tasks: &mut impl Iterator<Item = (String, Task)>,
     ) -> SenderResult;
-    fn send_error(sender: Sender<Com>, message: String) -> SenderResult;
+    fn send_error(sender: &Sender<Com>, message: String) -> SenderResult;
 }
 
 pub struct Human {}
 
 impl Formatter for Human {
     fn send_tasks(
-        sender: Sender<Com>,
+        sender: &Sender<Com>,
         tasks: &mut impl Iterator<Item = (String, Task)>,
     ) -> SenderResult {
         sender.send(Com::Msg(String::from("Available jobs:\n")))?;
@@ -50,16 +50,16 @@ impl Formatter for Human {
         Ok(())
     }
 
-    fn send_status(sender: Sender<Com>, name: &str, status: Status) -> SenderResult {
+    fn send_status(sender: &Sender<Com>, name: &str, status: Status) -> SenderResult {
         sender.send(Com::Msg(format!("status of {}: {}", name, status)))
     }
 
-    fn send_task(sender: Sender<Com>, name: &str, task: &Task) -> SenderResult {
+    fn send_task(sender: &Sender<Com>, name: &str, task: &Task) -> SenderResult {
         sender.send(Com::Msg(format!("Info {}:\n", name)))?;
         sender.send(Com::Msg(task.to_string()))
     }
 
-    fn send_error(sender: Sender<Com>, message: String) -> SenderResult {
+    fn send_error(sender: &Sender<Com>, message: String) -> SenderResult {
         sender.send(Com::Msg(message))
     }
 }
