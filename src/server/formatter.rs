@@ -75,29 +75,48 @@ enum Message {
     Task { taskid: String, task: Task },
 }
 
+impl Message {
+    fn from_error(message: String) -> Self {
+        Self::Error { message }
+    }
+
+    fn from_status(name: String, status: Status) -> Self {
+        Self::Status {
+            taskid: name,
+            status,
+        }
+    }
+
+    fn from_tasks_iter(tasks: &mut impl Iterator<Item = (String, Task)>) -> Self {
+        Self::from_tasks(tasks.collect())
+    }
+
+    fn from_tasks(tasks: HashMap<String, Task>) -> Self {
+        Self::Tasks { tasks }
+    }
+
+    fn from_task(name: String, task: Task) -> Self {
+        Self::Task { taskid: name, task }
+    }
+}
+
 pub struct Json;
 
 impl Formatter for Json {
     fn send_error(sender: &Sender<Com>, message: String) -> SenderResult {
-        let raw_msg = serde_json::to_string(&Message::Error { message }).unwrap();
+        let raw_msg = serde_json::to_string(&Message::from_error(message)).unwrap();
         sender.send(Com::Msg(raw_msg))
     }
 
     fn send_status(sender: &Sender<Com>, name: &str, status: Status) -> SenderResult {
-        let raw_msg = serde_json::to_string(&Message::Status {
-            taskid: name.to_string(),
-            status,
-        })
-        .unwrap();
+        let raw_msg =
+            serde_json::to_string(&Message::from_status(name.to_string(), status)).unwrap();
         sender.send(Com::Msg(raw_msg))
     }
 
     fn send_task(sender: &Sender<Com>, name: &str, task: &Task) -> SenderResult {
-        let raw_msg = serde_json::to_string(&Message::Task {
-            taskid: name.to_string(),
-            task: task.clone(),
-        })
-        .unwrap();
+        let raw_msg =
+            serde_json::to_string(&Message::from_task(name.to_string(), task.clone())).unwrap();
         sender.send(Com::Msg(raw_msg))
     }
 
@@ -105,8 +124,7 @@ impl Formatter for Json {
         sender: &Sender<Com>,
         tasks: &mut impl Iterator<Item = (String, Task)>,
     ) -> SenderResult {
-        let tasks: HashMap<String, Task> = tasks.collect();
-        let raw_msg = serde_json::to_string(&Message::Tasks { tasks }).unwrap();
+        let raw_msg = serde_json::to_string(&Message::from_tasks_iter(tasks)).unwrap();
         sender.send(Com::Msg(raw_msg))
     }
 }
