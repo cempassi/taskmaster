@@ -30,7 +30,8 @@ fn main() -> TaskmasterResult<()> {
     match cli.subcommand() {
         ("server", Some(matches)) => {
             let config = matches.value_of("config").unwrap();
-            server::start(config)
+            let format = matches.value_of("format").unwrap();
+            server::start(config, format)
         }
         ("client", Some(_matches)) => {
             log::info!("starting client");
