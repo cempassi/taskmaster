@@ -1,6 +1,7 @@
 use std::{
     collections::HashMap,
     convert::TryFrom,
+    marker,
     sync::{
         atomic::{AtomicBool, Ordering},
         mpsc::Sender,
@@ -12,7 +13,7 @@ use std::{
 
 use super::{
     communication::Com,
-    formatter::{Formatter, Human},
+    formatter::Formatter,
     inter::Inter,
     monitor::Monitor,
     task::{ConfigFile, Task},
@@ -20,22 +21,24 @@ use super::{
 };
 
 #[derive(Debug)]
-pub struct State {
+pub struct State<F: Formatter> {
     pub monitors: Arc<Mutex<HashMap<String, Monitor>>>,
     sender: Sender<Inter>,
     response: Sender<Com>,
     thread: Option<JoinHandle<()>>,
     waiter_running: Arc<AtomicBool>,
+    _marker: marker::PhantomData<F>,
 }
 
-impl State {
+impl<F: Formatter> State<F> {
     pub fn new(sender: Sender<Inter>, response: Sender<Com>) -> Self {
-        State {
+        Self {
             monitors: Arc::new(Mutex::new(HashMap::new())),
             sender,
             response,
             thread: None,
             waiter_running: Arc::new(AtomicBool::new(false)),
+            _marker: marker::PhantomData,
         }
     }
 
@@ -89,16 +92,16 @@ impl State {
     pub fn info(&mut self, name: &str) {
         log::debug!("Get info on task {}", name);
         if let Some(mon) = self.monitors.lock().unwrap().get_mut(name) {
-            Human::send_task(&self.response, name, &mon.get_task()).unwrap();
+            F::send_task(&self.response, name, &mon.get_task()).unwrap();
         } else {
             log::error!("task {} doesn't exist", name);
-            Human::send_error(&self.response, format!("task {} doesn't exist\n", name)).unwrap();
+            F::send_error(&self.response, format!("task {} doesn't exist\n", name)).unwrap();
         }
     }
 
     pub fn list(&mut self) {
         log::debug!("setting list");
-        Human::send_tasks(
+        F::send_tasks(
             &self.response,
             &mut self
                 .monitors
@@ -119,7 +122,7 @@ impl State {
             .get(taskname)
             .unwrap()
             .status();
-        Human::send_status(&self.response, taskname, status).unwrap();
+        F::send_status(&self.response, taskname, status).unwrap();
     }
 
     pub fn stop(&mut self, namespace: &str) {

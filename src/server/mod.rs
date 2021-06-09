@@ -1,5 +1,8 @@
-use std::convert::TryFrom;
-use std::sync::mpsc::{channel, Sender};
+use std::{
+    convert::TryFrom,
+    marker,
+    sync::mpsc::{channel, Sender},
+};
 
 mod communication;
 mod default;
@@ -17,11 +20,19 @@ mod watcher;
 
 use crate::shared::message::Message;
 
-use self::{communication::Com, inter::Inter, listener::Listener, state::State, watcher::Watcher};
+use self::{
+    communication::Com,
+    formatter::{Formatter, Human},
+    inter::Inter,
+    listener::Listener,
+    state::State,
+    watcher::Watcher,
+};
 
-struct Server {
-    state: State,
+struct Server<F: Formatter> {
+    state: State<F>,
     event: Sender<Inter>,
+    _marker: marker::PhantomData<F>,
 }
 
 pub fn start(config: &str) -> Result<(), error::Taskmaster> {
@@ -29,9 +40,10 @@ pub fn start(config: &str) -> Result<(), error::Taskmaster> {
     let (response, receiver) = channel::<Com>();
     let mut watcher = Watcher::try_from(config)?;
     let mut listener = Listener::new();
-    let mut server = Server {
+    let mut server: Server<Human> = Server {
         state: State::new(sender.clone(), response.clone()),
         event: sender.clone(),
+        _marker: marker::PhantomData,
     };
 
     watcher.run(sender.clone());
@@ -54,7 +66,7 @@ pub fn start(config: &str) -> Result<(), error::Taskmaster> {
     Ok(())
 }
 
-impl Server {
+impl<F: Formatter> Server<F> {
     fn reload_config(&mut self, watcher: &Watcher) {
         self.state.reload(watcher)
     }
