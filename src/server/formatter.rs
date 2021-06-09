@@ -128,3 +128,32 @@ impl Formatter for Json {
         sender.send(Com::Msg(raw_msg))
     }
 }
+
+pub struct Yaml;
+
+impl Formatter for Yaml {
+    fn send_error(sender: &Sender<Com>, message: String) -> SenderResult {
+        let raw_msg = serde_yaml::to_string(&Message::from_error(message)).unwrap();
+        sender.send(Com::Msg(raw_msg))
+    }
+
+    fn send_status(sender: &Sender<Com>, name: &str, status: Status) -> SenderResult {
+        let raw_msg =
+            serde_yaml::to_string(&Message::from_status(name.to_string(), status)).unwrap();
+        sender.send(Com::Msg(raw_msg))
+    }
+
+    fn send_task(sender: &Sender<Com>, name: &str, task: &Task) -> SenderResult {
+        let raw_msg =
+            serde_yaml::to_string(&Message::from_task(name.to_string(), task.clone())).unwrap();
+        sender.send(Com::Msg(raw_msg))
+    }
+
+    fn send_tasks(
+        sender: &Sender<Com>,
+        tasks: &mut impl Iterator<Item = (String, Task)>,
+    ) -> SenderResult {
+        let raw_msg = serde_yaml::to_string(&Message::from_tasks_iter(tasks)).unwrap();
+        sender.send(Com::Msg(raw_msg))
+    }
+}
