@@ -12,8 +12,8 @@ TASKMASTER_SOCK = '/tmp/taskmaster.sock'
 def get_taskmaster_args(config: SimpleNamespace) -> List[str]:
     l = log.getChild(get_taskmaster_args.__name__)
     args = ['taskmaster']
-    if isinstance(config.verbose, str):
-        args.extend(['--verbose', config.verbose])
+    # if isinstance(config.verbose, str):
+    #     args.extend(['--verbose', config.verbose])
     l.debug(f'args={args}')
     return args
 
