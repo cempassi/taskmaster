@@ -49,6 +49,9 @@ setup-testing-env: | $(VENV_DIR)
 	. $(VENV_DIR)/bin/activate; pip3 install -r requirement.txt
 	echo "Don't forget to load the virtual env ( source $(VENV_DIR)/bin/activate )"
 
+test_check:
+	. $(VENV_DIR)/bin/activate; python -m unittest discover --pattern '*_test.py' -s features/steps -v
+
 check: $(RELEASE_TM)
 	. $(VENV_DIR)/bin/activate; behave
 
