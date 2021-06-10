@@ -12,7 +12,8 @@ log = logging.getLogger('when')
 @when('server is running')
 def run_server(ctx):
     l = log.getChild(run_server.__name__)
-    ctx.server = ServerProc(config=ctx.config_file, verbose=ctx.verbose_level)
+    ctx.server = ServerProc(config=ctx.config_file,
+                            verbose=ctx.verbose_level, format=ctx.format)
     l.debug(f'server={ctx.server!s}')
 
 
@@ -33,4 +34,6 @@ def flush_stdout(ctx):
 @when('we ask for tasks')
 def list_tasks(ctx):
     mock = ClientMock()
-    ctx.read_tasks = mock.send_list()
+    res = mock.send_list()
+    assert res['type'] == 'tasks', 'check the return type'
+    ctx.read_tasks = res['tasks']
