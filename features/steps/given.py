@@ -22,6 +22,13 @@ def setup_verbose_level(ctx, level):
     ctx.verbose_level = level
 
 
+@given("the format as \"{format}\"")
+def setup_format(ctx, format):
+    l = log.getChild(setup_format.__name__)
+    l.debug(f'format={format}')
+    ctx.format = format
+
+
 @given("the client is running")
 def start_client(ctx):
     ctx.client = ClientProc()
