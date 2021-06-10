@@ -7,7 +7,7 @@ Feature: testing loading configuration file with taskmaster
 
   @fixture.clean_server
   Scenario Outline: Load valid yaml config file
-    Given the config file configs/<File> in YAML
+    Given the config file configs/<File>
     When server is running
     And we ask for tasks
     Then server is still running
@@ -15,18 +15,6 @@ Feature: testing loading configuration file with taskmaster
     And the tasks are named <Names>
 
     Examples:
-      | File        | N | Names                            |
-      | example.yml | 4 | ls, ls-homer, wait, failing-wait |
-
-  @fixture.clean_server
-  Scenario Outline: Load valid toml config file
-    Given the config file configs/<File> in TOML
-    When server is running
-    And we ask for tasks
-    Then server is still running
-    And server has read <N> tasks
-    And the tasks are named <Names>
-
-    Examples:
-      | File         | N | Names                 |
-      | example.toml | 3 | ls, ls-homer, ls-test |
+      | File         | N | Names                            |
+      | example.yml  | 4 | ls, ls-homer, wait, failing-wait |
+      | example.toml | 3 | ls, ls-homer, ls-test            |

@@ -7,11 +7,11 @@ import logging
 log = logging.getLogger('given')
 
 
-@given("the config file {file} in {lang}")
-def setup_config_file(ctx, file, lang):
+@given("the config file {file}")
+def setup_config_file(ctx, file):
     import mimetypes
     l = log.getChild(setup_config_file.__name__)
-    l.debug(f'file={file}, lang={lang}')
+    l.debug(f'file={file}')
     ctx.config_file = file
     ctx.config_file_type = mimetypes.guess_type(file)
 
