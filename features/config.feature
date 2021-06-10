@@ -2,6 +2,7 @@ Feature: testing loading configuration file with taskmaster
 
   Background: Setting option for taskmaster server
     Given the verbose level as debug
+    And the format as "json"
 
   @fixture.clean_server
   Scenario Outline: Load valid yaml config file
@@ -13,8 +14,8 @@ Feature: testing loading configuration file with taskmaster
     And the tasks are named <Names>
 
     Examples:
-      | File        | N | Names                 |
-      | example.yml | 3 | ls, ls-homer, ls-test |
+      | File        | N | Names                            |
+      | example.yml | 4 | ls, ls-homer, wait, failing-wait |
 
   @fixture.clean_server
   Scenario Outline: Load valid toml config file
