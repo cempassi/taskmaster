@@ -12,11 +12,15 @@ DEFAULT_TASK = {
 
 
 def mock_task(partial_task: Dict[str, Any]):
-    return {'cmd': 'echo foo', **DEFAULT_TASK, **partial_task}
+    data = {'cmd': 'echo foo', **DEFAULT_TASK, **partial_task}
+    if not data['stopsignal'].startswith('SIG'):
+        data['stopsignal'] = 'SIG' + data['stopsignal']
+    return data
 
 
 def mock_config_task(partial_config: Dict[str, Any]):
-    return {'cmd': 'echo foo', **DEFAULT_CONFIG_TASK, **partial_config}
+    data = {'cmd': 'echo foo', **DEFAULT_CONFIG_TASK, **partial_config}
+    return data
 
 
 class TestAssertTask(unittest.TestCase):
