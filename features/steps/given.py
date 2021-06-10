@@ -9,10 +9,11 @@ log = logging.getLogger('given')
 
 @given("the config file {file} in {lang}")
 def setup_config_file(ctx, file, lang):
+    import mimetypes
     l = log.getChild(setup_config_file.__name__)
     l.debug(f'file={file}, lang={lang}')
     ctx.config_file = file
-    ctx.config_file_type = lang
+    ctx.config_file_type = mimetypes.guess_type(file)
 
 
 @given("the verbose level as {level}")
