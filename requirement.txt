@@ -3,3 +3,4 @@ PyYaml
 inotify
 autopep8
 asserts
+toml
