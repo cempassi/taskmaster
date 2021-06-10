@@ -15,7 +15,9 @@ def get_server_args(config: Namespace) -> list[str]:
     args = get_taskmaster_args(config)
     args.append('server')
     if isinstance(config.configfile, str):
-        args.extend(['--config', config.configfile])
+        args.append(config.configfile)
+    if isinstance(config.format, str):
+        args.extend(['-f', config.format])
     l.debug(f'args={args}')
     return args
 
@@ -43,8 +45,9 @@ class ServerProc:
             if filepath == TASKMASTER_SOCK and 'IN_CREATE' in type_names:
                 break
 
-    def __init__(self, config: str, verbose: str) -> None:
-        cfg = Namespace(configfile=config, verbose=verbose)
+    def __init__(self, config: str, verbose: str, format: str) -> None:
+        cfg = Namespace(configfile=config, verbose=verbose, format=format)
+        self.log.debug(f'server config: {cfg}')
         self.args = get_server_args(cfg)
         watch = ServerProc.prepare_to_wait()
         self.proc = Popen(self.args, executable=TASKMASTER_PATH,
