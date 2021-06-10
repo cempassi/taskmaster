@@ -1,8 +1,9 @@
 from typing import List
 from behave import then, register_type, use_step_matcher
+from features.steps.assert_utils import assert_tasks
 from features.steps.lib.pattern import parse_int
 import logging
-from asserts import assert_equal
+from asserts import assert_dict_equal, assert_equal
 
 log = logging.getLogger('then')
 
@@ -11,11 +12,17 @@ use_step_matcher('cfparse')
 
 
 @then('server has read the good amount of tasks')
+def assert_tasks_amount_read(ctx):
+    l = log.getChild(assert_tasks_amount_read.__name__)
+    l.debug(f'tasks={len(ctx.read_tasks)}')
+    assert_equal(len(ctx.read_tasks), len(ctx.config_file_data.keys()))
+
+
+@then('server has read the tasks')
 def assert_tasks_read(ctx):
     l = log.getChild(assert_tasks_read.__name__)
     l.debug(f'tasks={ctx.read_tasks}')
-    # assert len(ctx.read_tasks.values()) == task_to_read
-    assert_equal(len(ctx.read_tasks.keys()), len(ctx.config_file_data.keys()))
+    assert_tasks(ctx.read_tasks, ctx.config_file_data)
 
 
 @then('server is still running')

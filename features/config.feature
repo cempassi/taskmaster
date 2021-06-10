@@ -13,6 +13,7 @@ Feature: testing loading configuration file with taskmaster
     Then server is still running
     And server has read the good amount of tasks
     And server has read the named tasks
+    And server has read the tasks
 
     Examples:
       | File         |
