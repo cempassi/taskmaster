@@ -11,10 +11,10 @@ Feature: testing loading configuration file with taskmaster
     When server is running
     And we ask for tasks
     Then server is still running
-    And server has read <N> tasks
-    And the tasks are named <Names>
+    And server has read the good amount of tasks
+    And server has read the named tasks
 
     Examples:
-      | File         | N | Names                            |
-      | example.yml  | 4 | ls, ls-homer, wait, failing-wait |
-      | example.toml | 3 | ls, ls-homer, ls-test            |
+      | File         |
+      | example.yml  |
+      | example.toml |

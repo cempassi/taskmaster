@@ -2,6 +2,7 @@ from typing import List
 from behave import then, register_type, use_step_matcher
 from features.steps.lib.pattern import parse_int
 import logging
+from asserts import assert_equal
 
 log = logging.getLogger('then')
 
@@ -9,12 +10,12 @@ register_type(Int=parse_int, String=str)
 use_step_matcher('cfparse')
 
 
-@then('server has read {task_to_read:Int} tasks')
-def assert_tasks_read(ctx, task_to_read):
+@then('server has read the good amount of tasks')
+def assert_tasks_read(ctx):
     l = log.getChild(assert_tasks_read.__name__)
-    l.debug(f'task_to_read={task_to_read}')
     l.debug(f'tasks={ctx.read_tasks}')
-    assert len(ctx.read_tasks.values()) == task_to_read
+    # assert len(ctx.read_tasks.values()) == task_to_read
+    assert_equal(len(ctx.read_tasks.keys()), len(ctx.config_file_data.keys()))
 
 
 @then('server is still running')
@@ -35,10 +36,10 @@ def assert_client_running(ctx):
     assert isrunning
 
 
-@then('the tasks are named {task_names:String+}')
-def assert_task_names(ctx, task_names: List[str]):
-    from asserts import assert_equal
+@then('server has read the named tasks')
+def assert_task_names(ctx):
     l = log.getChild(assert_task_names.__name__)
+    task_names = ctx.config_file_data.keys()
     l.debug(f'task_names={task_names}')
     read_tasks_name = list(ctx.read_tasks.keys())
     l.debug(f'read_tasks_name={read_tasks_name}')
