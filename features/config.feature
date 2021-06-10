@@ -1,3 +1,4 @@
+@fixture.setup_mimetypes
 Feature: testing loading configuration file with taskmaster
 
   Background: Setting option for taskmaster server

@@ -2,7 +2,7 @@
 import logging
 
 from behave.fixture import fixture, use_fixture
-from behave.model import Scenario
+from behave.model import Feature, Scenario
 from features.steps.lib.taskmaster_utils import TASKMASTER_SOCK
 
 handler = logging.FileHandler('environment.log', mode='w')
@@ -26,7 +26,23 @@ def clean_server(ctx):
     ctx.server.close()
 
 
+@fixture
+def setup_mimetypes(ctx):
+    import mimetypes
+
+    log.debug('setup mimetypes')
+    mimetypes.add_type('application/yaml', '.yml')
+    mimetypes.add_type('application/yaml', '.yaml')
+    mimetypes.add_type('application/toml', '.toml')
+
+
 def before_scenario(ctx, scenario: Scenario):
     log.info(f'before_scenario={scenario.name}')
     if 'fixture.clean_server' in scenario.tags:
         use_fixture(clean_server, ctx)
+
+
+def before_feature(ctx, feature: Feature):
+    log.info(f'before_feature={feature.name}')
+    if 'fixture.setup_mimetypes' in feature.tags:
+        use_fixture(setup_mimetypes, ctx)
