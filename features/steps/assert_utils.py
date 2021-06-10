@@ -4,7 +4,7 @@ import logging
 
 log = logging.getLogger('assert_utils')
 
-DEFAULT_TASK = {
+DEFAULT_CONFIG_TASK = {
     'umask': 0,
     'numprocess': 1,
     'autostart': False,
@@ -31,7 +31,7 @@ def assert_task(got, wanted):
         vwanted = wanted.get(key)
         if vwanted is None:
             log.debug(f'no expected value for {key}, fallback to default')
-            vwanted = DEFAULT_TASK[key]
+            vwanted = DEFAULT_CONFIG_TASK[key]
         l.debug(f'for key {key}: got <{vgot}> wanted <{vwanted}>')
         if key == 'stopsignal':
             assert_true(vgot.startswith("SIG"),
