@@ -6,7 +6,7 @@ Feature: testing loading configuration file with taskmaster
     And the format as "json"
 
   @fixture.clean_server
-  Scenario Outline: Load valid yaml config file
+  Scenario Outline: Load valid config file
     Given the config file configs/<File>
     When server is running
     And we ask for tasks
