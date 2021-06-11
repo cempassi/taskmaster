@@ -74,3 +74,10 @@ class ClientMock:
         command = dumps(raw_command)
         sock, _ = self.send_command(command)
         return scan_status(self.readline(sock, 256))
+
+    def send_stop(self, taskname: str):
+        """send stop command to server"""
+        raw_command = ClientMock.build_command(
+            ClientCommand.STOP, {'id': taskname})
+        command = dumps(raw_command)
+        self.send_command(command)

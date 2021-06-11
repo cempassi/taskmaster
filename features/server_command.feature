@@ -29,7 +29,6 @@ Feature: Test server command on basic config
         And we ask the status of "test"
         Then the status of "test" is "Active"
 
-    @wip
     @fixture.clean_server
     Scenario: Test stop command
         When the server is running

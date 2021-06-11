@@ -40,7 +40,7 @@ def status_task(ctx, taskname):
 def stop_task(ctx, taskname):
     l = log.getChild(stop_task.__name__)
     l.debug(f'taskname={taskname}')
-    raise NotImplementedError
+    ctx.client_mock.send_stop(taskname)
 
 
 @when('we ask the info about \"{taskname}\"')
