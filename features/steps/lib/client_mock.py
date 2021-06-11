@@ -3,21 +3,21 @@ from enum import Enum
 from features.steps.lib.taskmaster_utils import connect_to_socket, scan_tasks
 from json import dumps
 import logging
-from typing import Dict
+from typing import Any, Dict
 
 
 log = logging.getLogger('client_mock')
 
 
-class ClientCommand(Enum):
+class ClientCommand(str, Enum):
     LIST = 'List'
     START = 'Start'
     RELOAD = 'Reload'
     STOP_SERVER = 'Quit'
     INFO = 'Info'
     STOP = 'Stop'
-    Status = 'Status'
-    Restart = 'Restart'
+    STATUS = 'Status'
+    RESTART = 'Restart'
 
     def __str__(self) -> str:
         return str(self.value)
@@ -34,9 +34,13 @@ class ClientMock:
         self.log.debug(f'sending command: {command}')
         self.sock.send(command.encode())
 
+    @staticmethod
+    def build_command(name: str, extra: Dict[str, Any] = {}) -> Dict[str, Any]:
+        return {**extra, 'type': name}
+
     def send_list(self) -> Dict[str, object]:
         """send list command to server"""
-        command = dumps(str(ClientCommand.LIST))
+        command = dumps(ClientMock.build_command(ClientCommand.LIST))
         self.send_command(command)
         return scan_tasks(self.readline(4096))
 
