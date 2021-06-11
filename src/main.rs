@@ -17,7 +17,7 @@ type Result<T> = std::result::Result<T, error::Taskmaster>;
 fn init(cli: &clap::ArgMatches<'static>) -> std::result::Result<(), SetLoggerError> {
     let config = Config::new(Some(time::Instant::now()));
 
-    cli.value_of("log-file").map_or_else(
+    cli.value_of("logfile").map_or_else(
         || logger::simple::Logger::init(LevelFilter::Debug, config),
         |file| logger::file::Logger::init(LevelFilter::Debug, config, File::create(file).unwrap()),
     )
