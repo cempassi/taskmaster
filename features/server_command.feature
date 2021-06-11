@@ -1,4 +1,5 @@
 # USING: Gherkin v6
+@wip
 @fixture.setup_mimetypes
 @fixture.remove_tmp_files
 Feature: Test server command on basic config
