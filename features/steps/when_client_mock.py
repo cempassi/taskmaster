@@ -1,5 +1,3 @@
-from features.steps.lib.taskmaster_utils import TASKMASTER_PATH
-from features.steps.lib.client_mock import ClientMock
 from behave import when
 import logging
 
@@ -47,7 +45,13 @@ def stop_task(ctx, taskname):
 def info_task(ctx, taskname):
     l = log.getChild(info_task.__name__)
     l.debug(f'taskname={taskname}')
-    raise NotImplementedError
+    task = ctx.client_mock.send_info(taskname)
+    l.debug(f'task={task}')
+
+    if 'task_info' not in ctx:
+        ctx.task_info = {taskname: task}
+    else:
+        ctx.task_info[taskname] = task
 
 
 @when('we ask to reload the config')

@@ -40,7 +40,6 @@ Feature: Test server command on basic config
             | Stopped  |
             | Stopping |
 
-    @wip
     @fixture.clean_server
     Scenario: Test info command
         When the server is running
