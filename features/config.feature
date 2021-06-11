@@ -17,3 +17,15 @@ Feature: testing loading configuration file with taskmaster
       | File         |
       | example.yml  |
       | example.toml |
+
+  @fixture.remote_tmp_file
+  Scenario: Load minimal config file
+    Given the config in application/yaml
+      """
+      test:
+        cmd: echo foo
+      """
+    When server is running
+    And we ask for tasks
+    Then server is still running
+    And server has read the tasks
