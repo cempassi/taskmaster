@@ -5,6 +5,7 @@ Feature: testing loading configuration file with taskmaster
   Background: Setting option for taskmaster server
     Given the verbose level as debug
     And the format as "json"
+    And the log file as "config.log"
 
   @fixture.clean_server
   Scenario Outline: Load valid config file

@@ -14,6 +14,8 @@ def get_taskmaster_args(config: SimpleNamespace) -> List[str]:
     args = ['taskmaster']
     # if isinstance(config.verbose, str):
     #     args.extend(['--verbose', config.verbose])
+    if isinstance(config.logfile, str):
+        args.extend(['--log-file', config.logfile])
     l.debug(f'args={args}')
     return args
 

@@ -67,6 +67,13 @@ def setup_format(ctx, format):
     ctx.format = format
 
 
+@given("the log file as \"{filename}\"")
+def setup_log_file(ctx, filename):
+    l = log.getChild(setup_log_file.__name__)
+    l.debug(f'logfile={filename}')
+    ctx.logfile = filename
+
+
 @given("the client is running")
 def start_client(ctx):
     ctx.client = ClientProc()
