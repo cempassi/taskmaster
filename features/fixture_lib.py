@@ -1,3 +1,4 @@
+from features.steps.lib.client_mock import ClientMock
 from os import remove
 from behave import fixture
 import logging
@@ -56,7 +57,12 @@ def setup_mimetypes(_ctx):
     mimetypes.add_type('application/toml', '.toml')
 
 
+@fixture(name='fixture.use_client_mock')
+def setup_client_mock(ctx):
+    ctx.client_mock = ClientMock()
+
+
 fixtures_registry = dict()
 
-for func in setup_mimetypes, remove_tmp_files, clean_server:
+for func in setup_mimetypes, remove_tmp_files, clean_server, setup_client_mock:
     fixtures_registry[func.name] = func
