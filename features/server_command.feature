@@ -22,7 +22,6 @@ Feature: Test server command on basic config
         And we ask for tasks
         Then the server has read the tasks
 
-    @wip
     @fixture.clean_server
     Scenario: Test start command
         When the server is running
