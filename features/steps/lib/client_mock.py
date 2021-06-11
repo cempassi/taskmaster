@@ -11,6 +11,13 @@ log = logging.getLogger('client_mock')
 
 class ClientCommand(Enum):
     LIST = 'List'
+    START = 'Start'
+    RELOAD = 'Reload'
+    STOP_SERVER = 'Quit'
+    INFO = 'Info'
+    STOP = 'Stop'
+    Status = 'Status'
+    Restart = 'Restart'
 
     def __str__(self) -> str:
         return str(self.value)
