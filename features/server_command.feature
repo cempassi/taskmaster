@@ -53,7 +53,7 @@ Feature: Test server command on basic config
         Then the status of "test" is "Inactive"
 
     @fixture.clean_server
-    Scenario: Test quit command
+    Scenario: Test stop-server command
         When the server is running
         And we ask to stop the server
         Then the server is stopped
