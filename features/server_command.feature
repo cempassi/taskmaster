@@ -28,7 +28,7 @@ Feature: Test server command on basic config
         When the server is running
         And we ask to start "test"
         And we ask the status of "test"
-        Then the status of "test" is "active"
+        Then the status of "test" is "Active"
 
     @wip
     @fixture.clean_server
@@ -37,7 +37,7 @@ Feature: Test server command on basic config
         And we ask to start "test"
         And we ask to stop "test"
         And we ask the status of "test"
-        Then the status of "test" is "stopped"
+        Then the status of "test" is "Stopped"
 
     @wip
     @fixture.clean_server
@@ -64,7 +64,7 @@ Feature: Test server command on basic config
     Scenario: Test status command
         When the server is running
         And we ask the status of "test"
-        Then the status of "test" is "inactive"
+        Then the status of "test" is "Inactive"
 
     @wip
     @fixture.clean_server
