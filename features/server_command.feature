@@ -58,7 +58,6 @@ Feature: Test server command on basic config
         And we ask to stop the server
         Then the server is stopped
 
-    @wip
     @fixture.clean_server
     Scenario: Test reload command
         When the server is running
@@ -69,6 +68,7 @@ Feature: Test server command on basic config
                 stdout: /tmp/echo-test1.out
             """
         And we ask to reload the config
+        And we ask for tasks
         Then the server has read the tasks
 
     @wip

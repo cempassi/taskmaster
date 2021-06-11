@@ -57,7 +57,7 @@ def info_task(ctx, taskname):
 @when('we ask to reload the config')
 def reload_config(ctx):
     l = log.getChild(reload_config.__name__)
-    raise NotImplementedError
+    ctx.client_mock.send_reload()
 
 
 @when('we ask to stop the server')

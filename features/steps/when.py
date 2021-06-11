@@ -31,4 +31,7 @@ def flush_stdout(ctx):
 def edit_current_config_file(ctx):
     l = log.getChild(edit_current_config_file.__name__)
     l.debug(f'current_file={ctx.config_file} text={ctx.text}')
-    raise NotImplementedError()
+    with open(ctx.config_file, 'a') as f:
+        f.write('\n')
+        f.write(ctx.text)
+    ctx.execute_steps(f'Given the config file {ctx.config_file}')
