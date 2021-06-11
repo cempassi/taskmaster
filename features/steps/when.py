@@ -9,11 +9,11 @@ import logging
 log = logging.getLogger('when')
 
 
-@when('server is running')
+@when('the server is running')
 def run_server(ctx):
     l = log.getChild(run_server.__name__)
     ctx.server = ServerProc(config=ctx.config_file,
-                            verbose=ctx.verbose_level, format=ctx.format)
+                            verbose=ctx.verbose_level, format=ctx.format, logfile=ctx.logfile)
     l.debug(f'server={ctx.server!s}')
 
 

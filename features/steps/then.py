@@ -11,21 +11,14 @@ register_type(Int=parse_int, String=str)
 use_step_matcher('cfparse')
 
 
-@then('server has read the good amount of tasks')
-def assert_tasks_amount_read(ctx):
-    l = log.getChild(assert_tasks_amount_read.__name__)
-    l.debug(f'tasks={len(ctx.read_tasks)}')
-    assert_equal(len(ctx.read_tasks), len(ctx.config_file_data.keys()))
-
-
-@then('server has read the tasks')
+@then('the server has read the tasks')
 def assert_tasks_read(ctx):
     l = log.getChild(assert_tasks_read.__name__)
     l.debug(f'tasks={ctx.read_tasks}')
     assert_tasks(ctx.read_tasks, ctx.config_file_data)
 
 
-@then('server is still running')
+@then('the server is still running')
 def assert_server_running(ctx):
     l = log.getChild(assert_server_running.__name__)
     isrunning = ctx.server.is_running()
@@ -33,7 +26,7 @@ def assert_server_running(ctx):
     assert isrunning
 
 
-@then('client is still running')
+@then('the client is still running')
 def assert_client_running(ctx):
     l = log.getChild(assert_client_running.__name__)
     stderr_lines = ctx.client.readlines_stderr()
@@ -41,16 +34,6 @@ def assert_client_running(ctx):
     isrunning = ctx.client.is_running()
     l.debug(f'isrunning={isrunning}')
     assert isrunning
-
-
-@then('server has read the named tasks')
-def assert_task_names(ctx):
-    l = log.getChild(assert_task_names.__name__)
-    task_names = ctx.config_file_data.keys()
-    l.debug(f'task_names={task_names}')
-    read_tasks_name = list(ctx.read_tasks.keys())
-    l.debug(f'read_tasks_name={read_tasks_name}')
-    assert_equal(sorted(task_names), sorted(read_tasks_name))
 
 
 @then('we read the help command output')

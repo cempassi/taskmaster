@@ -48,8 +48,9 @@ class ServerProc:
         raise TimeoutError(
             'server take too much time to start')
 
-    def __init__(self, config: str, verbose: str, format: str) -> None:
-        cfg = Namespace(configfile=config, verbose=verbose, format=format)
+    def __init__(self, config: str, verbose: str, format: str, logfile: str) -> None:
+        cfg = Namespace(configfile=config, verbose=verbose,
+                        format=format, logfile=logfile)
         self.log.debug(f'server config: {cfg}')
         self.args = get_server_args(cfg)
         watch = ServerProc.prepare_to_wait()

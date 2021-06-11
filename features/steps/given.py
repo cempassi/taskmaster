@@ -30,7 +30,7 @@ def setup_config_file(ctx, file):
         ctx.config_file, ctx.config_file_type[0])
 
 
-@given("the config in {mime}")
+@given("the config in \"{mime}\"")
 def setup_config(ctx, mime):
     from tempfile import NamedTemporaryFile
     from mimetypes import guess_extension
@@ -79,6 +79,6 @@ def start_client(ctx):
     ctx.client = ClientProc()
 
 
-@given("server is running")
+@given("the server is running")
 def start_server(ctx):
     ctx.server = ServerProc('configs/example.yml', 'debug')
