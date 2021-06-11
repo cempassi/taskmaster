@@ -45,7 +45,7 @@ Feature: Test server command on basic config
 
     @fixture.clean_server
     Scenario: Test reload command
-        Given the server is running
+        When the server is running
         And we add the following to the current config file
             """
             test1:
@@ -57,7 +57,7 @@ Feature: Test server command on basic config
 
     @fixture.clean_server
     Scenario: Test status command
-        Given the server is running
+        When the server is running
         And we ask the status of "test"
         Then the status of "test" is "inactive"
 
@@ -67,6 +67,6 @@ Feature: Test server command on basic config
 
     @fixture.clean_server
     Scenario: Test quit command
-        Given the server is running
+        When the server is running
         And we ask to stop the server
         Then the server is stopped
