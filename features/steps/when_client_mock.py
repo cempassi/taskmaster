@@ -64,3 +64,10 @@ def reload_config(ctx):
 def stop_server(ctx):
     l = log.getChild(stop_server.__name__)
     ctx.client_mock.send_stop_server()
+
+
+@when('we ask to restart \"{taskname}\"')
+def restart_task(ctx, taskname):
+    l = log.getChild(restart_task.__name__)
+    l.debug(f'name={taskname}')
+    ctx.client_mock.send_restart(taskname)

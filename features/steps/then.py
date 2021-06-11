@@ -1,13 +1,13 @@
 from typing import List
 from behave import then, register_type, use_step_matcher
 from features.steps.assert_utils import assert_task, assert_tasks
-from features.steps.lib.pattern import parse_int
+from features.steps.lib.pattern import parse_float, parse_int
 import logging
 from asserts import assert_dict_equal, assert_equal, assert_in, assert_true
 
 log = logging.getLogger('then')
 
-register_type(Int=parse_int, String=str)
+register_type(Int=parse_int, String=str, Float=parse_float)
 use_step_matcher('cfparse')
 
 
@@ -97,3 +97,20 @@ def check_server_stop(ctx):
         import time
         time.sleep(0.2)
         assert ctx.server.is_running() is False, 'server is not stopped'
+
+
+@then('we have {count:Int} files with the pattern \"{file_pattern}\" containing')
+def check_file_created(ctx, count, file_pattern):
+    assert ctx.text is not None, "missing text to check content"
+    l = log.getChild(check_file_created.__name__)
+    l.debug(f'count={count} file_pattern={file_pattern} text="{ctx.text}"')
+
+    from glob import glob
+    matches = glob(file_pattern)
+    l.debug(f'matches={matches}')
+
+    assert_equal(len(matches), count)
+    for filename in matches:
+        with open(filename) as f:
+            assert_equal(f.read(), ctx.text, msg_fmt=filename +
+                         ' not containing expected data: {msg}')

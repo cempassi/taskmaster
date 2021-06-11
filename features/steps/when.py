@@ -35,3 +35,12 @@ def edit_current_config_file(ctx):
         f.write('\n')
         f.write(ctx.text)
     ctx.execute_steps(f'Given the config file {ctx.config_file}')
+
+
+@when('we sleep for {time:Float}')
+def sleep_for(ctx, time):
+    l = log.getChild(sleep_for.__name__)
+    l.debug(f'time={time}')
+    from time import sleep
+
+    sleep(time)
