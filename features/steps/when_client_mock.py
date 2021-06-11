@@ -1,3 +1,4 @@
+from features.steps.lib.taskmaster_utils import TASKMASTER_PATH
 from features.steps.lib.client_mock import ClientMock
 from behave import when
 import logging
@@ -17,14 +18,22 @@ def list_tasks(ctx):
 def start_task(ctx, taskname):
     l = log.getChild(start_task.__name__)
     l.debug(f'taskname={taskname}')
-    raise NotImplementedError()
+
+    ctx.client_mock.send_start(taskname)
 
 
 @when('we ask the status of \"{taskname}\"')
 def status_task(ctx, taskname):
     l = log.getChild(status_task.__name__)
     l.debug(f'taskname={taskname}')
-    raise NotImplementedError()
+
+    status = ctx.client_mock.send_status(taskname)
+    if 'task_status' not in ctx:
+        ctx.task_status = {taskname: [status]}
+    elif ctx.task_status.has_key(taskname):
+        ctx.task_status[taskname].append(status)
+    else:
+        ctx.task_status[taskname] = [status]
 
 
 @when('we ask to stop \"{taskname}\"')
