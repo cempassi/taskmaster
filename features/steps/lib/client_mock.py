@@ -1,7 +1,7 @@
 from __future__ import annotations
 from enum import Enum
 from socket import socket
-from features.steps.lib.taskmaster_utils import connect_to_socket, scan_tasks
+from features.steps.lib.taskmaster_utils import connect_to_socket, scan_status, scan_tasks
 from json import dumps
 import logging
 from typing import Any, Dict, TextIO, Union
@@ -66,3 +66,11 @@ class ClientMock:
             ClientCommand.START, {'id': taskname})
         command = dumps(raw_command)
         self.send_command(command)
+
+    def send_status(self, taskname: str) -> str:
+        """send status command to server"""
+        raw_command = ClientMock.build_command(
+            ClientCommand.STATUS, {'id': taskname})
+        command = dumps(raw_command)
+        sock, _ = self.send_command(command)
+        return scan_status(self.readline(sock, 256))
