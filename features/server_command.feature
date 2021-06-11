@@ -24,12 +24,24 @@ Feature: Test server command on basic config
 
     @fixture.clean_server
     Scenario: Test start command
+        When the server is running
+        And we ask to start "test"
+        And we ask the status of "test"
+        Then the status of "test" is "active"
 
     @fixture.clean_server
     Scenario: Test stop command
+        When the server is running
+        And we ask to start "test"
+        And we ask to stop "test"
+        And we ask the status of "test"
+        Then the status of "test" is "stopped"
 
     @fixture.clean_server
     Scenario: Test info command
+        When the server is running
+        And we ask the info about "test"
+        Then the server sent the info about "test"
 
     @fixture.clean_server
     Scenario: Test reload command
@@ -51,6 +63,7 @@ Feature: Test server command on basic config
 
     @fixture.clean_server
     Scenario: Test restart command
+
 
     @fixture.clean_server
     Scenario: Test quit command
