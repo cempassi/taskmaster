@@ -47,7 +47,7 @@ def setup_config(ctx, mime):
     tmp.close()
 
     filename = tmp.name
-    ctx.tmp_file = filename
+    ctx.tmp_files.append(filename)
 
     l.debug(f'tmp_file={filename}')
     ctx.execute_steps(f'Given the config file {filename}')

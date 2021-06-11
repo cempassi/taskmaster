@@ -29,17 +29,20 @@ def clean_server(ctx):
     ctx.server.close()
 
 
-@fixture(name="fixture.remove_tmp_file")
-def remove_tmp_file(ctx):
-    l = log.getChild(remove_tmp_file.__name__)
-    l.debug('wait for cleanup')
+@fixture(name="fixture.remove_tmp_files")
+def remove_tmp_files(ctx):
+    l = log.getChild(remove_tmp_files.__name__)
+    l.debug('create empty tmp files')
+    ctx.tmp_files = []
+    l.debug('waiting for cleanup')
     yield
     from os import unlink
 
-    l.debug(f'tmp_file={ctx.tmp_file}')
-    assert ctx.tmp_file, 'no tmp file to remove'
-    unlink(ctx.tmp_file)
-    ctx.tmp_file = None
+    l.debug(f'tmp_files={ctx.tmp_files}')
+    while len(ctx.tmp_files):
+        file = ctx.tmp_files.pop()
+        l.debug(f'remove file {file}')
+        unlink(file)
 
 
 @fixture(name='fixture.setup_mimetypes')
@@ -55,5 +58,5 @@ def setup_mimetypes(_ctx):
 
 fixtures_registry = dict()
 
-for func in setup_mimetypes, remove_tmp_file, clean_server:
+for func in setup_mimetypes, remove_tmp_files, clean_server:
     fixtures_registry[func.name] = func

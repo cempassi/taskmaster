@@ -1,4 +1,5 @@
 @fixture.setup_mimetypes
+@fixture.remove_tmp_files
 Feature: testing loading configuration file with taskmaster
 
   Background: Setting option for taskmaster server
@@ -18,7 +19,6 @@ Feature: testing loading configuration file with taskmaster
       | example.yml  |
       | example.toml |
 
-  @fixture.remove_tmp_file
   @fixture.clean_server
   Scenario: Load minimal config file
     Given the config in application/yaml
