@@ -1,10 +1,11 @@
 from __future__ import annotations
+import builtins
 from enum import Enum
 from socket import socket
 from features.steps.lib.taskmaster_utils import connect_to_socket, scan_status, scan_tasks
 from json import dumps
 import logging
-from typing import Any, Dict, TextIO, Union
+from typing import Any, Dict, TextIO, Tuple, Union
 
 
 log = logging.getLogger('client_mock')
@@ -36,13 +37,20 @@ class ClientMock:
         ClientMock.log.debug(f'cmd={cmd}')
         return cmd
 
-    def send_command(self, command: str) -> Union[socket, TextIO]:
+    @staticmethod
+    def send_raw_command(command: str) -> Tuple[socket, TextIO]:
         sock = connect_to_socket()
         sockfile = sock.makefile()
 
-        self.log.debug(f'sending command: {command}')
+        ClientMock.log.debug(f'sending command: {command}')
         sock.send(command.encode())
         return (sock, sockfile)
+
+    @staticmethod
+    def send_command(type: ClientCommand, extra: Dict[str, Any] = {}) -> Tuple[socket, TextIO]:
+        raw_command = ClientMock.build_command(type, extra)
+        command = dumps(raw_command)
+        return ClientMock.send_raw_command(command)
 
     def read_data(self, sock: socket, max_size: int) -> bytes:
         return sock.recv(max_size)
@@ -55,29 +63,29 @@ class ClientMock:
 
     def send_list(self) -> Dict[str, object]:
         """send list command to server"""
-        raw_command = ClientMock.build_command(ClientCommand.LIST)
-        command = dumps(raw_command)
-        sock, _ = self.send_command(command)
+        sock, _ = ClientMock.send_command(ClientCommand.LIST)
         return scan_tasks(self.readline(sock, 4096))
 
     def send_start(self, taskname: str):
         """send start command to server"""
-        raw_command = ClientMock.build_command(
+        ClientMock.send_command(
             ClientCommand.START, {'id': taskname})
-        command = dumps(raw_command)
-        self.send_command(command)
 
     def send_status(self, taskname: str) -> str:
         """send status command to server"""
-        raw_command = ClientMock.build_command(
+        sock, _ = ClientMock.send_command(
             ClientCommand.STATUS, {'id': taskname})
-        command = dumps(raw_command)
-        sock, _ = self.send_command(command)
         return scan_status(self.readline(sock, 256))
 
     def send_stop(self, taskname: str):
         """send stop command to server"""
-        raw_command = ClientMock.build_command(
+        ClientMock.send_command(
             ClientCommand.STOP, {'id': taskname})
-        command = dumps(raw_command)
-        self.send_command(command)
+
+    def send_info(self, taskname: str):
+        """send info command to server"""
+        sock, _ = ClientMock.send_command(
+            ClientCommand.INFO, {'id': taskname})
+        raw_data = self.readline(sock, 4096)
+        self.log.debug(f'raw_data={raw_data}')
+        raise NotImplementedError
