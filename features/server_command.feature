@@ -35,7 +35,10 @@ Feature: Test server command on basic config
         And we ask to start "test"
         And we ask to stop "test"
         And we ask the status of "test"
-        Then the status of "test" is "Stopped"
+        Then the status of "test" is one of
+            | status   |
+            | Stopped  |
+            | Stopping |
 
     @wip
     @fixture.clean_server

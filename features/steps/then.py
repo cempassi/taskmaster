@@ -3,7 +3,7 @@ from behave import then, register_type, use_step_matcher
 from features.steps.assert_utils import assert_tasks
 from features.steps.lib.pattern import parse_int
 import logging
-from asserts import assert_dict_equal, assert_equal, assert_true
+from asserts import assert_dict_equal, assert_equal, assert_in, assert_true
 
 log = logging.getLogger('then')
 
@@ -56,6 +56,24 @@ def check_task_status(ctx, taskname, status):
     assert_true(len(ctx.task_status[taskname]),
                 msg_fmt=f'registred status is empty')
     assert_equal(ctx.task_status[taskname].pop(0), status)
+
+
+@then('the status of \"{taskname}\" is one of')
+def check_task_status_choice(ctx, taskname):
+    assert ctx.table is not None, 'no table given'
+    l = log.getChild(check_task_status_choice.__name__)
+    choices = list(map(lambda cell: cell['status'], ctx.table))
+    l.debug(f'taskname={taskname}, status_choice={choices}')
+    l.debug(f'registred_status={ctx.task_status}')
+
+    assert_true(taskname in ctx.task_status,
+                msg_fmt=f'missing {taskname} in registred status')
+    assert_true(len(ctx.task_status[taskname]),
+                msg_fmt=f'registred status is empty')
+    got_status = ctx.task_status[taskname].pop(0)
+
+    assert_in(True, list(map(lambda st: st == got_status, choices)),
+              msg_fmt=f'{got_status} not in {choices}')
 
 
 @then('the server sent the info about \"{taskname}\"')
