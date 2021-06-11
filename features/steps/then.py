@@ -15,7 +15,7 @@ use_step_matcher('cfparse')
 def assert_tasks_read(ctx):
     l = log.getChild(assert_tasks_read.__name__)
     l.debug(f'tasks={ctx.read_tasks}')
-    assert_tasks(ctx.read_tasks, ctx.config_file_data)
+    assert_tasks(ctx.read_tasks, ctx.config_data)
 
 
 @then('the server is still running')

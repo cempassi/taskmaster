@@ -25,9 +25,9 @@ def setup_config_file(ctx, file):
     l = log.getChild(setup_config_file.__name__)
     l.debug(f'file={file}')
     ctx.config_file = file
-    ctx.config_file_type = mimetypes.guess_type(file)
-    ctx.config_file_data = load_config_file(
-        ctx.config_file, ctx.config_file_type[0])
+    ctx.config_type = mimetypes.guess_type(file)
+    ctx.config_data = load_config_file(
+        ctx.config_file, ctx.config_type[0])
 
 
 @given("the config in \"{mime}\"")
