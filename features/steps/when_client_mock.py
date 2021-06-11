@@ -8,8 +8,7 @@ log = logging.getLogger('client_command')
 @when('we ask for tasks')
 def list_tasks(ctx):
     assert ctx.server.is_running(), 'server is not running'
-    mock = ClientMock()
-    res = mock.send_list()
+    res = ctx.client_mock.send_list()
     assert res['type'] == 'tasks', 'check the return type'
     ctx.read_tasks = res['tasks']
 
