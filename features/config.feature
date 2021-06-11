@@ -18,8 +18,8 @@ Feature: testing loading configuration file with taskmaster
       | example.yml  |
       | example.toml |
 
-  @fixture.clean_server
   @fixture.remove_tmp_file
+  @fixture.clean_server
   Scenario: Load minimal config file
     Given the config in application/yaml
       """
