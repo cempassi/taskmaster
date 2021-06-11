@@ -37,13 +37,15 @@ class ServerProc:
     @staticmethod
     def wait_for_server_to_be_ready(watcher: Inotify):
         from os.path import join
-        for event in watcher.event_gen(yield_nones=False):
+        for event in watcher.event_gen(yield_nones=False, timeout_s=2):
             (_, type_names, path, filename) = event
             filepath = join(path, filename)
             ServerProc.log.debug(
                 f'type_names={type_names}, path={path}, filename={filename}')
             if filepath == TASKMASTER_SOCK and 'IN_CREATE' in type_names:
-                break
+                return
+        raise TimeoutError(
+            'server take too much time to start')
 
     def __init__(self, config: str, verbose: str, format: str) -> None:
         cfg = Namespace(configfile=config, verbose=verbose, format=format)
@@ -52,6 +54,7 @@ class ServerProc:
         watch = ServerProc.prepare_to_wait()
         self.proc = Popen(self.args, executable=TASKMASTER_PATH,
                           stdout=open('server.log', 'w'), stderr=STDOUT)
+        self.log.debug(f'waiting for server')
         ServerProc.wait_for_server_to_be_ready(watch)
 
     def __str__(self) -> str:
