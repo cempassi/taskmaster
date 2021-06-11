@@ -2,7 +2,7 @@ from __future__ import annotations
 import builtins
 from enum import Enum
 from socket import socket
-from features.steps.lib.taskmaster_utils import connect_to_socket, scan_status, scan_tasks
+from features.steps.lib.taskmaster_utils import connect_to_socket, scan_info, scan_status, scan_tasks
 from json import dumps
 import logging
 from typing import Any, Dict, TextIO, Tuple, Union
@@ -86,6 +86,4 @@ class ClientMock:
         """send info command to server"""
         sock, _ = ClientMock.send_command(
             ClientCommand.INFO, {'id': taskname})
-        raw_data = self.readline(sock, 4096)
-        self.log.debug(f'raw_data={raw_data}')
-        raise NotImplementedError
+        return scan_info(self.readline(sock, 4096))
