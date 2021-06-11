@@ -30,6 +30,29 @@ def setup_config_file(ctx, file):
         ctx.config_file, ctx.config_file_type[0])
 
 
+@given("the config in {mime}")
+def setup_config(ctx, mime):
+    from tempfile import NamedTemporaryFile
+    from mimetypes import guess_extension
+    l = log.getChild(setup_config.__name__)
+    l.debug(f'mime={mime} text={ctx.text}')
+    assert ctx.text is not None, "empty text"
+
+    ext = guess_extension(mime)
+    assert ext is not None, f"unknow mime {mime}"
+
+    l.debug(f'create tmp file with suffix {ext}')
+    tmp = NamedTemporaryFile('w', suffix=ext, delete=False)
+    tmp.write(ctx.text)
+    tmp.close()
+
+    filename = tmp.name
+    ctx.tmp_file = filename
+
+    l.debug(f'tmp_file={filename}')
+    ctx.execute_steps(f'Given the config file {filename}')
+
+
 @given("the verbose level as {level}")
 def setup_verbose_level(ctx, level):
     l = log.getChild(setup_verbose_level.__name__)
