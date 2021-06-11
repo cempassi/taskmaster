@@ -1,5 +1,3 @@
-# USING: Gherkin v6
-@wip
 @fixture.setup_mimetypes
 @fixture.remove_tmp_files
 @fixture.use_client_mock
@@ -24,6 +22,7 @@ Feature: Test server command on basic config
         And we ask for tasks
         Then the server has read the tasks
 
+    @wip
     @fixture.clean_server
     Scenario: Test start command
         When the server is running
@@ -31,6 +30,7 @@ Feature: Test server command on basic config
         And we ask the status of "test"
         Then the status of "test" is "active"
 
+    @wip
     @fixture.clean_server
     Scenario: Test stop command
         When the server is running
@@ -39,12 +39,14 @@ Feature: Test server command on basic config
         And we ask the status of "test"
         Then the status of "test" is "stopped"
 
+    @wip
     @fixture.clean_server
     Scenario: Test info command
         When the server is running
         And we ask the info about "test"
         Then the server sent the info about "test"
 
+    @wip
     @fixture.clean_server
     Scenario: Test reload command
         When the server is running
@@ -57,16 +59,19 @@ Feature: Test server command on basic config
         And we ask to reload the config
         Then the server has read the tasks
 
+    @wip
     @fixture.clean_server
     Scenario: Test status command
         When the server is running
         And we ask the status of "test"
         Then the status of "test" is "inactive"
 
+    @wip
     @fixture.clean_server
     Scenario: Test restart command
 
 
+    @wip
     @fixture.clean_server
     Scenario: Test quit command
         When the server is running
