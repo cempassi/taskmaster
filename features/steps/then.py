@@ -42,3 +42,23 @@ def check_help_command_output(ctx):
     lines = ctx.client.readlines_stdout()
     l.debug(f'lines={lines}')
     raise NotImplementedError
+
+
+@then('the status of \"{taskname}\" is \"{status}\"')
+def check_task_status(ctx, taskname, status):
+    l = log.getChild(check_task_status.__name__)
+    l.debug(f'taskname={taskname}, status={status}')
+    raise NotImplementedError
+
+
+@then('the server sent the info about \"{taskname}\"')
+def check_task_info(ctx, taskname):
+    l = log.getChild(check_task_info.__name__)
+    l.debug(f'taskname={taskname}')
+    raise NotImplementedError
+
+
+@then('the server is stopped')
+def check_server_stop(ctx):
+    l = log.getChild(check_server_stop.__name__)
+    assert ctx.server.is_running() is False, 'server is not stopped'
