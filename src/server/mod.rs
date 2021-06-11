@@ -99,8 +99,7 @@ impl<F: Formatter> Server<F> {
             Message::List => self.state.list(),
             Message::Status { id: taskname } => self.state.status(&taskname),
             Message::Restart { id: taskname } => {
-                self.state.stop(&taskname);
-                self.state.start(&taskname);
+                self.state.restart(&taskname);
             }
             Message::Quit => self
                 .event
