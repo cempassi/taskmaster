@@ -25,6 +25,7 @@ def get_server_args(config: Namespace) -> list[str]:
 class ServerProc:
 
     log = log.getChild(__qualname__)  # type: ignore
+    SERVER_STARTUP_TIMEOUT = 2
 
     @staticmethod
     def prepare_to_wait() -> Inotify:
@@ -37,7 +38,7 @@ class ServerProc:
     @staticmethod
     def wait_for_server_to_be_ready(watcher: Inotify):
         from os.path import join
-        for event in watcher.event_gen(yield_nones=False, timeout_s=2):
+        for event in watcher.event_gen(yield_nones=False, timeout_s=ServerProc.SERVER_STARTUP_TIMEOUT):
             (_, type_names, path, filename) = event
             filepath = join(path, filename)
             ServerProc.log.debug(
