@@ -63,4 +63,4 @@ def reload_config(ctx):
 @when('we ask to stop the server')
 def stop_server(ctx):
     l = log.getChild(stop_server.__name__)
-    raise NotImplementedError
+    ctx.client_mock.send_stop_server()

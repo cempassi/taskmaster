@@ -87,3 +87,7 @@ class ClientMock:
         sock, _ = ClientMock.send_command(
             ClientCommand.INFO, {'id': taskname})
         return scan_info(self.readline(sock, 4096))
+
+    def send_stop_server(self):
+        """send stop-server command to server"""
+        ClientMock.send_command(ClientCommand.STOP_SERVER)

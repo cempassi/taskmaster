@@ -46,14 +46,12 @@ Feature: Test server command on basic config
         And we ask the info about "test"
         Then the server sent the info about "test"
 
-    @wip
     @fixture.clean_server
     Scenario: Test status command
         When the server is running
         And we ask the status of "test"
         Then the status of "test" is "Inactive"
 
-    @wip
     @fixture.clean_server
     Scenario: Test quit command
         When the server is running
