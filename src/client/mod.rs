@@ -38,35 +38,45 @@ fn process_line(history: &History, line: &str) -> Result<()> {
         "start" => {
             if vec.len() > 1 {
                 for taskname in vec.iter().skip(1) {
-                    send_message(&Message::Start((*taskname).to_string()));
+                    send_message(&Message::Start {
+                        id: (*taskname).to_string(),
+                    });
                 }
             }
         }
         "info" => {
             if vec.len() > 1 {
                 for taskname in vec.iter().skip(1) {
-                    send_message(&Message::Info((*taskname).to_string()));
+                    send_message(&Message::Info {
+                        id: (*taskname).to_string(),
+                    });
                 }
             }
         }
         "stop" => {
             if vec.len() > 1 {
                 for taskname in vec.iter().skip(1) {
-                    send_message(&Message::Stop((*taskname).to_string()));
+                    send_message(&Message::Stop {
+                        id: (*taskname).to_string(),
+                    });
                 }
             }
         }
         "status" => {
             if vec.len() > 1 {
                 for taskname in vec.iter().skip(1) {
-                    send_message(&Message::Status((*taskname).to_string()));
+                    send_message(&Message::Status {
+                        id: (*taskname).to_string(),
+                    });
                 }
             }
         }
         "restart" => {
             if vec.len() > 1 {
                 for taskname in vec.iter().skip(1) {
-                    send_message(&Message::Restart((*taskname).to_string()));
+                    send_message(&Message::Restart {
+                        id: (*taskname).to_string(),
+                    });
                 }
             }
         }

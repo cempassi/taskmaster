@@ -93,12 +93,12 @@ impl<F: Formatter> Server<F> {
     fn handle_client_message(&mut self, message: Message) {
         match message {
             Message::Reload => self.event.send(Inter::Reload).unwrap(),
-            Message::Start(taskname) => self.state.start(&taskname),
-            Message::Info(taskname) => self.state.info(&taskname),
-            Message::Stop(taskname) => self.state.stop(&taskname),
+            Message::Start { id: taskname } => self.state.start(&taskname),
+            Message::Info { id: taskname } => self.state.info(&taskname),
+            Message::Stop { id: taskname } => self.state.stop(&taskname),
             Message::List => self.state.list(),
-            Message::Status(taskname) => self.state.status(&taskname),
-            Message::Restart(taskname) => {
+            Message::Status { id: taskname } => self.state.status(&taskname),
+            Message::Restart { id: taskname } => {
                 self.state.stop(&taskname);
                 self.state.start(&taskname);
             }
