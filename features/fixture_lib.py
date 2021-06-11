@@ -51,3 +51,9 @@ def setup_mimetypes(_ctx):
     mimetypes.add_type('application/yaml', '.yml')
     mimetypes.add_type('application/yaml', '.yaml')
     mimetypes.add_type('application/toml', '.toml')
+
+
+fixtures_registry = dict()
+
+for func in setup_mimetypes, remove_tmp_file, clean_server:
+    fixtures_registry[func.name] = func
