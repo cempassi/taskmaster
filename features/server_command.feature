@@ -48,6 +48,20 @@ Feature: Test server command on basic config
 
     @wip
     @fixture.clean_server
+    Scenario: Test status command
+        When the server is running
+        And we ask the status of "test"
+        Then the status of "test" is "Inactive"
+
+    @wip
+    @fixture.clean_server
+    Scenario: Test quit command
+        When the server is running
+        And we ask to stop the server
+        Then the server is stopped
+
+    @wip
+    @fixture.clean_server
     Scenario: Test reload command
         When the server is running
         And we add the following to the current config file
@@ -61,19 +75,15 @@ Feature: Test server command on basic config
 
     @wip
     @fixture.clean_server
-    Scenario: Test status command
-        When the server is running
-        And we ask the status of "test"
-        Then the status of "test" is "Inactive"
-
-    @wip
-    @fixture.clean_server
     Scenario: Test restart command
-
-
-    @wip
-    @fixture.clean_server
-    Scenario: Test quit command
+        Given the config in application/yaml
+            """
+            test:
+                cmd: echo foo
+                stdout: /tmp/echo-test3-{.Id}
+            """
         When the server is running
-        And we ask to stop the server
-        Then the server is stopped
+        And we ask to start "test"
+        And we ask to restart "test"
+        Then we have 2 file with the pattern "/tmp/echo-test3-\d" containing
+            """foo"""
