@@ -91,4 +91,9 @@ def check_task_info(ctx, taskname):
 @then('the server is stopped')
 def check_server_stop(ctx):
     l = log.getChild(check_server_stop.__name__)
-    assert ctx.server.is_running() is False, 'server is not stopped'
+    try:
+        assert ctx.server.is_running() is False, 'server is not stopped'
+    except AssertionError:  # we give Him some time
+        import time
+        time.sleep(0.2)
+        assert ctx.server.is_running() is False, 'server is not stopped'
