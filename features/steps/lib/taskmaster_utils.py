@@ -1,6 +1,6 @@
 from __future__ import annotations
 from types import SimpleNamespace
-from typing import Dict, List
+from typing import Any, Dict, List
 import logging
 
 log = logging.getLogger('taskmaster_utils')
@@ -27,8 +27,17 @@ def connect_to_socket():
     return sock
 
 
-def scan_tasks(stream: str) -> Dict[str, object]:
+def scan_yaml_reply(stream: str) -> Any:
     from yaml import Loader, load
     l = log.getChild(scan_tasks.__name__)
     data = load(stream, Loader=Loader)
     return data
+
+
+def scan_tasks(stream: str) -> Dict[str, Any]:
+    return scan_yaml_reply(stream)
+
+
+def scan_status(stream: str) -> str:
+    data = scan_yaml_reply(stream)
+    return data['status']
