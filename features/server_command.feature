@@ -2,6 +2,7 @@
 @wip
 @fixture.setup_mimetypes
 @fixture.remove_tmp_files
+@fixture.use_client_mock
 Feature: Test server command on basic config
 
     Test various server command

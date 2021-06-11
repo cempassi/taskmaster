@@ -1,5 +1,6 @@
 @fixture.setup_mimetypes
 @fixture.remove_tmp_files
+@fixture.use_client_mock
 Feature: testing loading configuration file with taskmaster
 
   Background: Setting option for taskmaster server
