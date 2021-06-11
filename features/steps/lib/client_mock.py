@@ -95,3 +95,7 @@ class ClientMock:
     def send_reload(self):
         """send reload command to server"""
         ClientMock.send_command(ClientCommand.RELOAD)
+
+    def send_restart(self, taskname: str):
+        """send restart command to server"""
+        ClientMock.send_command(ClientCommand.RESTART, {'id': taskname})
