@@ -65,9 +65,17 @@ def setup_client_mock(ctx):
 
 @fixture(name='fixture.use_server_mock')
 def setup_server_mock(ctx):
+    l = log.getChild(setup_server_mock.__name__)
+    l.debug('starting server mock')
+    ServerMock.log = log.getChild(ServerMock.__name__)
     ctx.server_mock = ServerMock()
+    ctx.server_mock.log = log.getChild(ServerMock.__name__)
     yield
+
+    l.debug('stopping server mock')
+    server = ctx.server_mock
     del ctx.server_mock
+    del server
 
 
 fixtures_registry = dict()
