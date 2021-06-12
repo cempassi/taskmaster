@@ -3,7 +3,7 @@ from behave import then, register_type, use_step_matcher
 from features.steps.assert_utils import assert_task, assert_tasks
 from features.steps.lib.pattern import parse_float, parse_int
 import logging
-from asserts import assert_dict_equal, assert_equal, assert_in, assert_true
+from asserts import assert_dict_equal, assert_equal, assert_in, assert_not_in, assert_true
 
 log = logging.getLogger('then')
 
@@ -29,9 +29,6 @@ def assert_server_running(ctx):
 @then('the client is still running')
 def assert_client_running(ctx):
     l = log.getChild(assert_client_running.__name__)
-    l.debug(f'read lines')
-    lines = ctx.client.readlines(1)
-    l.debug(f'lines={lines}')
     assert_true(ctx.client.is_running(),
                 msg_fmt='client is not running: {msg}')
 
@@ -39,7 +36,7 @@ def assert_client_running(ctx):
 @then('we read the help command output')
 def check_help_command_output(ctx):
     l = log.getChild(check_help_command_output.__name__)
-    lines = ctx.client.readlines_stdout()
+    lines = ctx.client.readlines()
     l.debug(f'lines={lines}')
     raise NotImplementedError
 
@@ -114,3 +111,11 @@ def check_file_created(ctx, count, file_pattern):
         with open(filename) as f:
             assert_equal(f.read(), ctx.text, msg_fmt=filename +
                          ' not containing expected data: {msg}')
+
+
+@then("the client shouldn't have paniced")
+def check_client_dont_panic(ctx):
+    l = log.getChild(check_client_dont_panic.__name__)
+    lines = ctx.client.readline(4096)
+    l.debug(f'captured_lines={lines}')
+    assert_not_in(b'panic', lines)
