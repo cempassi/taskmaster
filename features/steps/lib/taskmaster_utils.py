@@ -27,6 +27,13 @@ def connect_to_socket():
     return sock
 
 
+def listen_to_socket():
+    import socket
+    sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    sock.bind(TASKMASTER_SOCK)
+    return sock
+
+
 def scan_yaml_reply(stream: str) -> Any:
     from yaml import Loader, load
     l = log.getChild(scan_tasks.__name__)
