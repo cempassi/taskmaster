@@ -37,8 +37,7 @@ fn main() -> TaskmasterResult<()> {
         }
         ("client", Some(_matches)) => {
             log::info!("starting client");
-            client::start();
-            Ok(())
+            client::start()
         }
         _ => {
             log::error!("unknown subcommand");
