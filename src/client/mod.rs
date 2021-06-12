@@ -116,10 +116,13 @@ pub fn start() {
                     }
                 }
                 Err(e) if e.kind() == ErrorKind::Interrupted => break,
-                Err(_) => break,
+                Err(e) => {
+                    log::error!("got error {:?}", e);
+                    panic!("unexpected error")
+                }
             }
         }
     } else {
-        eprintln!("Server isn't running");
+        log::error!("Server isn't running");
     }
 }
