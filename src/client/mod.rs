@@ -100,6 +100,7 @@ fn print_help() {
         help: show this help menu
         status: show status of <command>
         stop-server: stop the server
+        exit: exit client
         "#;
     print!("{}", s);
 }
@@ -110,6 +111,10 @@ pub fn start() {
 
         loop {
             match Editor::default().readline(&mut history) {
+                Ok(line) if line == "exit" => {
+                    log::info!("stopping client, bye");
+                    break;
+                }
                 Ok(line) => {
                     if process_line(&history, &line).is_ok() {
                         history.push(line);
