@@ -30,7 +30,9 @@ def assert_server_running(ctx):
 def assert_client_running(ctx):
     l = log.getChild(assert_client_running.__name__)
     stderr_lines = ctx.client.readlines_stderr()
+    stdout_lines = ctx.client.readlines_stdout()
     l.debug(f'err_lines={stderr_lines}')
+    l.debug(f'stdout_lines={stdout_lines}')
     assert_true(ctx.client.is_running(),
                 msg_fmt='client is not running: {msg}')
 
