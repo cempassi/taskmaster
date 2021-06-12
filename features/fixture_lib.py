@@ -73,9 +73,10 @@ def setup_server_mock(ctx):
     yield
 
     l.debug('stopping server mock')
-    server = ctx.server_mock
-    del ctx.server_mock
-    del server
+    if 'server_mock' in ctx:
+        del ctx.server_mock
+    else:
+        l.warn('server mock already stopped/non existing')
 
 
 fixtures_registry = dict()
