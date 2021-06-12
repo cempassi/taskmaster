@@ -10,6 +10,6 @@ Feature: Test client on unexpected behavior
     Scenario: Test server close socket before client quit
         When the client is running
         And we sleep for 0.02
-        And the client is still running
-        And we stop the server mock
+        Then the client is still running
+        When we stop the server mock
         Then the client shouldn't have paniced

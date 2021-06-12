@@ -31,9 +31,8 @@ def assert_client_running(ctx):
     l = log.getChild(assert_client_running.__name__)
     stderr_lines = ctx.client.readlines_stderr()
     l.debug(f'err_lines={stderr_lines}')
-    isrunning = ctx.client.is_running()
-    l.debug(f'isrunning={isrunning}')
-    assert isrunning
+    assert_true(ctx.client.is_running(),
+                msg_fmt='client is not running: {msg}')
 
 
 @then('we read the help command output')
