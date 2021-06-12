@@ -17,7 +17,8 @@ def run_server(ctx):
 @when('the client is running')
 def run_client(ctx):
     l = log.getChild(run_client.__name__)
-    ctx.client = ClientProc(verbose=ctx.verbose_level, logfile=ctx.logfile)
+    ctx.client = ClientProc(verbose=ctx.verbose_level,
+                            logfile=ctx.logfile if 'logfile' in ctx else None)
     l.debug(f'client={ctx.client}')
 
 
