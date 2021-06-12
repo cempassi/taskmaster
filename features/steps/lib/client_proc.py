@@ -19,8 +19,8 @@ def get_client_args(config: Namespace) -> list[str]:
 class ClientProc:
     log = log.getChild(__qualname__)  # type: ignore
 
-    def __init__(self) -> ClientProc:
-        cfg = Namespace()
+    def __init__(self, **kwargs) -> ClientProc:
+        cfg = Namespace(**kwargs)
         self.args = get_client_args(cfg)
         self.proc = Popen(self.args, executable=TASKMASTER_PATH, stdin=PIPE,
                           stdout=PIPE, stderr=PIPE)

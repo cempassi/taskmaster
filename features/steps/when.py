@@ -1,3 +1,4 @@
+from features.steps.lib.client_proc import ClientProc
 from behave import when
 from features.steps.lib.server_proc import ServerProc
 import logging
@@ -11,6 +12,13 @@ def run_server(ctx):
     ctx.server = ServerProc(config=ctx.config_file,
                             verbose=ctx.verbose_level, format=ctx.format, logfile=ctx.logfile)
     l.debug(f'server={ctx.server!s}')
+
+
+@when('the client is running')
+def run_client(ctx):
+    l = log.getChild(run_client.__name__)
+    ctx.client = ClientProc(verbose=ctx.verbose_level, logfile=ctx.logfile)
+    l.debug(f'client={ctx.client}')
 
 
 @when('we write {command:String}')
