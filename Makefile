@@ -14,7 +14,6 @@ SOURCES_FILE := \
 	server/default.rs \
 	server/signal.rs \
 	server/task.rs \
-	server/error.rs \
 	server/mod.rs \
 	server/watcher.rs \
 	server/nix_utils.rs \
@@ -28,6 +27,7 @@ SOURCES_FILE := \
 	client/history.rs \
 	client/mod.rs \
 	shared/mod.rs \
+	shared/error.rs \
 	shared/logger/simple.rs \
 	shared/logger/config.rs \
 	shared/logger/mod.rs \
