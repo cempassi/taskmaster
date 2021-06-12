@@ -2,7 +2,6 @@ Feature: Test client on unexpected behavior
 
     Background: Config client
         Given the verbose level as debug
-        And the log file as "unexpected_client.log"
 
 
     @wip
