@@ -1,8 +1,15 @@
 Feature: Test client on unexpected behavior
 
+    Background: Config client
+        Given the verbose level as debug
+        And the log file as "unexpected_client.log"
+
+
     @wip
     @fixture.use_server_mock
     Scenario: Test server close socket before client quit
         When the client is running
-        And we close the socket
+        And we sleep for 0.02
+        And the client is still running
+        And we stop the server mock
         Then the client shouldn't have paniced
