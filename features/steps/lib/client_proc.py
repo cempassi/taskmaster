@@ -40,9 +40,7 @@ class ClientProc:
         return self.proc.poll() is None
 
     def write(self, data: str) -> int:
-        n = self.proc.stdin.write(data.encode())
-        self.proc.stdin.flush()
-        return n
+        return self.proc.stdin.write(data.encode())
 
     def read(self) -> bytes:
         return self.proc.stdout.read()
@@ -56,7 +54,10 @@ class ClientProc:
     def seek(self, offset, whence=SEEK_SET) -> int:
         return self.proc.stdout.seek(offset, whence)
 
-    def flush(self):
+    def flush_in(self):
+        return self.proc.stdin.flush()
+
+    def flush_out(self):
         if self.proc.stdout.seekable():
             self.seek(0, SEEK_END)
         else:
