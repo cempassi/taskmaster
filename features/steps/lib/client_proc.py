@@ -1,5 +1,6 @@
 from __future__ import annotations
 from os import SEEK_END, SEEK_SET
+from sys import stderr
 from features.steps.lib.utils import Namespace
 from features.steps.lib.taskmaster_utils import TASKMASTER_PATH, get_taskmaster_args
 import logging
@@ -39,13 +40,15 @@ class ClientProc:
         return self.proc.poll() is None
 
     def write(self, data: str) -> int:
-        return self.proc.stdin.write(data.encode())
+        n = self.proc.stdin.write(data.encode())
+        self.proc.stdin.flush()
+        return n
 
     def read(self) -> bytes:
         return self.proc.stdout.read()
 
     def readline(self, limit: int = -1) -> bytes:
-        return self.proc.stdout.readline(limit=limit)
+        return self.proc.stdout.readline(limit)
 
     def readlines(self, hint: int = -1) -> list[bytes]:
         return self.proc.stdout.readlines(hint)
