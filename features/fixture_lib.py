@@ -1,3 +1,4 @@
+from features.steps.lib.server_mock import ServerMock
 from features.steps.lib.client_mock import ClientMock
 from os import remove
 from behave import fixture
@@ -62,7 +63,12 @@ def setup_client_mock(ctx):
     ctx.client_mock = ClientMock()
 
 
+@fixture(name='fixture.use_server_mock')
+def setup_server_mock(ctx):
+    ctx.server_mock = ServerMock()
+
+
 fixtures_registry = dict()
 
-for func in setup_mimetypes, remove_tmp_files, clean_server, setup_client_mock:
+for func in setup_mimetypes, remove_tmp_files, clean_server, setup_client_mock, setup_server_mock:
     fixtures_registry[func.name] = func
