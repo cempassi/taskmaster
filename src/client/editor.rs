@@ -1,11 +1,12 @@
 use std::io::{self, stdout, Error, ErrorKind, Write};
-use termion::{event::Key, input::TermRead, raw::IntoRawMode};
+use termion::{event::Key, input::TermRead, is_tty, raw::IntoRawMode};
 
 use super::history::{Direction, History};
 
 pub struct Editor {
     should_quit: bool,
     newline: bool,
+    interactive_mode: bool,
 }
 
 impl Editor {
@@ -45,16 +46,26 @@ impl Editor {
     }
 
     pub fn readline(&mut self, history: &mut History) -> Result<String, std::io::Error> {
-        let _stdout = stdout().into_raw_mode().unwrap();
+        if self.interactive_mode {
+            if stdout().into_raw_mode().is_err() {
+                self.interactive_mode = false;
+                self.readline_raw()
+            } else {
+                self.readline_interactive(history)
+            }
+        } else {
+            self.readline_raw()
+        }
+    }
+
+    fn readline_interactive(&mut self, history: &mut History) -> Result<String, std::io::Error> {
         let mut line = String::new();
 
         loop {
             refresh_screen().unwrap();
             display_prompt();
             display_line(&line);
-            if let Err(error) = self.process_keypress(&mut line, history) {
-                die(&error);
-            }
+            self.process_keypress(&mut line, history)?;
             if self.should_quit {
                 return Err(Error::new(ErrorKind::Interrupted, "Interupted"));
             }
@@ -65,10 +76,15 @@ impl Editor {
         }
     }
 
+    fn readline_raw(&mut self) -> Result<String, std::io::Error> {
+        Ok("".to_string())
+    }
+
     pub fn default() -> Self {
         Self {
             should_quit: false,
             newline: false,
+            interactive_mode: is_tty(&io::stdin()),
         }
     }
 }
