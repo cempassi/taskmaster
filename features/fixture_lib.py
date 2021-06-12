@@ -66,6 +66,8 @@ def setup_client_mock(ctx):
 @fixture(name='fixture.use_server_mock')
 def setup_server_mock(ctx):
     ctx.server_mock = ServerMock()
+    yield
+    del ctx.server_mock
 
 
 fixtures_registry = dict()
