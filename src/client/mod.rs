@@ -116,6 +116,7 @@ pub fn start() {
                     break;
                 }
                 Ok(line) => {
+                    log::debug!("line={}", line);
                     if process_line(&history, &line).is_ok() {
                         history.push(line);
                     }
