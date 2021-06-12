@@ -104,7 +104,7 @@ fn print_help() {
     print!("{}", s);
 }
 
-pub fn start() {
+pub fn start() -> Result<()> {
     if UnixStream::connect("/tmp/taskmaster.sock").is_ok() {
         let mut history = History::new();
 
@@ -112,15 +112,21 @@ pub fn start() {
             match Editor::default().readline(&mut history) {
                 Ok(line) if line == "exit" => {
                     log::info!("stopping client, bye");
-                    break;
+                    return Ok(());
                 }
                 Ok(line) => {
                     log::debug!("line={}", line);
-                    if process_line(&history, &line).is_ok() {
+                    let res = process_line(&history, &line);
+                    if res.is_ok() {
                         history.push(line);
+                        continue;
+                    }
+                    match res {
+                        Err(error::Taskmaster::InvalidCmd) => continue,
+                        e => return e,
                     }
                 }
-                Err(e) if e.kind() == ErrorKind::Interrupted => break,
+                Err(e) if e.kind() == ErrorKind::Interrupted => return Ok(()),
                 Err(e) => {
                     log::error!("got error {:?}", e);
                     panic!("unexpected error")
@@ -129,5 +135,6 @@ pub fn start() {
         }
     } else {
         log::error!("Server isn't running");
+        Err(error::Taskmaster::InvalidConf)
     }
 }
