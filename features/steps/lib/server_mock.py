@@ -1,7 +1,7 @@
 from features.steps.lib.utils import Namespace, NamespaceLock
 from socket import socket
 from typing import List
-from features.steps.lib.taskmaster_utils import connect_to_socket, listen_to_socket
+from features.steps.lib.taskmaster_utils import listen_to_socket
 import logging
 from threading import Thread, Lock
 from select import select
@@ -50,7 +50,7 @@ def worker(shared: Namespace):
                 shared.log.debug(f'client={csock} raw_msg={raw_msg}')
                 if len(raw_msg) == 0:
                     shared.log.info(f'client quit: {csock}')
-                    clients.remove(csock)
-                    csock.close()
+                clients.remove(csock)
+                csock.close()
 
     shared.log.error('thread stopping')
