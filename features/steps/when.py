@@ -33,7 +33,7 @@ def write_client_command(ctx, command: str):
 def flush_stdout(ctx):
     l = log.getChild(flush_stdout.__name__)
     l.debug('flush client stdout')
-    ctx.client.flush_stdout()
+    ctx.client.flush_out()
 
 
 @when('we add the following to the current config file')
@@ -53,3 +53,17 @@ def sleep_for(ctx, time):
     from time import sleep
 
     sleep(time)
+
+
+@when('we stop the server mock')
+def stop_server_mock(ctx):
+    l = log.getChild(stop_server_mock.__name__)
+    del ctx.server_mock
+
+
+@when('the client send the command "{command}"')
+def send_command(ctx, command):
+    l = log.getChild(send_command.__name__)
+    l.debug(f'command={command}')
+    ctx.client.write(f'{command}\n')
+    ctx.client.flush_in()
