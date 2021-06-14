@@ -47,9 +47,9 @@ def scan_tasks(stream: str) -> Dict[str, Any]:
 
 def scan_status(stream: str) -> str:
     data = scan_yaml_reply(stream)
-    return data['status']
+    return data.get('status') if data else None
 
 
 def scan_info(stream: str) -> Dict[str, Any]:
     data = scan_yaml_reply(stream)
-    return data['task']
+    return data.get('task') if data else None
