@@ -1,9 +1,14 @@
-use std::convert::TryFrom;
-use std::sync::mpsc::{channel, Sender};
+use std::{
+    convert::TryFrom,
+    marker,
+    str::FromStr,
+    sync::mpsc::{channel, Sender},
+};
 
 mod communication;
 mod default;
 pub mod error;
+mod formatter;
 mod inter;
 mod listener;
 mod monitor;
@@ -16,21 +21,48 @@ mod watcher;
 
 use crate::shared::message::Message;
 
-use self::{communication::Com, inter::Inter, listener::Listener, state::State, watcher::Watcher};
+use self::{
+    communication::Com,
+    formatter::{Formatter, Human, Json, MessageFormat, Yaml},
+    inter::Inter,
+    listener::Listener,
+    state::State,
+    watcher::Watcher,
+};
 
-struct Server {
-    state: State,
+struct Server<F>
+where
+    F: Formatter,
+{
+    state: State<F>,
     event: Sender<Inter>,
+    _marker: marker::PhantomData<F>,
 }
 
-pub fn start(config: &str) -> Result<(), error::Taskmaster> {
+pub fn start(config: &str, format: &str) -> Result<(), error::Taskmaster> {
+    log::info!(
+        "starting server with config at {} and format {}",
+        config,
+        format
+    );
+    let format = MessageFormat::from_str(format).unwrap();
+    match format {
+        MessageFormat::Human => start_raw::<Human>(config),
+        MessageFormat::Yaml => start_raw::<Yaml>(config),
+        MessageFormat::Json => start_raw::<Json>(config),
+    }
+}
+
+pub fn start_raw<F: Formatter>(config: &str) -> Result<(), error::Taskmaster> {
     let (sender, event) = channel::<Inter>();
     let (response, receiver) = channel::<Com>();
+
     let mut watcher = Watcher::try_from(config)?;
     let mut listener = Listener::new();
     let mut server = Server {
-        state: State::new(sender.clone(), response.clone()),
+        state: State::<F>::new(sender.clone(), response.clone()),
         event: sender.clone(),
+        _marker: marker::PhantomData,
     };
 
     watcher.run(sender.clone());
@@ -53,7 +85,7 @@ pub fn start(config: &str) -> Result<(), error::Taskmaster> {
     Ok(())
 }
 
-impl Server {
+impl<F: Formatter> Server<F> {
     fn reload_config(&mut self, watcher: &Watcher) {
         self.state.reload(watcher)
     }

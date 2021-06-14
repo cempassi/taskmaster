@@ -1,6 +1,7 @@
 use std::{
     collections::HashMap,
     convert::TryFrom,
+    marker,
     sync::{
         atomic::{AtomicBool, Ordering},
         mpsc::Sender,
@@ -12,6 +13,7 @@ use std::{
 
 use super::{
     communication::Com,
+    formatter::Formatter,
     inter::Inter,
     monitor::Monitor,
     task::{ConfigFile, Task},
@@ -19,22 +21,27 @@ use super::{
 };
 
 #[derive(Debug)]
-pub struct State {
+pub struct State<F>
+where
+    F: Formatter,
+{
     pub monitors: Arc<Mutex<HashMap<String, Monitor>>>,
     sender: Sender<Inter>,
     response: Sender<Com>,
     thread: Option<JoinHandle<()>>,
     waiter_running: Arc<AtomicBool>,
+    _marker: marker::PhantomData<F>,
 }
 
-impl State {
+impl<F: Formatter> State<F> {
     pub fn new(sender: Sender<Inter>, response: Sender<Com>) -> Self {
-        State {
+        Self {
             monitors: Arc::new(Mutex::new(HashMap::new())),
             sender,
             response,
             thread: None,
             waiter_running: Arc::new(AtomicBool::new(false)),
+            _marker: marker::PhantomData,
         }
     }
 
@@ -62,7 +69,7 @@ impl State {
     }
 
     fn add_task(&mut self, name: &str, task: Task) {
-        let mon = Monitor::new(name.to_string(), task, self.sender.clone());
+        let mon = Monitor::new(name.to_string(), task);
         if mon.is_running() {
             self.start_waiting_thread_if_needed();
         }
@@ -88,30 +95,25 @@ impl State {
     pub fn info(&mut self, name: &str) {
         log::debug!("Get info on task {}", name);
         if let Some(mon) = self.monitors.lock().unwrap().get_mut(name) {
-            self.response
-                .send(Com::Msg(format!("Info {}:\n", name)))
-                .unwrap();
-            self.response
-                .send(Com::Msg(format!("{}\n", mon.get_task())))
-                .unwrap();
+            F::send_task(&self.response, name, &mon.get_task()).unwrap();
         } else {
             log::error!("task {} doesn't exist", name);
-            self.response
-                .send(Com::Msg(format!("task {} doesn't exist\n", name)))
-                .unwrap();
+            F::send_error(&self.response, format!("task {} doesn't exist", name)).unwrap();
         }
     }
 
     pub fn list(&mut self) {
         log::debug!("setting list");
-        self.response
-            .send(Com::Msg("Available jobs:\n".to_string()))
-            .unwrap();
-        for mon in self.monitors.lock().unwrap().keys() {
-            self.response
-                .send(Com::Msg(format!("    - {}\n", mon)))
-                .unwrap();
-        }
+        F::send_tasks(
+            &self.response,
+            &mut self
+                .monitors
+                .lock()
+                .unwrap()
+                .iter()
+                .map(|(k, v)| (k.clone(), v.get_task().clone())),
+        )
+        .unwrap();
     }
 
     pub fn status(&self, taskname: &str) {
@@ -123,9 +125,7 @@ impl State {
             .get(taskname)
             .unwrap()
             .status();
-        self.response
-            .send(Com::Msg(format!("status of {}: {}", taskname, status)))
-            .unwrap();
+        F::send_status(&self.response, taskname, status).unwrap();
     }
 
     pub fn stop(&mut self, namespace: &str) {
@@ -170,13 +170,5 @@ impl State {
             log::debug!("waiter thread finished !");
             running_state.store(false, Ordering::SeqCst);
         }));
-    }
-
-    pub fn done_wait_children(&mut self) {
-        if let Some(thread) = self.thread.take() {
-            thread.join().expect("cannot join waiting thread");
-        } else {
-            log::error!("waiter: no thread to join as being asked !");
-        }
     }
 }

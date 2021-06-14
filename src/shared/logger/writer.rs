@@ -19,6 +19,7 @@ where
     Ok(())
 }
 
+#[allow(clippy::inline_always)]
 #[inline(always)]
 fn write_instant_with_level<W>(
     writer: &mut W,
@@ -32,6 +33,7 @@ where
     Ok(())
 }
 
+#[allow(clippy::inline_always)]
 #[inline(always)]
 fn write_level<W>(writer: &mut W, level: Level) -> Result<(), Error>
 where
@@ -41,6 +43,7 @@ where
     Ok(())
 }
 
+#[allow(clippy::inline_always)]
 #[inline(always)]
 fn write_args<W>(writer: &mut W, record: &Record<'_>) -> Result<(), Error>
 where

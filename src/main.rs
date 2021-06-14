@@ -12,36 +12,35 @@ use server::error;
 use shared::logger::{self, Config};
 use std::{fs::File, time};
 
-type Result<T> = std::result::Result<T, error::Taskmaster>;
+type TaskmasterResult<T> = Result<T, error::Taskmaster>;
 
-/// # Errors
-///
-/// Will return `Err` when failing to initialise `LOGGER`
-fn init(cli: &clap::ArgMatches<'static>) -> std::result::Result<(), SetLoggerError> {
+fn init(cli: &clap::ArgMatches<'static>) -> Result<(), SetLoggerError> {
     let config = Config::new(Some(time::Instant::now()));
 
-    cli.value_of("log-file").map_or_else(
+    cli.value_of("logfile").map_or_else(
         || logger::simple::Logger::init(LevelFilter::Debug, config),
         |file| logger::file::Logger::init(LevelFilter::Debug, config, File::create(file).unwrap()),
     )
 }
 
-fn main() -> Result<()> {
+fn main() -> TaskmasterResult<()> {
     let cli = cli::generate();
     init(&cli).unwrap();
 
-    // LOGGER.
-
-    if let Some(matches) = cli.subcommand_matches("server") {
-        let config = matches.value_of("config").unwrap();
-        log::info!("starting server");
-        server::start(config)?;
-    } else if cli.subcommand_matches("client").is_some() {
-        log::info!("starting client");
-        client::start();
-    } else {
-        log::error!("unknown subcommand");
-        return Err(error::Taskmaster::Cli);
+    match cli.subcommand() {
+        ("server", Some(matches)) => {
+            let config = matches.value_of("config").unwrap();
+            let format = matches.value_of("format").unwrap();
+            server::start(config, format)
+        }
+        ("client", Some(_matches)) => {
+            log::info!("starting client");
+            client::start();
+            Ok(())
+        }
+        _ => {
+            log::error!("unknown subcommand");
+            Err(error::Taskmaster::Cli)
+        }
     }
-    Ok(())
 }
