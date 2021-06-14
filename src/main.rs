@@ -35,9 +35,8 @@ fn detach(path: String, config: &str) -> TaskmasterResult<()> {
         Ok(ForkResult::Child) => {
             println!("I'm in Child Process");
             let mut args = Vec::new();
-            args.push(CString::new("--log-file ./taskmaster.log").unwrap());
+            args.push(CString::new("--log-file /tmp/taskmaster.log").unwrap());
             args.push(CString::new("server").unwrap());
-            args.push(CString::new("--config").unwrap());
             args.push(CString::new(config).unwrap());
             close(0).unwrap();
             close(1).unwrap();
