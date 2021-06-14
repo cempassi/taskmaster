@@ -76,12 +76,17 @@ impl<F: Formatter> State<F> {
         self.monitors.lock().unwrap().insert(name.to_string(), mon);
     }
 
+    fn unknown_taskid(&self, taskid: &str) {
+        log::error!("task {} doesn't exist", taskid);
+        F::send_error(&self.response, format!("unknown taskid {}", taskid)).unwrap();
+    }
+
     pub fn start(&mut self, name: &str) {
         log::debug!("starting task {}", name);
         if let Some(mon) = self.monitors.lock().unwrap().get_mut(name) {
             mon.start();
         } else {
-            log::error!("task {} doesn't exist", name);
+            self.unknown_taskid(name);
         }
         self.start_waiting_thread_if_needed();
     }
@@ -97,8 +102,7 @@ impl<F: Formatter> State<F> {
         if let Some(mon) = self.monitors.lock().unwrap().get_mut(name) {
             F::send_task(&self.response, name, &mon.get_task()).unwrap();
         } else {
-            log::error!("task {} doesn't exist", name);
-            F::send_error(&self.response, format!("task {} doesn't exist", name)).unwrap();
+            self.unknown_taskid(name);
         }
     }
 
@@ -118,24 +122,22 @@ impl<F: Formatter> State<F> {
 
     pub fn status(&self, taskname: &str) {
         log::debug!("retrieving status of {}", taskname);
-        let status = self
-            .monitors
-            .lock()
-            .unwrap()
-            .get(taskname)
-            .unwrap()
-            .status();
-        F::send_status(&self.response, taskname, status).unwrap();
+        if let Some(manager) = self.monitors.lock().unwrap().get(taskname) {
+            let status = manager.status();
+
+            F::send_status(&self.response, taskname, status).unwrap();
+        } else {
+            self.unknown_taskid(taskname);
+        }
     }
 
     pub fn stop(&mut self, taskid: &str) {
         let mut process_manager = self.monitors.lock().unwrap();
 
         if let Some(manager) = process_manager.get_mut(taskid) {
-            manager.stop()
+            manager.stop();
         } else {
-            log::warn!("task {} doesn't exist", taskid);
-            F::send_error(&self.response, format!("unknown taskid {}", taskid)).unwrap();
+            self.unknown_taskid(taskid);
         }
     }
 
@@ -145,8 +147,7 @@ impl<F: Formatter> State<F> {
         if let Some(manager) = process_manager.get_mut(taskid) {
             manager.restart()
         } else {
-            log::error!("task {} doesn't exist", taskid);
-            F::send_error(&self.response, format!("unknown taskid {}", taskid)).unwrap();
+            self.unknown_taskid(taskid);
         }
     }
 
