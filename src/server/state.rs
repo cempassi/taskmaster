@@ -128,13 +128,25 @@ impl<F: Formatter> State<F> {
         F::send_status(&self.response, taskname, status).unwrap();
     }
 
-    pub fn stop(&mut self, namespace: &str) {
+    pub fn stop(&mut self, taskid: &str) {
         let mut process_manager = self.monitors.lock().unwrap();
 
-        if let Some(manager) = process_manager.get_mut(namespace) {
+        if let Some(manager) = process_manager.get_mut(taskid) {
             manager.stop()
         } else {
-            log::warn!("unknown namespace {}", namespace);
+            log::warn!("task {} doesn't exist", taskid);
+            F::send_error(&self.response, format!("unknown taskid {}", taskid)).unwrap();
+        }
+    }
+
+    pub fn restart(&mut self, taskid: &str) {
+        let mut process_manager = self.monitors.lock().unwrap();
+
+        if let Some(manager) = process_manager.get_mut(taskid) {
+            manager.restart()
+        } else {
+            log::error!("task {} doesn't exist", taskid);
+            F::send_error(&self.response, format!("unknown taskid {}", taskid)).unwrap();
         }
     }
 

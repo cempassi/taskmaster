@@ -1,14 +1,23 @@
-use std::io::{self, stdout, Error, ErrorKind, Write};
-use termion::{event::Key, input::TermRead, raw::IntoRawMode};
+use std::io::{self, Error, ErrorKind, Write};
+use termion::{event::Key, input::TermRead, is_tty, raw::IntoRawMode};
 
 use super::history::{Direction, History};
 
 pub struct Editor {
     should_quit: bool,
     newline: bool,
+    interactive_mode: bool,
 }
 
 impl Editor {
+    pub fn default() -> Self {
+        Self {
+            should_quit: false,
+            newline: false,
+            interactive_mode: is_tty(&io::stdin()),
+        }
+    }
+
     fn process_keypress(
         &mut self,
         line: &mut String,
@@ -18,6 +27,7 @@ impl Editor {
 
         match pressed_key {
             Key::Char(c) if c == '\n' => self.newline = true,
+            Key::Char(c) => line.push(c),
             Key::Up if line.is_empty() => {
                 if let Some(cmd) = history.get(&Direction::Previous) {
                     *line = cmd;
@@ -28,7 +38,6 @@ impl Editor {
                     *line = cmd;
                 }
             }
-            Key::Char(c) => line.push(c),
             Key::Backspace => {
                 line.pop();
             }
@@ -45,16 +54,28 @@ impl Editor {
     }
 
     pub fn readline(&mut self, history: &mut History) -> Result<String, std::io::Error> {
-        let _stdout = stdout().into_raw_mode().unwrap();
+        if self.interactive_mode {
+            let previous_stdout_mode = io::stdout().into_raw_mode();
+            if previous_stdout_mode.is_err() {
+                log::warn!("stdout is not available in raw mode, disabling interactive mode");
+                self.interactive_mode = false;
+                Editor::readline_raw()
+            } else {
+                self.readline_interactive(history)
+            }
+        } else {
+            Editor::readline_raw()
+        }
+    }
+
+    fn readline_interactive(&mut self, history: &mut History) -> Result<String, std::io::Error> {
         let mut line = String::new();
 
         loop {
             refresh_screen().unwrap();
             display_prompt();
             display_line(&line);
-            if let Err(error) = self.process_keypress(&mut line, history) {
-                die(&error);
-            }
+            self.process_keypress(&mut line, history)?;
             if self.should_quit {
                 return Err(Error::new(ErrorKind::Interrupted, "Interupted"));
             }
@@ -65,11 +86,12 @@ impl Editor {
         }
     }
 
-    pub fn default() -> Self {
-        Self {
-            should_quit: false,
-            newline: false,
-        }
+    fn readline_raw() -> Result<String, std::io::Error> {
+        log::debug!("read line in raw mode");
+        io::stdin()
+            .lock()
+            .read_line()?
+            .map_or_else(|| Err(Error::new(ErrorKind::Interrupted, "Interupted")), Ok)
     }
 }
 
@@ -94,8 +116,4 @@ fn display_line(line: &str) {
 fn display_prompt() {
     print!("[~>] ");
     io::stdout().flush().unwrap();
-}
-
-fn die(e: &std::io::Error) {
-    panic!("{}", e);
 }

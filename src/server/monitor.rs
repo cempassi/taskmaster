@@ -281,6 +281,11 @@ impl Monitor {
         self.running.clear();
     }
 
+    pub fn restart(&mut self) {
+        self.stop();
+        self.start_raw();
+    }
+
     pub fn get_task(&self) -> &Task {
         &self.task
     }

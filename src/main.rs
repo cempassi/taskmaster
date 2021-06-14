@@ -8,8 +8,10 @@ mod server;
 mod shared;
 
 use log::{LevelFilter, SetLoggerError};
-use server::error;
-use shared::logger::{self, Config};
+use shared::{
+    error,
+    logger::{self, Config},
+};
 use std::{fs::File, time};
 
 type TaskmasterResult<T> = Result<T, error::Taskmaster>;
@@ -35,8 +37,7 @@ fn main() -> TaskmasterResult<()> {
         }
         ("client", Some(_matches)) => {
             log::info!("starting client");
-            client::start();
-            Ok(())
+            client::start()
         }
         _ => {
             log::error!("unknown subcommand");

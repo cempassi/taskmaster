@@ -7,7 +7,6 @@ use std::{
 
 mod communication;
 mod default;
-pub mod error;
 mod formatter;
 mod inter;
 mod listener;
@@ -19,7 +18,7 @@ mod state;
 mod task;
 mod watcher;
 
-use crate::shared::message::Message;
+use crate::shared::{error, message::Message};
 
 use self::{
     communication::Com,
@@ -99,8 +98,7 @@ impl<F: Formatter> Server<F> {
             Message::List => self.state.list(),
             Message::Status { id: taskname } => self.state.status(&taskname),
             Message::Restart { id: taskname } => {
-                self.state.stop(&taskname);
-                self.state.start(&taskname);
+                self.state.restart(&taskname);
             }
             Message::Quit => self
                 .event
