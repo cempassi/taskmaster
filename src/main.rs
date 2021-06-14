@@ -26,7 +26,7 @@ fn init(cli: &clap::ArgMatches<'static>) -> Result<(), SetLoggerError> {
     )
 }
 
-fn detach(path: String, config: &str) -> TaskmasterResult<()> {
+fn detach(path: String, config: &str, logfile: Option<&str>) -> TaskmasterResult<()> {
     match unsafe { fork() } {
         Ok(ForkResult::Parent { child, .. }) => {
             println!("Child is {}", child);
@@ -34,9 +34,15 @@ fn detach(path: String, config: &str) -> TaskmasterResult<()> {
         }
         Ok(ForkResult::Child) => {
             println!("I'm in Child Process");
-            let mut args = Vec::new();
-            args.push(CString::new("taskmaster").unwrap());
-            args.push(CString::new("--log-file=/tmp/taskmaster.log").unwrap());
+            let mut args = vec![
+                CString::new("taskmaster").unwrap(),
+                CString::new("--log-file").unwrap(),
+            ];
+            if let Some(file) = logfile {
+                args.push(CString::new(file).unwrap());
+            } else {
+                args.push(CString::new("/tmp/taskmaster.log").unwrap());
+            }
             args.push(CString::new("server").unwrap());
             args.push(CString::new(config).unwrap());
             close(0).unwrap();
@@ -66,7 +72,8 @@ fn main() -> TaskmasterResult<()> {
             let format = matches.value_of("format").unwrap();
             if matches.is_present("detached") {
                 log::info!("detached");
-                detach(args.next().unwrap(), config)
+                let logfile = cli.value_of("logfile");
+                detach(args.next().unwrap(), config, logfile)
             } else {
                 server::start(config, format)
             }
