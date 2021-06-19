@@ -1,22 +1,10 @@
-from os import remove
-from typing import Any, Callable, Union
+from features.steps.lib.utils import load_config_file
 from features.steps.lib.server_proc import ServerProc
 from features.steps.lib.client_proc import ClientProc
 from behave import given
 import logging
 
 log = logging.getLogger('given')
-
-
-def load_config_file(file: str, type: str):
-    if type == 'application/yaml':
-        import yaml
-        with open(file) as f:
-            return yaml.load(f, Loader=yaml.Loader)
-    elif type == 'application/toml':
-        import toml
-        with open(file) as f:
-            return toml.load(f)
 
 
 @given("the config file {file}")
