@@ -59,7 +59,7 @@ impl<F: Formatter> State<F> {
             }
         }
         let mut monitors = self.monitors.lock().unwrap();
-        log::info!("removed task: {:?}", to_remove);
+        log::info!("removed task from config: {:?}", to_remove);
         while !to_remove.is_empty() {
             let taskid = to_remove.remove(0);
             monitors.remove(&taskid);
