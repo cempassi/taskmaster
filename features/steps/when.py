@@ -1,3 +1,4 @@
+from features.steps.lib.utils import load_config_file
 from features.steps.lib.client_proc import ClientProc
 from behave import when
 from features.steps.lib.server_proc import ServerProc
@@ -67,3 +68,17 @@ def send_command(ctx, command):
     l.debug(f'command={command}')
     ctx.client.write(f'{command}\n')
     ctx.client.flush_in()
+
+
+@when('we edit the current config file with')
+def edit_current_config_file(ctx):
+    l = log.getChild(edit_current_config_file.__name__)
+    assert ctx.text is not None, 'we need a text to edit the config with'
+    assert 'config_file' in ctx, 'we need an existing config file loaded'
+    l.info(f'current_config={ctx.config_file}, data_size={len(ctx.text)}')
+    l.debug(f'text={ctx.text}')
+
+    with open(ctx.config_file, 'w') as f:
+        f.write(ctx.text)
+
+    ctx.config_data = load_config_file(ctx.config_file, ctx.config_type[0])
