@@ -1,5 +1,5 @@
 use signal_hook::{
-    consts::{SIGHUP, SIGINT},
+    consts::{SIGHUP, SIGINT, SIGTERM},
     iterator::Signals,
 };
 use std::sync::mpsc::Sender;
@@ -21,6 +21,10 @@ pub fn handle_signals(sender: Sender<Inter>) -> Result<(), error::Taskmaster> {
                 }
                 SIGINT => {
                     log::debug!("received SIGINT, sending Quit message");
+                    sender.send(Inter::Quit).unwrap()
+                }
+                SIGTERM => {
+                    log::debug!("received SIGTERM, sending Quit message");
                     sender.send(Inter::Quit).unwrap()
                 }
                 _ => {
