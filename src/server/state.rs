@@ -53,6 +53,7 @@ impl<F: Formatter> State<F> {
             log::debug!("parsed task: {}: {:?}", name, task);
 
             if self.monitors.lock().unwrap().get(&name).is_some() {
+                to_remove.retain(|taskid| taskid != &name);
                 self.may_reload_task(&name, task);
             } else {
                 self.add_task(&name, task);
