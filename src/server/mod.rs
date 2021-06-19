@@ -39,11 +39,8 @@ where
 }
 
 pub fn start(config: &str, format: &str) -> Result<(), error::Taskmaster> {
-    log::info!(
-        "starting server with config at {} and format {}",
-        config,
-        format
-    );
+    log::info!("starting server with config file {}", config,);
+    log::info!("message output format as {}", format);
     let format = MessageFormat::from_str(format).unwrap();
     match format {
         MessageFormat::Human => start_raw::<Human>(config),

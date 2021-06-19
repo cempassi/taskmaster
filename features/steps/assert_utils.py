@@ -49,6 +49,6 @@ def assert_tasks(got: Dict[str, Any], wanted: Dict[str, Any]):
         vgot = got.get(key)
         vwanted = wanted.get(key)
 
-        assert_true(vgot, msg_fmt=f'missing value for {key}')
-        assert_true(vwanted, msg_fmt=f'extra value from got with key {key}')
+        assert_true(vgot, msg_fmt=f'expected task with key "{key}"')
+        assert_true(vwanted, msg_fmt=f'unexpected task with key "{key}"')
         assert_task(got[key], wanted[key])

@@ -49,7 +49,7 @@ impl TryFrom<&Watcher> for ConfigFile {
                 log::error!("no handler for extension '{}'", ext);
                 Err(error::Taskmaster::Cli)
             }
-            _ => {
+            None => {
                 log::error!("cannot determine file type by extension");
                 Err(error::Taskmaster::Cli)
             }

@@ -17,3 +17,14 @@ class NamespaceLock(Namespace):
         data = super().__getattr__(attr)
         self.lock.release()
         return data
+
+
+def load_config_file(file: str, type: str):
+    if type == 'application/yaml':
+        import yaml
+        with open(file) as f:
+            return yaml.load(f, Loader=yaml.Loader)
+    elif type == 'application/toml':
+        import toml
+        with open(file) as f:
+            return toml.load(f)

@@ -89,6 +89,10 @@ impl RunningChild {
             self.stopdelay,
         ))
     }
+
+    fn kill(&mut self) -> std::io::Result<()> {
+        self.child.kill()
+    }
 }
 
 #[derive(Debug)]
@@ -170,14 +174,13 @@ pub struct Monitor {
     finished: Vec<FinishedChild>,
 }
 
-// impl Drop for Monitor {
-//     fn drop(&mut self) {
-//         for child in &mut self.children {
-//             child.kill().expect("cannot kill children");
-//         }
-//         self.children.clear();
-//     }
-// }
+impl Drop for Monitor {
+    fn drop(&mut self) {
+        if self.is_running() {
+            self.kill();
+        }
+    }
+}
 
 impl Monitor {
     // Only create Monitoring struct
@@ -279,6 +282,23 @@ impl Monitor {
             self.stopping.push(stopping_child);
         }
         self.running.clear();
+    }
+
+    pub fn kill(&mut self) {
+        let mut killed_cout = 0;
+        log::info!("[{}] killing ...", self.id);
+
+        while !self.running.is_empty() {
+            let mut chld = self.running.remove(0);
+            killed_cout += 1;
+            chld.kill().expect("cannot kill child");
+        }
+        while !self.stopping.is_empty() {
+            let mut chld = self.stopping.remove(0);
+            killed_cout += 1;
+            chld.kill().expect("cannot kill chld");
+        }
+        log::info!("[{}] result of killing: {} killed", self.id, killed_cout);
     }
 
     pub fn restart(&mut self) {

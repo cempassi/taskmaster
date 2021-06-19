@@ -32,3 +32,24 @@ Feature: testing loading configuration file with taskmaster
     And we ask for tasks
     Then the server is still running
     And the server has read the tasks
+
+  @fixture.clean_server
+  Scenario: Test deleted task from config file
+    Given the config in "application/yaml"
+      """
+      test:
+        cmd: echo foo
+      rm:
+        cmd: echo bar
+      """
+    When the server is running
+    And we ask for tasks
+    Then the server has read the tasks
+    When we edit the current config file with
+      """
+      test:
+        cmd: echo foo
+      """
+    And we ask to reload the config
+    And we ask for tasks
+    Then the server has read the tasks

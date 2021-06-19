@@ -47,19 +47,27 @@ impl<F: Formatter> State<F> {
 
     pub fn reload(&mut self, watcher: &Watcher) {
         let configfile: ConfigFile = ConfigFile::try_from(watcher).unwrap();
+        let mut to_remove: Vec<String> = self.monitors.lock().unwrap().keys().cloned().collect();
 
         for (name, task) in configfile {
             log::debug!("parsed task: {}: {:?}", name, task);
 
             if self.monitors.lock().unwrap().get(&name).is_some() {
-                self.reload_task(&name, task);
+                to_remove.retain(|taskid| taskid != &name);
+                self.may_reload_task(&name, task);
             } else {
                 self.add_task(&name, task);
             }
         }
+        let mut monitors = self.monitors.lock().unwrap();
+        log::info!("removed task from config: {:?}", to_remove);
+        while !to_remove.is_empty() {
+            let taskid = to_remove.remove(0);
+            monitors.remove(&taskid);
+        }
     }
 
-    fn reload_task(&mut self, name: &str, task: Task) {
+    fn may_reload_task(&mut self, name: &str, task: Task) {
         let mut monitors = self.monitors.lock().unwrap();
         let mon = monitors.get_mut(name).unwrap();
 
