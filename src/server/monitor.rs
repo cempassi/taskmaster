@@ -176,7 +176,9 @@ pub struct Monitor {
 
 impl Drop for Monitor {
     fn drop(&mut self) {
-        self.kill();
+        if self.is_running() {
+            self.kill();
+        }
     }
 }
 
