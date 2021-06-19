@@ -89,6 +89,10 @@ impl RunningChild {
             self.stopdelay,
         ))
     }
+
+    fn kill(&mut self) -> std::io::Result<()> {
+        self.child.kill()
+    }
 }
 
 #[derive(Debug)]
@@ -279,7 +283,20 @@ impl Monitor {
     }
 
     pub fn kill(&mut self) {
+        let mut killed_cout = 0;
         log::info!("[{}] killing ...", self.id);
+
+        while !self.running.is_empty() {
+            let mut chld = self.running.remove(0);
+            killed_cout += 1;
+            chld.kill().expect("cannot kill child");
+        }
+        while !self.stopping.is_empty() {
+            let mut chld = self.stopping.remove(0);
+            killed_cout += 1;
+            chld.kill().expect("cannot kill chld");
+        }
+        log::info!("[{}] result of killing: {} killed", self.id, killed_cout);
     }
 
     pub fn restart(&mut self) {
