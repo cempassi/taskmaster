@@ -170,14 +170,11 @@ pub struct Monitor {
     finished: Vec<FinishedChild>,
 }
 
-// impl Drop for Monitor {
-//     fn drop(&mut self) {
-//         for child in &mut self.children {
-//             child.kill().expect("cannot kill children");
-//         }
-//         self.children.clear();
-//     }
-// }
+impl Drop for Monitor {
+    fn drop(&mut self) {
+        self.kill();
+    }
+}
 
 impl Monitor {
     // Only create Monitoring struct
@@ -279,6 +276,10 @@ impl Monitor {
             self.stopping.push(stopping_child);
         }
         self.running.clear();
+    }
+
+    pub fn kill(&mut self) {
+        log::info!("[{}] killing ...", self.id);
     }
 
     pub fn restart(&mut self) {
