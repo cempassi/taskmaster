@@ -1,5 +1,5 @@
 use signal_hook::{
-    consts::{SIGHUP, SIGINT, SIGTERM, SIGQUIT},
+    consts::{SIGHUP, SIGINT, SIGQUIT, SIGTERM},
     iterator::Signals,
 };
 use std::sync::mpsc::Sender;
@@ -7,6 +7,15 @@ use std::sync::mpsc::Sender;
 use super::inter::Inter;
 use crate::error;
 
+fn sigstr(signum: i32) -> &'static str {
+    match signum {
+        SIGINT => "SIGINT",
+        SIGTERM => "SIGTERM",
+        SIGHUP => "SIGHUP",
+        SIGQUIT => "SIGQUIT",
+        _ => "unknown",
+    }
+}
 pub fn handle_signals(sender: Sender<Inter>) -> Result<(), error::Taskmaster> {
     let mut watching_signals = match Signals::new(&[SIGHUP, SIGINT, SIGTERM, SIGQUIT]) {
         Ok(c) => c,
@@ -20,7 +29,7 @@ pub fn handle_signals(sender: Sender<Inter>) -> Result<(), error::Taskmaster> {
                     sender.send(Inter::Reload).unwrap()
                 }
                 SIGINT => {
-                    log::debug!("received SIGINT, sending Quit message");
+                    log::debug!("received {:?}, sending Quit message", sig);
                     sender.send(Inter::Quit).unwrap()
                 }
                 SIGTERM => {
@@ -39,4 +48,19 @@ pub fn handle_signals(sender: Sender<Inter>) -> Result<(), error::Taskmaster> {
         }
     });
     Ok(())
+}
+
+#[cfg(test)]
+mod test_signal {
+    use super::sigstr;
+    use signal_hook::consts::{SIGCONT, SIGHUP, SIGINT, SIGQUIT, SIGTERM};
+
+    #[test]
+    fn test_sigstr() {
+        assert_eq!(sigstr(SIGTERM), "SIGTERM");
+        assert_eq!(sigstr(SIGQUIT), "SIGQUIT");
+        assert_eq!(sigstr(SIGINT), "SIGINT");
+        assert_eq!(sigstr(SIGHUP), "SIGHUP");
+        assert_eq!(sigstr(SIGCONT), "unknown");
+    }
 }
