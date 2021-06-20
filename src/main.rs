@@ -47,7 +47,7 @@ fn detach(path: String, config: &str, logfile: Option<&str>) -> TaskmasterResult
             args.push(CString::new(config).unwrap());
             close(0).unwrap();
             close(1).unwrap();
-            //close(2).unwrap();
+            close(2).unwrap();
             setsid().unwrap();
             execve(
                 CString::new(path).unwrap().as_c_str(),
