@@ -28,16 +28,8 @@ pub fn handle_signals(sender: Sender<Inter>) -> Result<(), error::Taskmaster> {
                     log::debug!("received SIGHUP, send Reload message");
                     sender.send(Inter::Reload).unwrap()
                 }
-                SIGINT => {
-                    log::debug!("received {:?}, sending Quit message", sig);
-                    sender.send(Inter::Quit).unwrap()
-                }
-                SIGTERM => {
-                    log::debug!("received SIGTERM, sending Quit message");
-                    sender.send(Inter::Quit).unwrap()
-                }
-                SIGQUIT => {
-                    log::debug!("received SIGQUIT, sending Quit message");
+                SIGINT | SIGTERM | SIGQUIT => {
+                    log::debug!("received {}, sending Quit message", sigstr(sig));
                     sender.send(Inter::Quit).unwrap()
                 }
                 _ => {
