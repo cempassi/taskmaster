@@ -1,5 +1,5 @@
 use signal_hook::{
-    consts::{SIGHUP, SIGINT, SIGTERM},
+    consts::{SIGHUP, SIGINT, SIGTERM, SIGQUIT},
     iterator::Signals,
 };
 use std::sync::mpsc::Sender;
@@ -8,7 +8,7 @@ use super::inter::Inter;
 use crate::error;
 
 pub fn handle_signals(sender: Sender<Inter>) -> Result<(), error::Taskmaster> {
-    let mut watching_signals = match Signals::new(&[SIGHUP, SIGINT]) {
+    let mut watching_signals = match Signals::new(&[SIGHUP, SIGINT, SIGTERM, SIGQUIT]) {
         Ok(c) => c,
         Err(e) => return Err(error::Taskmaster::Io(e)),
     };
@@ -25,6 +25,10 @@ pub fn handle_signals(sender: Sender<Inter>) -> Result<(), error::Taskmaster> {
                 }
                 SIGTERM => {
                     log::debug!("received SIGTERM, sending Quit message");
+                    sender.send(Inter::Quit).unwrap()
+                }
+                SIGQUIT => {
+                    log::debug!("received SIGQUIT, sending Quit message");
                     sender.send(Inter::Quit).unwrap()
                 }
                 _ => {
