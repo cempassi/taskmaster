@@ -6,7 +6,7 @@ Feature: Test task's state nightmare
   Background: Setting option for taskmaster server
     Given the verbose level as debug
     And the format as "json"
-    And the log file as "server_hardening.log"
+    And the log file as "state_nightmare.log"
 
   @fixture.clean_server
   Scenario: Test autostart on reloading task
@@ -26,8 +26,9 @@ Feature: Test task's state nightmare
         autostart: true
       """
     And we ask to reload the config
+    And we sleep for 0.2
     And we ask the status of "test"
     Then the status of "test" is one of
       | status   |
       | Finished |
-      | Running  |
+      | Active   |
