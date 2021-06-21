@@ -3,7 +3,6 @@ name = "taskmaster"
 version = "0.1.0"
 authors = [
     "Cedric M'Passi <cedricmpassi@gmail.com>",
-    "Apolline Saint-Mleux <apsaint-@student.42.fr>",
     "Florian Bennetot <florian.bennetot@gmail.com>"
 ]
 edition = "2018"
