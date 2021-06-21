@@ -68,7 +68,12 @@ def setup_server_mock(ctx):
     import os
     l = log.getChild(setup_server_mock.__name__)
     l.debug('starting server mock')
-    os.unlink(TASKMASTER_SOCK)
+
+    try:
+        os.unlink(TASKMASTER_SOCK)
+    except FileNotFoundError as e:
+        l.info(f'{TASKMASTER_SOCK} not existing, skipping deletion: {e}')
+
     ServerMock.log = log.getChild(ServerMock.__name__)
     ctx.server_mock = ServerMock()
     ctx.server_mock.log = log.getChild(ServerMock.__name__)
