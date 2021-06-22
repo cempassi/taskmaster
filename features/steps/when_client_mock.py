@@ -28,7 +28,7 @@ def status_task(ctx, taskname):
     status = ctx.client_mock.send_status(taskname)
     if 'task_status' not in ctx:
         ctx.task_status = {taskname: [status]}
-    elif ctx.task_status.has_key(taskname):
+    elif taskname in ctx.task_status:
         ctx.task_status[taskname].append(status)
     else:
         ctx.task_status[taskname] = [status]

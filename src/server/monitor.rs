@@ -21,6 +21,7 @@ pub enum Status {
     Inactive,
     Active,
     Reloading,
+    Reloaded,
     Failing,
     Finished,
     Failed,
@@ -34,6 +35,7 @@ impl Display for Status {
             Status::Inactive => "inactive",
             Status::Active => "active",
             Status::Reloading => "reloading",
+            Status::Reloaded => "reloaded",
             Status::Failing => "failing",
             Status::Finished => "finished",
             Status::Failed => "failed",
@@ -264,10 +266,10 @@ impl Monitor {
             }
             self.task = task;
 
+            self.change_state(Status::Reloaded);
             if need_to_start {
                 self.start();
             } else {
-                // FIXME!: What if the monitor was started ?
                 self.change_state(Status::Inactive);
             }
         }
@@ -511,6 +513,7 @@ fn startable_state(state: Status) -> bool {
         || state == Status::Finished
         || state == Status::Failed
         || state == Status::Stopped
+        || state == Status::Reloaded
 }
 
 fn finished_state(state: Status) -> Status {
@@ -548,6 +551,7 @@ mod monitor_suite {
         assert_eq!(startable_state(Status::Failing), false);
         assert_eq!(startable_state(Status::Stopping), false);
 
+        assert_eq!(startable_state(Status::Reloaded), true);
         assert_eq!(startable_state(Status::Finished), true);
         assert_eq!(startable_state(Status::Inactive), true);
         assert_eq!(startable_state(Status::Failed), true);
@@ -560,6 +564,8 @@ mod monitor_suite {
         assert_eq!(finished_state(Status::Reloading), Status::Finished);
         assert_eq!(finished_state(Status::Finished), Status::Finished);
         assert_eq!(finished_state(Status::Inactive), Status::Finished);
+
+        assert_eq!(finished_state(Status::Reloaded), Status::Finished);
 
         assert_eq!(finished_state(Status::Failing), Status::Failed);
         assert_eq!(finished_state(Status::Failed), Status::Failed);
